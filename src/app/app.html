@@ -1,0 +1,372 @@
+<header class="topbar">
+  <a class="brand" href="." aria-label="Mesa do Mês — início">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
+      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
+      <path class="brand-seam" d="M6 20h28" />
+    </svg>
+    <span>Mesa do Mês</span>
+  </a>
+  <p class="machine-plate">Máquina do clube <span>nº 01</span></p>
+</header>
+
+<main>
+  @if (draw(); as currentDraw) {
+    <section
+      class="draw-stage"
+      aria-labelledby="result-title"
+      [class.is-live]="isRevealed()"
+      [style.--live]="winnerColor()"
+    >
+      <p class="month-sticker" [attr.aria-label]="'Sorteio de ' + monthLabel">
+        <span>{{ monthShort(month) }}</span>
+        <strong>{{ year }}</strong>
+      </p>
+
+      <div class="machine" [class.is-spinning]="isSpinning()" [class.is-delivered]="isRevealed()">
+        <svg
+          class="machine-front"
+          viewBox="-26 -26 452 576"
+          role="img"
+          [attr.aria-label]="'Globo com ' + currentDraw.orderedParticipants.length + ' cápsulas, uma por participante'"
+        >
+          <defs>
+            <linearGradient id="chrome" x1="0" y1="0" x2="0.35" y2="1">
+              <stop offset="0" stop-color="#F4F8FC" />
+              <stop offset="0.34" stop-color="#93A6BE" />
+              <stop offset="0.52" stop-color="#E6EDF5" />
+              <stop offset="0.78" stop-color="#7C8DA6" />
+              <stop offset="1" stop-color="#D8E2ED" />
+            </linearGradient>
+            <radialGradient id="well" cx="0.38" cy="0.3" r="0.86">
+              <stop offset="0" stop-color="#26436B" />
+              <stop offset="1" stop-color="#0A1830" />
+            </radialGradient>
+            <linearGradient id="acrylic" x1="0.18" y1="0" x2="0.7" y2="1">
+              <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42" />
+              <stop offset="0.36" stop-color="#FFFFFF" stop-opacity="0.06" />
+              <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.16" />
+            </linearGradient>
+            <radialGradient id="core-glass" cx="0.42" cy="0.34" r="0.78">
+              <stop offset="0" stop-color="#12294a" stop-opacity="0.18" />
+              <stop offset="0.62" stop-color="#08152c" stop-opacity="0.52" />
+              <stop offset="1" stop-color="#040d1e" stop-opacity="0.82" />
+            </radialGradient>
+            <linearGradient id="inner-edge" x1="0.12" y1="0.04" x2="0.78" y2="0.94">
+              <stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
+              <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.04" />
+              <stop offset="1" stop-color="#ffffff" stop-opacity="0.24" />
+            </linearGradient>
+            <clipPath id="globe-clip"><circle cx="200" cy="200" r="170" /></clipPath>
+          </defs>
+
+          <!-- Machine body -->
+          <rect class="body-plate" x="14" y="352" width="372" height="164" rx="16" />
+          <rect class="body-seam" x="14" y="386" width="372" height="1.5" />
+
+          <!-- Acrylic globe -->
+          <circle class="globe-well" cx="200" cy="200" r="170" fill="url(#well)" />
+          <circle class="globe-core" cx="200" cy="200" r="96" fill="url(#core-glass)" />
+          <g class="loose" clip-path="url(#globe-clip)">
+            @for (loose of looseCapsules(); track $index) {
+              <g [attr.transform]="loose.transform">
+                <path class="loose-dome" [attr.d]="loose.dome" [attr.fill]="loose.color" />
+                <path class="loose-shell" [attr.d]="loose.shell" />
+                <path class="loose-seam" [attr.d]="loose.seam" />
+                <path class="loose-spot" [attr.d]="loose.spot" />
+              </g>
+            }
+          </g>
+          <g class="capsule-field" [style.transform]="'rotate(' + wheelRotation() + 'deg)'">
+            @for (capsule of capsules(); track trackPerson($index, capsule.name); let index = $index) {
+              <g class="capsule" [class.is-chosen]="isRevealed() && index === currentDraw.cyclePosition">
+                <path class="capsule-dome" [attr.d]="capsule.dome" [attr.fill]="capsule.color" />
+                <path class="capsule-shell" [attr.d]="capsule.clear" />
+                <path class="capsule-seam" [attr.d]="capsule.seam" />
+                <path class="capsule-gloss" [attr.d]="capsule.gloss" />
+                <path [attr.id]="'rim-' + index" [attr.d]="capsule.labelPath" fill="none" />
+                <text class="capsule-name" [attr.font-size]="capsule.fontSize">
+                  <textPath [attr.href]="'#rim-' + index" startOffset="50%" text-anchor="middle">{{ capsule.label }}</textPath>
+                </text>
+              </g>
+            }
+          </g>
+
+          <!-- Glass, rim and hub -->
+          <circle class="globe-glass" cx="200" cy="200" r="170" fill="url(#acrylic)" clip-path="url(#globe-clip)" />
+          <path class="globe-sheen" d="M74 96a170 170 0 0 1 148-62c-58 22-94 62-108 118-13 52-2 96 30 132A170 170 0 0 1 74 96Z" clip-path="url(#globe-clip)" />
+          <circle class="globe-inner-edge" cx="200" cy="200" r="163" fill="none" stroke="url(#inner-edge)" stroke-width="9" />
+          <circle class="globe-rim" cx="200" cy="200" r="177" fill="none" stroke="url(#chrome)" stroke-width="15" />
+          <g class="knurl">
+            @for (flute of flutes(); track $index) {
+              <path [attr.d]="flute" />
+            }
+          </g>
+          <circle class="globe-rim-line" cx="200" cy="200" r="170" fill="none" />
+          <g class="hub">
+            <circle class="hub-ring" cx="200" cy="200" r="44" />
+            <circle class="hub-face" cx="200" cy="200" r="35" fill="url(#chrome)" />
+            <circle class="hub-pin" cx="200" cy="200" r="10" />
+          </g>
+
+          <!-- Chute: where the month's capsule leaves the globe -->
+          <g class="chute">
+            <path class="chute-mouth" d="M170 358h60l-9 30h-42Z" />
+            <path class="chute-lip" d="M168 356h64" />
+          </g>
+
+          <!-- Crank and delivery tray -->
+          <g class="crank">
+            <circle class="crank-plate" cx="106" cy="452" r="40" fill="url(#chrome)" />
+            <g class="crank-arm">
+              <path class="crank-bar" d="M106 452h30" />
+              <circle class="crank-knob" cx="140" cy="452" r="10" />
+            </g>
+            <circle class="crank-boss" cx="106" cy="452" r="8" />
+          </g>
+          <g class="tray">
+            <rect class="tray-window" x="196" y="418" width="168" height="76" rx="8" />
+            <rect class="tray-glass" x="196" y="418" width="168" height="76" rx="8" />
+            <path class="tray-flap" d="M196 418h168" />
+          </g>
+
+          <!-- The delivered capsule -->
+          <g class="delivery" [attr.aria-hidden]="true">
+            <g class="delivery-body">
+              <path class="delivery-dome" d="M280 436a22 22 0 0 1 22 22h-44a22 22 0 0 1 22-22Z" [attr.fill]="winnerColor()" />
+              <path class="delivery-shell" d="M258 458h44a22 22 0 0 1-44 0Z" />
+              <path class="delivery-seam" d="M256 458h48" />
+            </g>
+          </g>
+
+          <!-- Machine decals: every annotated part carries a real value -->
+          <g class="decals" aria-hidden="true">
+            <path class="leader" d="M44 40 44 74 96 116" />
+            <text class="decal" x="8" y="30">{{ currentDraw.orderedParticipants.length }} CÁPSULAS</text>
+            <path class="leader leader-plate" d="M100 374 166 374" />
+            <text class="decal decal-plate" x="94" y="378" text-anchor="end">CALHA</text>
+            <path class="leader leader-plate" d="M380 398 380 418 344 418" />
+            <text class="decal decal-plate" x="384" y="392" text-anchor="end">BANDEJA</text>
+          </g>
+        </svg>
+
+        <p class="machine-caption">
+          O resultado sai de mês, ano, data de início e da lista. A manivela entrega, não decide.
+        </p>
+      </div>
+
+      <div class="result" aria-live="polite">
+        @if (isRevealed()) {
+          <h1 id="result-title" class="winner-name">{{ currentDraw.winner }}</h1>
+          <p class="result-copy">
+            {{ currentDraw.winner }} escolhe o jogo desta rodada. É a cápsula
+            {{ currentDraw.cyclePosition + 1 }} de {{ currentDraw.orderedParticipants.length }}: a coleção só recomeça
+            quando a última sair.
+          </p>
+        } @else {
+          <h1 id="result-title">Entregando</h1>
+          <p class="result-copy">A cápsula deste mês já está escolhida. A manivela só entrega o que o cálculo definiu.</p>
+        }
+
+        <div class="result-actions">
+          <button class="primary-action" type="button" (click)="replayDraw()" [disabled]="isSpinning()">
+            {{ isSpinning() ? 'Entregando…' : 'Entregar de novo' }}
+          </button>
+          <a class="text-link" href="#participantes" (click)="jumpToRoster($event)">Ver a coleção</a>
+        </div>
+
+        <dl class="serial-grid">
+          <div>
+            <dt>Cápsula</dt>
+            <dd>{{ currentDraw.cyclePosition + 1 }} / {{ currentDraw.orderedParticipants.length }}</dd>
+          </div>
+          <div>
+            <dt>Mês</dt>
+            <dd class="month-value">{{ monthLabel }}</dd>
+          </div>
+          <div>
+            <dt>Edição</dt>
+            <dd>{{ currentDraw.fingerprint.toUpperCase() }}</dd>
+          </div>
+          <div>
+            <dt>Início</dt>
+            <dd class="month-value">{{ startMonthLabel() }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="chart-section" aria-labelledby="chart-title">
+      <div class="section-heading">
+        <h2 id="chart-title">A cartela</h2>
+        <p>
+          Cada mês tira uma cápsula da coleção. Nenhum nome volta antes de todos terem saído.
+          @if (waitingCount()) {
+            <b>Ainda no globo: {{ waitingCount() }}.</b>
+          }
+        </p>
+      </div>
+
+      <ol class="chart-grid">
+        @for (entry of cycleEntries(); track entry.year + '-' + entry.month) {
+          <li [class]="'chart-cell ' + entry.status">
+            <span class="cell-tick" aria-hidden="true"></span>
+            @if (entry.status === 'waiting') {
+              <span class="cell-capsule is-empty" aria-hidden="true"></span>
+              <span class="cell-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
+              <span class="cell-sr">Cápsula ainda no globo</span>
+            } @else {
+              <span class="cell-capsule" aria-hidden="true" [style.background]="personColor(entry.participant)"></span>
+              <span class="cell-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
+              <strong>{{ entry.participant }}</strong>
+              @if (entry.status === 'current') {
+                <span class="cell-status">Nesta rodada</span>
+              }
+            }
+          </li>
+        }
+      </ol>
+      <p class="rail-hint">
+        Deslize para ver os próximos meses
+        <svg viewBox="0 0 28 14" aria-hidden="true"><path d="M1 7h24M19 1l6 6-6 6"></path></svg>
+      </p>
+    </section>
+  } @else if (startsInFuture()) {
+    <section class="empty-stage" aria-labelledby="pending-title">
+      <div class="empty-globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3" /></svg>
+      </div>
+      <div>
+        <h1 id="pending-title">A máquina abre em<br /><strong>{{ startMonthLabel() }}</strong></h1>
+        <p>A cartela só começa na data configurada. Até lá, nenhuma cápsula sai e nenhum mês fica registrado.</p>
+        <a class="primary-action" href="#participantes" (click)="jumpToRoster($event)">Ver a coleção</a>
+      </div>
+    </section>
+  } @else {
+    <section class="empty-stage" aria-labelledby="empty-title">
+      <div class="empty-globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+      </div>
+      <div>
+        <h1 id="empty-title">O globo está<br /><strong>quase vazio</strong></h1>
+        <p>Carregue pelo menos duas cápsulas para a máquina ter o que entregar neste mês.</p>
+        <a class="primary-action" href="#participantes" (click)="jumpToRoster($event)">Carregar o globo</a>
+      </div>
+    </section>
+  }
+
+  <section class="roster-section" id="participantes" aria-labelledby="roster-title">
+    <div class="roster-intro">
+      <h2 id="roster-title">A coleção</h2>
+      <p>A lista e a data de início definem a máquina inteira. Com a mesma configuração, qualquer navegador entrega a mesma cápsula.</p>
+      @if (!sharedList() && participants().join('|') === 'Ana|Breno|Cecília|Davi|Elisa|Fátima') {
+        <p class="demo-note">Esta é uma coleção de demonstração. Troque pelos nomes reais do clube.</p>
+      }
+
+      <form class="add-form" (ngSubmit)="addParticipant()" novalidate>
+        <label for="participant-name">Nome da pessoa</label>
+        <div class="field-row">
+          <input
+            id="participant-name"
+            name="participantName"
+            type="text"
+            maxlength="60"
+            autocomplete="off"
+            placeholder="Ex.: Mariana Souza"
+            [ngModel]="draftName()"
+            (ngModelChange)="draftName.set($event); formError.set('')"
+            [attr.aria-invalid]="formError() ? 'true' : null"
+            [attr.aria-describedby]="formError() ? 'name-error' : null"
+          />
+          <button type="submit">Carregar</button>
+        </div>
+        @if (formError()) {
+          <p class="field-error" id="name-error" role="alert">{{ formError() }}</p>
+        }
+      </form>
+
+      <div class="share-block">
+        <h3>Configuração da máquina</h3>
+        <p>Defina quando a cartela começa. Essa data entra no link e impede que meses anteriores apareçam como já saídos.</p>
+        <label class="start-field" for="start-month">
+          Data de início
+          <input
+            id="start-month"
+            name="startMonth"
+            type="month"
+            [ngModel]="startMonth()"
+            (ngModelChange)="updateStartMonth($event)"
+            [attr.aria-invalid]="startMonthError() ? 'true' : null"
+            [attr.aria-describedby]="startMonthError() ? 'start-month-error' : null"
+          />
+        </label>
+        @if (startMonthError()) {
+          <p class="field-error" id="start-month-error" role="alert">{{ startMonthError() }}</p>
+        }
+        <h3 class="share-title">Compartilhar</h3>
+        <p>O link carrega os nomes e a data de início. Quem abrir recebe a mesma máquina.</p>
+        <button class="secondary-action" type="button" (click)="copyGroupLink()" [disabled]="participants().length < 2">
+          Copiar link da máquina
+        </button>
+        @if (shareUrl()) {
+          <label class="share-field">
+            Link compartilhável
+            <input readonly [value]="shareUrl()" (focus)="selectShareUrl($event)" />
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="roster-list-wrap">
+      <div class="roster-count">
+        <strong>{{ participants().length }}</strong>
+        <span>{{ participants().length === 1 ? 'cápsula no globo' : 'cápsulas no globo' }}</span>
+      </div>
+      @if (participants().length) {
+        <ul class="roster-list">
+          @for (person of participants(); track trackPerson($index, person); let position = $index) {
+            <li>
+              <span class="person-index">{{ (position + 1).toString().padStart(2, '0') }}</span>
+              <span class="person-capsule" aria-hidden="true" [style.--capsule]="personColor(person)">
+                {{ initials(person) }}
+              </span>
+              <strong>{{ person }}</strong>
+              <button type="button" (click)="removeParticipant(person)" [attr.aria-label]="'Remover ' + person">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg>
+                <span>Remover</span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="roster-empty">O globo está vazio. Use o campo ao lado para carregar a primeira cápsula.</p>
+      }
+    </div>
+  </section>
+
+  <section class="method-section" aria-labelledby="method-title">
+    <h2 id="method-title">Como a máquina<br />foi carregada</h2>
+    <div class="method-copy">
+      <p>O app normaliza e ordena os nomes, combina essa lista com o mês, o ano e a data de início e monta a mesma ordem de cápsulas em qualquer navegador. Dentro de uma coleção, cada pessoa sai uma única vez.</p>
+      <details>
+        <summary>O que acontece quando a coleção muda?</summary>
+        <p>Uma lista nova é outra edição da máquina e pode entregar outra cápsula. Como o GitHub Pages não tem banco de dados, compartilhe o link de novo depois de carregar ou remover alguém.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Mesa do Mês</span>
+  <p>Sem conta, sem API e uma cápsula por mês para definir o jogo.</p>
+</footer>
+
+<div class="toast" [class.is-visible]="notice()" role="status" aria-live="polite">
+  <span>{{ notice() }}</span>
+  @if (lastRemoval()) {
+    <button type="button" (click)="undoRemoval()">Desfazer</button>
+  }
+  <button class="toast-close" type="button" (click)="dismissNotice()" aria-label="Fechar aviso">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+  </button>
+</div>

@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-26T00:00:00-03:00",
+  "title": "Design System: Mesa do Mês",
+  "extensions": {
+    "colorMeta": {
+      "enamel": { "role": "primary", "displayName": "Esmalte Azul-Noite", "canonical": "#10233f", "tonalRamp": ["#06101f","#0a1830","#10233f","#173352","#20456b","#3c6494","#7d9cc4","#c8d8ec"] },
+      "enamel-deep": { "role": "primary", "displayName": "Esmalte Profundo", "canonical": "#0a1830", "tonalRamp": ["#040a17","#0a1830","#102446","#173260","#22457e","#3c67a6","#7b9bcb","#c6d7ee"] },
+      "enamel-raised": { "role": "primary", "displayName": "Esmalte Elevado", "canonical": "#17304f", "tonalRamp": ["#081426","#0f2038","#17304f","#204169","#2c5688","#4a76ab","#87a5ca","#cadaed"] },
+      "enamel-lit": { "role": "primary", "displayName": "Esmalte Iluminado", "canonical": "#1e3d63", "tonalRamp": ["#0a1728","#122740","#1e3d63","#295180","#37699f","#5688bd","#93b0d3","#d0deef"] },
+      "chrome": { "role": "tertiary", "displayName": "Cromo", "canonical": "#e3eaf2", "tonalRamp": ["#20262e","#39404a","#535b67","#727b88","#93a6be","#b6c4d6","#e3eaf2","#f6f9fc"] },
+      "chrome-dim": { "role": "tertiary", "displayName": "Cromo Fosco", "canonical": "#93a6be", "tonalRamp": ["#1c2530","#2f3b4a","#455465","#5f7086","#7b8da5","#93a6be","#bccbdc","#e6edf4"] },
+      "sky": { "role": "tertiary", "displayName": "Céu", "canonical": "#bccde6", "tonalRamp": ["#1b2634","#2c3c52","#405370","#586e90","#7a8fb1","#9cb0cd","#bccde6","#e4ecf7"] },
+      "paper": { "role": "neutral", "displayName": "Papel Quente", "canonical": "#faf6ec", "tonalRamp": ["#2b271d","#484234","#67604e","#8a826d","#b0a894","#d3cbb8","#f0e9d9","#faf6ec"] },
+      "paper-quiet": { "role": "neutral", "displayName": "Papel Silencioso", "canonical": "#f0e9d9", "tonalRamp": ["#292418","#453f2d","#645c45","#877e63","#aca286","#cfc5aa","#e6dcc6","#f0e9d9"] },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#16233a", "tonalRamp": ["#0a111d","#16233a","#213353","#2e4671","#425f92","#6482b2","#9aafcc","#d5deeb"] },
+      "ink-quiet": { "role": "neutral", "displayName": "Tinta Silenciosa", "canonical": "#5b6779", "tonalRamp": ["#15191f","#262d37","#3b4451","#4e5a6b","#5b6779","#7f8b9c","#a9b3c0","#d8dee6"] },
+      "white": { "role": "neutral", "displayName": "Branco", "canonical": "#ffffff", "tonalRamp": ["#242628","#3e4143","#5a5d60","#7b7e81","#9ea1a4","#c2c4c6","#e4e5e6","#ffffff"] },
+      "yellow": { "role": "secondary", "displayName": "Amarelo de Ação", "canonical": "#ffc53d", "tonalRamp": ["#3a2903","#5d4308","#855f0d","#ad7d13","#d29a1c","#ffc53d","#ffd97e","#fff0c8"] },
+      "capsule-amber": { "role": "secondary", "displayName": "Cápsula Âmbar", "canonical": "#ffc53d", "tonalRamp": ["#3a2903","#5d4308","#855f0d","#ad7d13","#d29a1c","#ffc53d","#ffd97e","#fff0c8"] },
+      "capsule-mint": { "role": "secondary", "displayName": "Cápsula Menta", "canonical": "#4fe0c8", "tonalRamp": ["#04302a","#075045","#0b7264","#109485","#1fb5a3","#4fe0c8","#95efe0","#d6faf3"] },
+      "capsule-coral": { "role": "secondary", "displayName": "Cápsula Coral", "canonical": "#ff6b7d", "tonalRamp": ["#3d0611","#631021","#8b1b33","#b32948","#d9435f","#ff6b7d","#ffa2ae","#ffd9de"] },
+      "capsule-violet": { "role": "secondary", "displayName": "Cápsula Violeta", "canonical": "#a78bff", "tonalRamp": ["#1d0f4a","#2f1a72","#43289b","#5838c1","#7a5ce0","#a78bff","#c7b4ff","#e8e0ff"] },
+      "capsule-tangerine": { "role": "secondary", "displayName": "Cápsula Tangerina", "canonical": "#ff9a3c", "tonalRamp": ["#3b1e02","#5f3306","#87490b","#b06110","#d67b1c","#ff9a3c","#ffbe83","#ffe4c9"] },
+      "capsule-rose": { "role": "secondary", "displayName": "Cápsula Rosa", "canonical": "#ff8fc7", "tonalRamp": ["#3f0a27","#66163f","#8f2559","#b93875","#e05494","#ff8fc7","#ffb9dc","#ffe0ef"] },
+      "line": { "role": "neutral", "displayName": "Linha", "canonical": "rgba(200, 220, 255, .17)", "tonalRamp": ["rgba(200,220,255,.04)","rgba(200,220,255,.08)","rgba(200,220,255,.12)","rgba(200,220,255,.17)","rgba(200,220,255,.24)","rgba(200,220,255,.34)","rgba(200,220,255,.55)","rgba(200,220,255,.8)"] },
+      "line-strong": { "role": "neutral", "displayName": "Linha Forte", "canonical": "rgba(200, 220, 255, .34)", "tonalRamp": ["rgba(200,220,255,.06)","rgba(200,220,255,.11)","rgba(200,220,255,.17)","rgba(200,220,255,.24)","rgba(200,220,255,.34)","rgba(200,220,255,.48)","rgba(200,220,255,.66)","rgba(200,220,255,.88)"] },
+      "line-paper": { "role": "neutral", "displayName": "Linha de Papel", "canonical": "rgba(22, 35, 58, .18)", "tonalRamp": ["rgba(22,35,58,.05)","rgba(22,35,58,.09)","rgba(22,35,58,.13)","rgba(22,35,58,.18)","rgba(22,35,58,.26)","rgba(22,35,58,.4)","rgba(22,35,58,.6)","rgba(22,35,58,.82)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Nome na Cápsula", "purpose": "O nome vencedor e os títulos de estado de espera, em escala gigante na cor da cápsula." },
+      "headline": { "displayName": "Título de Faixa", "purpose": "Títulos de seção: a cartela, a coleção, o método." },
+      "title": { "displayName": "Título de Configuração", "purpose": "Subtítulos dentro da seção de papel." },
+      "action": { "displayName": "Rótulo de Ação", "purpose": "Texto de botão e iniciais no disco da pessoa." },
+      "body": { "displayName": "Corpo Hiperlegível", "purpose": "Parágrafos, campos e instruções, sob mandato de acessibilidade." },
+      "label": { "displayName": "Etiqueta", "purpose": "Links de texto, dica de trilho e mensagens curtas de estado." },
+      "serial": { "displayName": "Valor de Série", "purpose": "Valores conferíveis: grade de série, contadores, link compartilhável." },
+      "serial-label": { "displayName": "Rótulo de Série", "purpose": "Rótulos em caixa alta acima dos valores, meses da cartela e plaqueta da máquina." }
+    },
+    "shadows": [
+      { "name": "globe-well", "value": "drop-shadow(0 22px 40px rgba(4, 10, 22, .55))", "purpose": "O globo de acrílico assentado sobre o gabinete." },
+      { "name": "part-lifted", "value": "drop-shadow(0 6px 12px rgba(4, 10, 22, .5))", "purpose": "Peças menores levantadas da chapa, como a placa da manivela." },
+      { "name": "part-small", "value": "drop-shadow(0 2px 3px rgba(4, 10, 22, .45))", "purpose": "Cápsulas soltas no interior do globo." },
+      { "name": "sticker", "value": "0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px var(--paper)", "purpose": "Adesivo redondo do mês: sombra de colagem mais borda branca de recorte." },
+      { "name": "molded-wall-primary", "value": "0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38)", "purpose": "Parede lateral de plástico moldado do botão primário, com sombra ambiente." },
+      { "name": "molded-wall-primary-active", "value": "0 2px 0 #c48f16, 0 6px 12px rgba(4, 10, 22, .34)", "purpose": "A mesma parede colapsada sob o pressionar do botão." },
+      { "name": "molded-wall-secondary", "value": "0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28)", "purpose": "Parede lateral do botão de esmalte na seção de papel." },
+      { "name": "toast", "value": "0 14px 30px rgba(4, 10, 22, .48)", "purpose": "O aviso flutuante, único elemento fora do plano da página." },
+      { "name": "chosen-capsule", "value": "saturate(1.25) brightness(1.14) drop-shadow(0 0 12px color-mix(in srgb, var(--live) 65%, transparent))", "purpose": "A cunha vencedora acendendo no aro do globo." }
+    ],
+    "motion": [
+      { "name": "spin", "value": "4.3s cubic-bezier(.12, .72, .12, 1)", "purpose": "O giro do globo até encaixar a cápsula vencedora na calha às seis horas; a manivela e o assentamento das cápsulas soltas compartilham essa duração." },
+      { "name": "deliver", "value": "0.92s cubic-bezier(.22, .9, .3, 1)", "purpose": "A queda da cápsula na bandeja." },
+      { "name": "crack", "value": "1.5s cubic-bezier(.22, .9, .3, 1)", "purpose": "A abertura da cúpula da cápsula entregue." },
+      { "name": "press", "value": "0.16s ease", "purpose": "Colapso da parede moldada e descida do botão no :active." },
+      { "name": "state", "value": "0.5s–0.7s ease", "purpose": "Repintura da chapa e do brilho do palco quando a rodada é revelada." },
+      { "name": "reduced-motion", "value": "CSS: .01ms; JS: 120ms", "purpose": "prefers-reduced-motion é honrado nos dois lugares — durações de CSS zeradas e a entrega resolvida em 120ms em vez de 4300ms." }
+    ],
+    "breakpoints": [
+      { "name": "lap", "value": "980px" },
+      { "name": "hand", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão Primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação de entrega, em amarelo com parede lateral de plástico moldado.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Entregar de novo</button>",
+      "css": ".ds-btn-primary { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: .78rem 1.35rem; background: #ffc53d; color: #0a1830; border: 0; border-radius: 999px; box-shadow: 0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38); font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; } .ds-btn-primary:hover:not(:disabled) { background: #ffd469; } .ds-btn-primary:focus-visible { outline: 3px solid #ffc53d; outline-offset: 3px; } .ds-btn-primary:active:not(:disabled) { box-shadow: 0 2px 0 #c48f16, 0 6px 12px rgba(4, 10, 22, .34); transform: translateY(4px); } .ds-btn-primary:disabled { background: #93a6be; box-shadow: 0 6px 0 #6c7d94; color: #0a1830; cursor: not-allowed; }"
+    },
+    {
+      "name": "Botão de Esmalte",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária dentro da seção de papel, onde o amarelo brigaria com o fundo.",
+      "html": "<button class=\"ds-btn-enamel\" type=\"button\">Copiar link da máquina</button>",
+      "css": ".ds-btn-enamel { min-height: 46px; padding: .7rem 1.2rem; background: #10233f; color: #ffffff; border: 0; border-radius: 999px; box-shadow: 0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28); font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; } .ds-btn-enamel:hover:not(:disabled) { background: #1e3d63; } .ds-btn-enamel:focus-visible { outline: 3px solid #b5761c; outline-offset: 3px; } .ds-btn-enamel:active:not(:disabled) { box-shadow: 0 2px 0 #061225, 0 5px 10px rgba(4, 10, 22, .26); transform: translateY(3px); }"
+    },
+    {
+      "name": "Link de Texto",
+      "kind": "nav",
+      "refersTo": "link-text",
+      "description": "A âncora secundária ao lado da ação primária, em cromo sublinhado.",
+      "html": "<a class=\"ds-link-text\" href=\"#participantes\">Ver a coleção</a>",
+      "css": ".ds-link-text { min-height: 44px; display: inline-flex; align-items: center; color: #e3eaf2; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .82rem; font-weight: 700; text-underline-offset: .24em; text-decoration-thickness: 1.5px; } .ds-link-text:hover { color: #ffffff; } .ds-link-text:focus-visible { outline: 3px solid #ffc53d; outline-offset: 3px; }"
+    },
+    {
+      "name": "Campo de Texto",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Campo da coleção, sobre papel, com rótulo em mono de série.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Nome da pessoa</span><input class=\"ds-input\" type=\"text\" placeholder=\"Ex.: Mariana Souza\" /></label>",
+      "css": ".ds-field { display: block; } .ds-field-label { display: block; margin-bottom: .55rem; color: #16233a; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .64rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; } .ds-input { min-height: 48px; width: 100%; padding: .78rem .95rem; background: #ffffff; color: #16233a; border: 1.5px solid #a9b1bf; border-radius: 8px; caret-color: #b5761c; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1rem; } .ds-input::placeholder { color: #5b6779; opacity: 1; } .ds-input:focus-visible { outline: 3px solid #b5761c; outline-offset: 3px; } .ds-input[aria-invalid='true'] { border-color: #a3123f; }"
+    },
+    {
+      "name": "Plaqueta da Máquina",
+      "kind": "chip",
+      "refersTo": "machine-plate",
+      "description": "A plaqueta de identificação rebitada no cabeçalho; oculta abaixo de 620px.",
+      "html": "<p class=\"ds-machine-plate\">Máquina do clube <span>nº 01</span></p>",
+      "css": ".ds-machine-plate { margin: 0; padding: .34rem .62rem; color: #bccde6; background: rgba(200, 220, 255, .06); border: 1px solid rgba(200, 220, 255, .17); border-radius: 4px; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; } .ds-machine-plate span { color: #e3eaf2; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Adesivo do Mês",
+      "kind": "chip",
+      "refersTo": "month-sticker",
+      "description": "Adesivo redondo torto no canto do palco, com borda branca de recorte.",
+      "html": "<p class=\"ds-month-sticker\"><span>AGO</span><strong>2026</strong></p>",
+      "css": ".ds-month-sticker { width: 5.6rem; aspect-ratio: 1; display: grid; place-content: center; gap: .1rem; margin: 0; background: #ffc53d; border-radius: 50%; box-shadow: 0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px #faf6ec; color: #0a1830; text-align: center; transform: rotate(-13deg); } .ds-month-sticker span { font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: 1.32rem; font-weight: 600; line-height: 1; text-transform: uppercase; } .ds-month-sticker strong { font-family: 'Martian Mono', ui-monospace, monospace; font-size: .6rem; font-weight: 700; letter-spacing: .08em; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Grade de Série",
+      "kind": "card",
+      "refersTo": "serial-cell",
+      "description": "Os valores conferíveis da rodada, costurados por hairlines sem gap nem raio.",
+      "html": "<dl class=\"ds-serial-grid\"><div><dt>Cápsula</dt><dd>1 / 6</dd></div><div><dt>Mês</dt><dd>Agosto de 2026</dd></div><div><dt>Edição</dt><dd>9DC4E223</dd></div></dl>",
+      "css": ".ds-serial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; margin: 0; border-top: 1px solid rgba(200, 220, 255, .17); border-left: 1px solid rgba(200, 220, 255, .17); } .ds-serial-grid div { display: grid; gap: .34rem; padding: .85rem .9rem; border-right: 1px solid rgba(200, 220, 255, .17); border-bottom: 1px solid rgba(200, 220, 255, .17); } .ds-serial-grid dt { color: #bccde6; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; } .ds-serial-grid dd { margin: 0; color: #ffffff; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }"
+    },
+    {
+      "name": "Linha da Coleção",
+      "kind": "card",
+      "refersTo": "person-capsule",
+      "description": "Uma pessoa na cartela de papel: índice em mono, disco de iniciais na cor da sua cápsula, nome e remoção.",
+      "html": "<ul class=\"ds-roster\"><li><span class=\"ds-person-index\">03</span><span class=\"ds-person-capsule\" style=\"--capsule:#ff6b7d\">CE</span><strong>Cecília</strong><button type=\"button\" aria-label=\"Remover Cecília\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path></svg><span>Remover</span></button></li></ul>",
+      "css": ".ds-roster { margin: 0; padding: 0; list-style: none; background: #faf6ec; } .ds-roster li { min-height: 74px; display: grid; grid-template-columns: 2rem 2.7rem 1fr auto; align-items: center; gap: .9rem; border-bottom: 1px solid rgba(22, 35, 58, .18); } .ds-person-index { color: #5b6779; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .66rem; font-variant-numeric: tabular-nums; } .ds-person-capsule { width: 2.7rem; height: 2.7rem; display: grid; place-items: center; padding-bottom: .8rem; background: var(--capsule, #f0e9d9); border-radius: 999px; box-shadow: inset 0 -.85rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); color: #16233a; font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: .84rem; font-weight: 600; } .ds-roster strong { color: #16233a; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1rem; overflow-wrap: anywhere; } .ds-roster button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .42rem; padding: .5rem; background: transparent; color: #6d5560; border: 0; border-radius: 999px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; } .ds-roster button:hover { background: rgba(163, 18, 63, .09); color: #8f0f37; } .ds-roster button:focus-visible { outline: 3px solid #b5761c; outline-offset: 3px; } .ds-roster button svg { width: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }"
+    },
+    {
+      "name": "Célula da Cartela",
+      "kind": "card",
+      "refersTo": "chart-cell-capsule",
+      "description": "Um mês da coleção: tique na régua, cápsula achatada na cor da pessoa, mês em mono e nome. O mês corrente acende; os já saídos são riscados.",
+      "html": "<ol class=\"ds-chart\"><li class=\"ds-chart-cell current\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#ffc53d\"></span><span class=\"ds-cell-month\">AGO 2026</span><strong>Fátima</strong><span class=\"ds-cell-status\">Nesta rodada</span></li><li class=\"ds-chart-cell drawn\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#4fe0c8\"></span><span class=\"ds-cell-month\">JUL 2026</span><strong>Breno</strong></li></ol>",
+      "css": ".ds-chart { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); margin: 0; padding: 0; background: #0a1830; border-top: 2px solid rgba(200, 220, 255, .34); list-style: none; } .ds-chart-cell { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; color: #ffffff; } .ds-cell-tick { position: absolute; top: 0; left: 0; width: 1px; height: 13px; background: rgba(200, 220, 255, .34); } .ds-cell-capsule { width: 1.55rem; height: 1.1rem; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); } .ds-cell-month { color: #bccde6; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; } .ds-chart-cell strong { font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: 1.1rem; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; } .ds-cell-status { color: #ffc53d; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .7rem; font-weight: 700; } .ds-chart-cell.current .ds-cell-tick { width: 3px; height: 26px; background: #ffc53d; } .ds-chart-cell.current .ds-cell-month { color: #ffc53d; } .ds-chart-cell.drawn { color: #93a6be; } .ds-chart-cell.drawn .ds-cell-tick { background: #93a6be; } .ds-chart-cell.drawn strong { text-decoration: line-through; text-decoration-thickness: 1.5px; } .ds-chart-cell.drawn .ds-cell-capsule { opacity: .4; }"
+    },
+    {
+      "name": "Aviso Flutuante",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Confirmação de ação com desfazer, no canto inferior direito, sobre esmalte elevado.",
+      "html": "<div class=\"ds-toast is-visible\" role=\"status\"><span>Cecília saiu do globo.</span><button type=\"button\">Desfazer</button><button class=\"ds-toast-close\" type=\"button\" aria-label=\"Fechar aviso\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"></path></svg></button></div>",
+      "css": ".ds-toast { max-width: 460px; min-height: 58px; display: flex; align-items: center; gap: 1rem; padding: .7rem .7rem .7rem 1.15rem; background: #17304f; color: #ffffff; border: 1px solid rgba(200, 220, 255, .34); border-radius: 12px; box-shadow: 0 14px 30px rgba(4, 10, 22, .48); opacity: 0; transform: translateY(1rem); transition: opacity .2s ease, transform .2s ease; } .ds-toast.is-visible { opacity: 1; transform: translateY(0); } .ds-toast > span { flex: 1; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .92rem; } .ds-toast button { min-height: 42px; padding: .45rem .85rem; background: #ffc53d; color: #0a1830; border: 0; border-radius: 999px; font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; cursor: pointer; } .ds-toast button:hover { background: #ffd469; } .ds-toast button:focus-visible { outline: 3px solid #ffc53d; outline-offset: 3px; } .ds-toast .ds-toast-close { width: 42px; padding: .55rem; background: transparent; color: #e3eaf2; } .ds-toast .ds-toast-close:hover { background: rgba(200, 220, 255, .12); } .ds-toast-close svg { width: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Máquina de Cápsulas do Clube",
+    "overview": "O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula colorida encaixada no aro do globo de acrílico; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete é esmalte azul-noite com brilho especular, aro cromado canelado e acrílico translúcido, e ocupa a tela inteira em vez de flutuar dentro de um cartão. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão \"Sortear\" que todo sorteador web entrega.\n\nA densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: a cartela e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.\n\nHá exatamente uma quebra no esmalte: a seção da coleção é papel quente impresso (paper), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.",
+    "keyCharacteristics": [
+      "Máquina de cápsulas em esmalte azul-noite sangrando na tela, nunca um cartão centralizado.",
+      "Seis cores fixas de cápsula, atribuídas por posição, que são a única fonte de cor viva.",
+      "A cor da cápsula vencedora repinta o corpo da máquina e carrega o nome em escala gigante.",
+      "Monoespaçada apenas em valores de série e medição; nunca como fantasia técnica.",
+      "Papel quente como única quebra do esmalte, reservado à administração.",
+      "Um único momento animado: manivela, giro, encaixe, queda e abertura."
+    ],
+    "rules": [
+      { "name": "A Regra da Cápsula Portante", "body": "Toda cor de cápsula passa de 4.5:1 sobre enamel, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados.", "section": "colors" },
+      { "name": "A Regra da Repintura Total", "body": "Quando a rodada é revelada, o corpo da máquina (.body-plate) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.", "section": "colors" },
+      { "name": "A Regra da Única Quebra", "body": "O papel aparece uma vez, na seção da coleção, porque é ali que se administra. Nenhuma outra superfície clara. Se algo precisa de papel, precisa antes justificar por que é administração.", "section": "colors" },
+      { "name": "A Regra do Amarelo de Ação", "body": "O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (button-secondary) ou o link de texto.", "section": "colors" },
+      { "name": "A Regra da Mono de Série", "body": "Martian Mono só aparece em valores de série e medição: grade de série, mês da cartela, índice da pessoa, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia \"técnica\" em texto corrido, botão ou título.", "section": "typography" },
+      { "name": "A Regra da Escala Sozinha", "body": "A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.", "section": "typography" },
+      { "name": "A Regra do Nome Inteiro", "body": "O nome vencedor sempre aparece por extenso no h1. A degradação — primeiro nome, iniciais, uma letra — existe apenas dentro do aro do globo, onde o comprimento do arco manda.", "section": "typography" },
+      { "name": "A Regra do Alvo de 44px", "body": "Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho da cartela e na lista da coleção.", "section": "layout" },
+      { "name": "A Regra do Decalque de Bancada", "body": "Os decalques com linha-guia na máquina são desktop-only: ocultos abaixo de 980px, porque a linha-guia precisa de espaço lateral para apontar sem cruzar a peça. A placa da máquina no cabeçalho some abaixo de 620px por ser plaqueta de identificação, não conteúdo.", "section": "layout" },
+      { "name": "A Regra da Parede Moldada", "body": "O botão tem uma parede lateral de plástico moldado — preenchimento sólido mais escuro em 0 Npx 0, acompanhado de uma sombra ambiente real e desfocada — e essa parede colapsa sob um translateY no :active, como plástico que afunda. É moldagem, não a sombra diagonal dura de bloco: nunca use deslocamento em X, e nunca use a parede sem a sombra ambiente que a acompanha.", "section": "elevation" },
+      { "name": "A Regra do Material Antes da Camada", "body": "Profundidade se resolve com gradiente, canelura e hairline dentro da peça. Uma sombra só é adicionada quando um objeto físico estaria levantado; nenhum contêiner de conteúdo recebe sombra para parecer \"card\".", "section": "elevation" },
+      { "name": "A Regra do Momento Único", "body": "Nada mais na página anima sozinho. Sem carrossel, sem contador que sobe, sem entrada por scroll, sem pulso de atenção. A animação da entrega é o único movimento autoral, e ela nunca altera o resultado — só o revela.", "section": "components" },
+      { "name": "A Regra do Movimento Reduzido nos Dois Lugares", "body": "prefers-reduced-motion é honrado em CSS (todas as durações caem para .01ms) e em JS (a entrega roda em 120ms em vez de 4300ms). Qualquer sequência nova precisa dos dois desligamentos; desligar só o CSS deixa a página parada esperando um timer longo.", "section": "components" }
+    ],
+    "dos": [
+      "Do deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.",
+      "Do usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, cartela, coleção, bandeja — para que a coleção leia como coleção.",
+      "Do pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para tinta escura.",
+      "Do reservar Martian Mono para valores de série e medição, com números tabulares.",
+      "Do construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.",
+      "Do manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.",
+      "Do acompanhar toda cor de estado com texto — a cartela marca \"Nesta rodada\" e risca os meses já saídos, e os erros de campo trazem mensagem.",
+      "Do honrar prefers-reduced-motion em CSS e em JS ao mesmo tempo."
+    ],
+    "donts": [
+      "Don't centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.",
+      "Don't misturar a cor da cápsula difusamente no azul como tintura de fundo — o resultado é oliva.",
+      "Don't introduzir uma cor de cápsula que não passe de 4.5:1 sobre o esmalte e não aceite tinta escura por cima.",
+      "Don't trazer papel para fora da seção da coleção.",
+      "Don't usar sombra dura de bloco com deslocamento diagonal e zero desfoque; a parede lateral do botão é vertical, sólida, e vem com sombra ambiente.",
+      "Don't colocar kicker, sobrancelha ou rótulo acima de um título.",
+      "Don't usar monoespaçada como sinal genérico de \"técnico\" em texto corrido, botão ou título.",
+      "Don't adicionar um segundo movimento autônomo à página; a entrega é o único momento.",
+      "Don't falar em sorte, azar ou aleatoriedade na interface: a cartela e a coleção completa são a prova."
+    ]
+  }
+}
