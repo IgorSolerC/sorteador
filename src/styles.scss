@@ -159,7 +159,13 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .rail-hint { display: none; }
 
 /* ---- The collection: printed paper, the one break from enamel ---- */
-.roster-section { display: grid; grid-template-columns: minmax(300px, .8fr) minmax(380px, 1.2fr); gap: clamp(3rem, 7vw, 6rem); padding: clamp(4.5rem, 9vw, 8rem) 5vw; background: var(--paper); color: var(--ink); }
+/* The collection is a printed sheet, so it carries a printer's own marks. */
+.roster-section { position: relative; display: grid; grid-template-columns: minmax(300px, .8fr) minmax(380px, 1.2fr); gap: clamp(3rem, 7vw, 6rem); padding: clamp(4.5rem, 9vw, 8rem) 5vw; background: var(--paper); color: var(--ink); }
+.roster-section::before, .roster-section::after { content: ''; position: absolute; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
+.roster-section::before { top: 1.5rem; left: 1.5rem; }
+.roster-section::after { right: 1.5rem; bottom: 1.5rem; }
+.roster-count { position: relative; }
+.roster-count::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }
 .roster-intro h2 { color: var(--ink); }
 .roster-intro > p { max-width: 50ch; color: var(--ink-quiet); font-size: 1rem; line-height: 1.62; }
 .demo-note { padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: #4a3c1c !important; font-size: .9rem !important; }
@@ -175,7 +181,28 @@ input:focus-visible { outline-color: #b5761c; }
 .share-block { margin-top: 3.2rem; padding-top: 1.6rem; border-top: 1px solid var(--line-paper); }
 .share-block h3 { margin: 0; color: var(--ink); font-size: 1.42rem; }
 .share-block p { max-width: 50ch; margin: .55rem 0 1.1rem; color: var(--ink-quiet); line-height: 1.55; }
-.start-field input { width: min(100%, 230px); display: block; margin-top: .45rem; }
+.start-field { position: relative; }
+.start-field-label { display: block; margin-bottom: .55rem; font-family: var(--mono); font-size: .64rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.month-picker { position: relative; width: min(100%, 268px); }
+.month-trigger { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .78rem .95rem; background: #ffffff; color: var(--ink); border: 1.5px solid #a9b1bf; border-radius: 8px; font-family: var(--body); font-size: 1rem; text-align: left; }
+.month-trigger span::first-letter { text-transform: uppercase; }
+.month-trigger:hover { border-color: var(--ink-quiet); }
+.month-trigger[aria-expanded='true'] { border-color: #b5761c; }
+.month-trigger[aria-invalid='true'] { border-color: #a3123f; }
+.month-trigger:focus-visible { outline-color: #b5761c; }
+.month-trigger svg { width: 20px; flex: none; fill: none; stroke: var(--ink-quiet); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease; }
+.month-trigger[aria-expanded='true'] svg { transform: rotate(180deg); }
+.month-scrim { position: fixed; z-index: 8; inset: 0; padding: 0; background: transparent; border: 0; cursor: default; }
+.month-panel { position: absolute; z-index: 9; top: calc(100% + .5rem); left: 0; width: 268px; padding: .75rem; background: #ffffff; border: 1.5px solid #a9b1bf; border-radius: 12px; box-shadow: 0 16px 34px rgba(22, 35, 58, .18); }
+.month-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .6rem; }
+.month-panel-head strong { font-family: var(--mono); font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.month-panel-head button { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; background: transparent; border: 0; border-radius: 999px; color: var(--ink); }
+.month-panel-head button:hover { background: var(--paper-quiet); }
+.month-panel-head svg { width: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .3rem; }
+.month-grid button { min-height: 44px; padding: .5rem .25rem; background: transparent; color: var(--ink); border: 0; border-radius: 8px; font-family: var(--display); font-size: .92rem; font-weight: 600; text-transform: capitalize; }
+.month-grid button:hover { background: var(--paper-quiet); }
+.month-grid button.is-selected { background: var(--enamel); color: var(--white); }
 .share-title { margin-top: 2.2rem !important; }
 .secondary-action { min-height: 46px; padding: .7rem 1.2rem; background: var(--enamel); color: var(--white); border: 0; border-radius: 999px; box-shadow: 0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28); font-family: var(--display); font-weight: 600; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
 .secondary-action:hover:not(:disabled) { background: var(--enamel-lit); }
@@ -183,7 +210,7 @@ input:focus-visible { outline-color: #b5761c; }
 .share-field { margin-top: 1.1rem; }
 .share-field input { width: 100%; display: block; margin-top: .45rem; font-family: var(--mono); font-size: .72rem; }
 .roster-list-wrap { position: relative; border-top: 1px solid var(--line-paper); }
-.roster-count { display: flex; align-items: baseline; gap: .65rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line-paper); }
+.roster-count { display: flex; align-items: baseline; gap: .65rem; padding: 1.1rem 0; }
 .roster-count strong { font-family: var(--display); font-size: 2.4rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
 .roster-count span { color: var(--ink-quiet); }
 .roster-list { margin: 0; padding: 0; list-style: none; }

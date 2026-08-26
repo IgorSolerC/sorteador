@@ -30,6 +30,16 @@ O vencedor não depende de um servidor nem de um clique arbitrário: ele é deri
 - Cada rodada tem um mês de início configurável. Meses anteriores a ele não produzem resultado nem histórico.
 - A lista pode ser administrada na propria interface e fica persistida no navegador.
 
+## Compatibility Commitment
+
+O app está em uso e há links de grupo em circulação desde agosto de 2026. A partir daí, três coisas são contrato, não implementação:
+
+- O fragmento `#grupo=<base64url>&inicio=AAAA-MM` é formato congelado. Um link antigo tem que continuar abrindo a mesma máquina.
+- `calculateMonthlyDraw` é congelada: a mesma lista, mês, ano e data de início têm que devolver a mesma pessoa, a mesma ordem de cápsulas e o mesmo código de edição, para sempre.
+- A normalização também é congelada, inclusive suas asperezas: `josé silva` e `jose silva` são chaves distintas e as duas permanecem na lista. Unificá-las agora mudaria o vencedor de quem já usa essas listas.
+
+`src/app/compatibility.spec.ts` trava isso com vetores capturados do build publicado. Uma mudança que quebre um deles quebra o link de alguém; se for mesmo desejada, precisa de uma nova versão de formato convivendo com a antiga, nunca de uma edição nos números do teste.
+
 ## Capabilities and Constraints
 
 - Adicionar e remover participantes.

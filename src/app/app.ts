@@ -1,6 +1,7 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { decodeParticipants, encodeParticipants } from './share-link';
 import {
   calculateMonthlyDraw,
   getCycleEntries,
@@ -11,6 +12,10 @@ import {
 
 const LEGACY_STORAGE_KEY = 'giro-do-mes:participants:v1';
 const CONFIG_STORAGE_KEY = 'mesa-do-mes:configuration:v1';
+const MONTH_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+const PICKER_STEPS: Record<string, number> = {
+  ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4,
+};
 const DEMO_PARTICIPANTS = ['Ana', 'Breno', 'Cecília', 'Davi', 'Elisa', 'Fátima'];
 const CAPSULE_COLORS = ['#FFC53D', '#4FE0C8', '#FF6B7D', '#A78BFF', '#FF9A3C', '#FF8FC7'];
 
@@ -85,8 +90,22 @@ export class App {
   protected readonly isSpinning = signal(false);
   protected readonly isRevealed = signal(true);
   protected readonly wheelRotation = signal(0);
+  protected readonly pickerOpen = signal(false);
+  protected readonly pickerYear = signal(this.now.getFullYear());
 
   protected readonly startMonthLabel = computed(() => formatMonthLabel(this.startMonth()));
+  protected readonly pickerMonths = computed(() => {
+    const selected = parseMonthValue(this.startMonth());
+    const year = this.pickerYear();
+    return MONTH_NUMBERS.map((month) => ({
+      month,
+      label: new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+        .format(new Date(2024, month - 1, 1)).replace('.', ''),
+      full: new Intl.DateTimeFormat('pt-BR', { month: 'long' })
+        .format(new Date(2024, month - 1, 1)),
+      isSelected: !!selected && selected.year === year && selected.month === month,
+    }));
+  });
   protected readonly startsInFuture = computed(() =>
     monthSerial(this.year, this.month) < monthValueToSerial(this.startMonth()),
   );
@@ -235,6 +254,55 @@ export class App {
 
   protected selectShareUrl(event: Event): void {
     (event.target as HTMLInputElement).select();
+  }
+
+  protected togglePicker(): void {
+    const open = !this.pickerOpen();
+    if (open) {
+      const selected = parseMonthValue(this.startMonth());
+      this.pickerYear.set(selected?.year ?? this.year);
+      this.pickerOpen.set(true);
+      // role="dialog" owes the keyboard the focus, landing on the month already chosen.
+      this.focusMonth(selected?.month ?? 1);
+      return;
+    }
+    this.pickerOpen.set(false);
+  }
+
+  protected closePicker(restoreFocus = true): void {
+    if (!this.pickerOpen()) return;
+    this.pickerOpen.set(false);
+    if (restoreFocus) this.document.getElementById('start-month')?.focus();
+  }
+
+  protected stepPickerYear(delta: number): void {
+    this.pickerYear.update((year) => Math.min(9999, Math.max(1, year + delta)));
+  }
+
+  protected chooseMonth(month: number): void {
+    this.updateStartMonth(`${this.pickerYear()}-${String(month).padStart(2, '0')}`);
+    this.closePicker();
+  }
+
+  /** Arrow keys walk the grid and roll into the neighbouring year at the edges. */
+  protected onPickerKeydown(event: KeyboardEvent, month: number): void {
+    const step = PICKER_STEPS[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    const target = month + step;
+    if (target < 1) {
+      this.stepPickerYear(-1);
+      this.focusMonth(target + 12);
+    } else if (target > 12) {
+      this.stepPickerYear(1);
+      this.focusMonth(target - 12);
+    } else {
+      this.focusMonth(target);
+    }
+  }
+
+  private focusMonth(month: number): void {
+    window.setTimeout(() => this.document.getElementById(`start-month-${month}`)?.focus());
   }
 
   protected updateStartMonth(value: string): void {
@@ -420,23 +488,6 @@ export class App {
       // The deterministic draw still works when storage is blocked.
     }
   }
-}
-
-function encodeParticipants(participants: readonly string[]): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(participants));
-  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function decodeParticipants(encoded: string): string[] {
-  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(encoded.length / 4) * 4, '=');
-  const binary = atob(base64);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
-  if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === 'string')) return [];
-  return normalizeParticipants(
-    parsed.slice(0, 60).map(normalizeName).filter((name) => name.length > 0 && name.length <= 60),
-  );
 }
 
 function parseMonthValue(value: string): { year: number; month: number } | null {
