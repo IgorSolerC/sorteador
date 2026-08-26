@@ -31,6 +31,12 @@ typography:
     fontWeight: 600
     lineHeight: 0.93
     letterSpacing: "-0.03em"
+  display-narrow:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "clamp(2.7rem, 14vw, 4.2rem)"
+    fontWeight: 600
+    lineHeight: 0.93
+    letterSpacing: "-0.03em"
   headline:
     fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
     fontSize: "clamp(2.4rem, 4.6vw, 4rem)"
