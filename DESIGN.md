@@ -9,6 +9,7 @@ colors:
   chrome: "#e3eaf2"
   chrome-dim: "#93a6be"
   sky: "#bccde6"
+  ok: "#1f5c3a"
   field: "#ffffff"
   field-line: "#a9b1bf"
   field-focus: "#b5761c"
@@ -48,11 +49,29 @@ typography:
     fontWeight: 600
     lineHeight: 0.95
     letterSpacing: "-0.03em"
+  count:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "2.4rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.03em"
   title:
     fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
     fontSize: "1.42rem"
     fontWeight: 600
     lineHeight: 1.2
+    letterSpacing: "-0.03em"
+  title-compact:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "1.32rem"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.03em"
+  subtitle:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "1.1rem"
+    fontWeight: 600
+    lineHeight: 1.1
     letterSpacing: "-0.03em"
   action:
     fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
@@ -65,6 +84,12 @@ typography:
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.62
+    letterSpacing: "normal"
+  label-strong:
+    fontFamily: "Atkinson Hyperlegible, sans-serif"
+    fontSize: "0.92rem"
+    fontWeight: 400
+    lineHeight: 1.5
     letterSpacing: "normal"
   label:
     fontFamily: "Atkinson Hyperlegible, sans-serif"
@@ -81,7 +106,7 @@ typography:
     fontFeature: "tnum"
   serial-label:
     fontFamily: "Martian Mono, ui-monospace, monospace"
-    fontSize: "0.58rem"
+    fontSize: "0.62rem"
     fontWeight: 700
     lineHeight: 1
     letterSpacing: "0.1em"
