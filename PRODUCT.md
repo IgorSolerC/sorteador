@@ -34,8 +34,8 @@ O vencedor não depende de um servidor nem de um clique arbitrário: ele é deri
 
 O app está em uso e há links de grupo em circulação desde agosto de 2026. A partir daí, três coisas são contrato, não implementação:
 
-- O fragmento `#grupo=<base64url>&inicio=AAAA-MM` é formato congelado. Um link antigo tem que continuar abrindo a mesma máquina.
-- `calculateMonthlyDraw` é congelada: a mesma lista, mês, ano e data de início têm que devolver a mesma pessoa, a mesma ordem de cápsulas e o mesmo código de edição, para sempre.
+- O fragmento `#grupo=<base64url>&inicio=AAAA-MM` é formato congelado. Um link antigo tem que continuar abrindo a mesma máquina. O parâmetro `&semente=` é opcional e ausente significa semente vazia, que reproduz o comportamento anterior byte a byte.
+- `calculateMonthlyDraw` é congelada com semente vazia: a mesma lista, mês, ano e data de início têm que devolver a mesma pessoa, a mesma ordem de cápsulas e o mesmo código de edição, para sempre. Uma semente não vazia é uma configuração diferente, com link próprio.
 - A normalização também é congelada, inclusive suas asperezas: `josé silva` e `jose silva` são chaves distintas e as duas permanecem na lista. Unificá-las agora mudaria o vencedor de quem já usa essas listas.
 
 `src/app/compatibility.spec.ts` trava isso com vetores capturados do build publicado. Uma mudança que quebre um deles quebra o link de alguém; se for mesmo desejada, precisa de uma nova versão de formato convivendo com a antiga, nunca de uma edição nos números do teste.
@@ -46,7 +46,9 @@ O app está em uso e há links de grupo em circulação desde agosto de 2026. A 
 - Calcular o resultado a partir de mês, ano, mês de início e lista normalizada de participantes.
 - Formar ciclos determinísticos para evitar repetições até todos terem vencido.
 - Persistir participantes e mês de início no `localStorage`, sem memorizar se a roleta já foi assistida.
-- Incluir participantes e mês de início no fragmento do link compartilhável.
+- Aceitar uma semente livre de caracteres que entra no cálculo junto com a lista, para consertar o histórico quando alguém entra ou sai do grupo.
+- Procurar automaticamente uma semente que devolva os meses já anunciados às pessoas que de fato ganharam.
+- Incluir participantes, mês de início e semente no fragmento do link compartilhável.
 - Funcionar sem API, conta, banco de dados ou custo de hospedagem.
 - GitHub Pages não sincroniza alterações de participantes entre navegadores; visitantes só reproduzem o mesmo resultado quando usam a mesma lista.
 - Nomes duplicados, vazios ou compostos apenas por espaços não são aceitos.

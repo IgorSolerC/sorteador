@@ -45,6 +45,7 @@ export function calculateMonthlyDraw(
   month: number,
   startYear = year,
   startMonth = month,
+  seed = '',
 ): MonthlyDraw | null {
   const participants = normalizeParticipants(values);
   if (
@@ -63,9 +64,11 @@ export function calculateMonthlyDraw(
   const cyclePosition = positiveModulo(elapsedMonths, participants.length);
   const cycleIndex = Math.floor(elapsedMonths / participants.length);
   const identity = participants.map(participantKey).join('|');
-  const fingerprint = hashString(`grupo:v2:${identity}:${startSerial}`).toString(16).padStart(8, '0');
-  const seed = hashString(`sorteio:v2:${identity}:${startSerial}:${cycleIndex}`);
-  const orderedParticipants = shuffle(participants, seed);
+  // An empty seed must reproduce the pre-seed strings byte for byte: links are already out.
+  const salt = seed ? `:${seed}` : '';
+  const fingerprint = hashString(`grupo:v2:${identity}:${startSerial}${salt}`).toString(16).padStart(8, '0');
+  const shuffleSeed = hashString(`sorteio:v2:${identity}:${startSerial}:${cycleIndex}${salt}`);
+  const orderedParticipants = shuffle(participants, shuffleSeed);
 
   return {
     year,
@@ -77,6 +80,54 @@ export function calculateMonthlyDraw(
     winner: orderedParticipants[cyclePosition],
     fingerprint,
   };
+}
+
+export interface HistoryTarget {
+  readonly year: number;
+  readonly month: number;
+  readonly winner: string;
+}
+
+export interface SeedSearchResult {
+  readonly seed: string | null;
+  readonly attempts: number;
+}
+
+/**
+ * Finds a seed that keeps months already announced landing on the same person after the
+ * roster changed. Candidates are walked in a fixed order, so the same history always
+ * yields the same seed — the search is as reproducible as the draw it repairs.
+ */
+export function findSeedForHistory(
+  values: readonly string[],
+  startYear: number,
+  startMonth: number,
+  targets: readonly HistoryTarget[],
+  maxAttempts = 200_000,
+): SeedSearchResult {
+  if (!targets.length) return { seed: '', attempts: 0 };
+
+  const wanted = targets.map((target) => ({
+    ...target,
+    key: participantKey(target.winner),
+  }));
+  const roster = normalizeParticipants(values);
+  if (roster.length < 2) return { seed: null, attempts: 0 };
+
+  // Every target has to be someone still on the list, or no seed can ever satisfy it.
+  const rosterKeys = new Set(roster.map(participantKey));
+  if (wanted.some((target) => !rosterKeys.has(target.key))) return { seed: null, attempts: 0 };
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const candidate = attempt === 0 ? '' : attempt.toString(36);
+    const matches = wanted.every((target) => {
+      const draw = calculateMonthlyDraw(values, target.year, target.month, startYear, startMonth, candidate);
+      return !!draw && participantKey(draw.winner) === target.key;
+    });
+    if (matches) return { seed: candidate, attempts: attempt + 1 };
+  }
+
+  return { seed: null, attempts: maxAttempts };
 }
 
 export function getCycleEntries(draw: MonthlyDraw): CycleEntry[] {

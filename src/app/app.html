@@ -337,8 +337,75 @@
         @if (startMonthError()) {
           <p class="field-error" id="start-month-error" role="alert">{{ startMonthError() }}</p>
         }
+        <h3 class="share-title">Semente</h3>
+        <p>
+          Uma sequência livre de caracteres que entra no cálculo junto com a lista. Serve para
+          consertar o histórico quando alguém entra ou sai: sem ela, uma lista nova reescreve os
+          meses que você já anunciou.
+        </p>
+        <label class="seed-field">
+          <span>Semente</span>
+          <input
+            name="seed"
+            type="text"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Sem semente"
+            [ngModel]="seed()"
+            (ngModelChange)="updateSeed($event)"
+          />
+        </label>
+
+        @if (historyMonths().length) {
+          <details class="history-tool">
+            <summary>Preservar meses já anunciados</summary>
+            <p>
+              Confira quem realmente ganhou em cada mês. Onde estiver diferente, corrija e procure
+              uma semente: ela recoloca essas pessoas nos meses delas sem tocar no resto.
+            </p>
+            <ul class="history-list">
+              @for (entry of historyMonths(); track entry.key) {
+                <li [class.is-changed]="entry.chosen !== entry.current">
+                  <span class="history-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
+                  <label class="history-pick">
+                    <span class="visually-hidden">Quem ganhou em {{ monthShort(entry.month) }} {{ entry.year }}</span>
+                    <select
+                      [value]="entry.chosen"
+                      (change)="setHistoryWinner(entry.key, $any($event.target).value)"
+                    >
+                      @for (person of draw()?.orderedParticipants ?? []; track trackPerson($index, person)) {
+                        <option [value]="person" [selected]="person === entry.chosen">{{ person }}</option>
+                      }
+                    </select>
+                  </label>
+                </li>
+              }
+            </ul>
+            <button class="secondary-action" type="button" (click)="searchSeed()" [disabled]="seedSearchState() === 'searching'">
+              Procurar semente
+            </button>
+            @switch (seedSearchState()) {
+              @case ('found') {
+                <p class="seed-note is-good" role="status">
+                  Pronto: semente <b>{{ seed() }}</b>. Os meses acima voltaram para as pessoas certas.
+                  Copie o link de novo e mande para o grupo.
+                </p>
+              }
+              @case ('unchanged') {
+                <p class="seed-note" role="status">O histórico já bate com a configuração atual. Nada a mudar.</p>
+              }
+              @case ('failed') {
+                <p class="seed-note is-bad" role="status">
+                  Não achei semente para esse histórico. Cheque se alguém aparece duas vezes no mesmo
+                  ciclo ou se um dos nomes já saiu da lista.
+                </p>
+              }
+            }
+          </details>
+        }
+
         <h3 class="share-title">Compartilhar</h3>
-        <p>O link carrega os nomes e a data de início. Quem abrir recebe a mesma máquina.</p>
+        <p>O link carrega os nomes, a data de início e a semente. Quem abrir recebe a mesma máquina.</p>
         <button class="secondary-action" type="button" (click)="copyGroupLink()" [disabled]="participants().length < 2">
           Copiar link da máquina
         </button>

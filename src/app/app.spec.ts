@@ -34,4 +34,44 @@ describe('App', () => {
     window.location.hash = '';
     fixture.destroy();
   });
+
+  it('preserva o mês já anunciado quando entra alguém novo', () => {
+    // O clube rodou agosto/2026 com seis pessoas; agora entra a sétima.
+    const clube = ['Ana', 'Breno', 'Cecília', 'Davi', 'Elisa', 'Fátima'];
+    localStorage.setItem(
+      'mesa-do-mes:configuration:v1',
+      JSON.stringify({ participants: clube, startMonth: '2026-08' }),
+    );
+
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      participants: { set(value: string[]): void };
+      seed: () => string;
+      draw: () => { winner: string } | null;
+      historyMonths: () => Array<{ key: string; year: number; month: number; chosen: string }>;
+      setHistoryWinner(key: string, winner: string): void;
+      searchSeed(): void;
+      seedSearchState: () => string;
+      addParticipant(): void;
+      draftName: { set(value: string): void };
+    };
+    fixture.detectChanges();
+
+    const vencedorOriginal = app.draw()!.winner;
+    const mesAnunciado = app.historyMonths()[0].key;
+
+    app.draftName.set('Gabriela');
+    app.addParticipant();
+    fixture.detectChanges();
+
+    app.setHistoryWinner(mesAnunciado, vencedorOriginal);
+    app.searchSeed();
+    fixture.detectChanges();
+
+    expect(['found', 'unchanged']).toContain(app.seedSearchState());
+    expect(app.draw()!.winner).toBe(vencedorOriginal);
+
+    localStorage.clear();
+    fixture.destroy();
+  });
 });

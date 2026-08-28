@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { decodeParticipants, encodeParticipants } from './share-link';
 import {
   calculateMonthlyDraw,
+  findSeedForHistory,
   getCycleEntries,
   normalizeName,
   normalizeParticipants,
@@ -54,6 +55,7 @@ export interface Capsule {
 interface GroupConfiguration {
   readonly participants: string[];
   readonly startMonth: string;
+  readonly seed: string;
   readonly isShared: boolean;
 }
 
@@ -80,6 +82,9 @@ export class App {
 
   protected readonly participants = signal<string[]>(this.initialConfiguration.participants);
   protected readonly startMonth = signal(this.initialConfiguration.startMonth);
+  protected readonly seed = signal(this.initialConfiguration.seed);
+  protected readonly seedSearchState = signal<'idle' | 'searching' | 'found' | 'unchanged' | 'failed'>('idle');
+  protected readonly historyChoice = signal<Record<string, string>>({});
   protected readonly draftName = signal('');
   protected readonly formError = signal('');
   protected readonly startMonthError = signal('');
@@ -92,6 +97,30 @@ export class App {
   protected readonly wheelRotation = signal(0);
   protected readonly pickerOpen = signal(false);
   protected readonly pickerYear = signal(this.now.getFullYear());
+
+  /** Months already lived through, which a roster change would silently rewrite. */
+  protected readonly historyMonths = computed(() => {
+    const start = parseMonthValue(this.startMonth());
+    if (!start) return [];
+    const startSerial = monthSerial(start.year, start.month);
+    const nowSerial = monthSerial(this.year, this.month);
+    const count = Math.min(nowSerial - startSerial + 1, 36);
+    if (count < 1) return [];
+
+    const choices = this.historyChoice();
+    return Array.from({ length: count }, (_, index) => {
+      const { year, month } = fromSerial(startSerial + index);
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const draw = calculateMonthlyDraw(
+        this.participants(), year, month, start.year, start.month, this.seed(),
+      );
+      return { key, year, month, current: draw?.winner ?? '', chosen: choices[key] ?? draw?.winner ?? '' };
+    });
+  });
+
+  protected readonly historyDiffers = computed(
+    () => this.historyMonths().some((entry) => entry.chosen && entry.chosen !== entry.current),
+  );
 
   protected readonly startMonthLabel = computed(() => formatMonthLabel(this.startMonth()));
   protected readonly pickerMonths = computed(() => {
@@ -112,7 +141,7 @@ export class App {
   protected readonly draw = computed(() => {
     const start = parseMonthValue(this.startMonth());
     return start
-      ? calculateMonthlyDraw(this.participants(), this.year, this.month, start.year, start.month)
+      ? calculateMonthlyDraw(this.participants(), this.year, this.month, start.year, start.month, this.seed())
       : null;
   });
   protected readonly cycleEntries = computed(() => {
@@ -242,7 +271,8 @@ export class App {
 
   protected async copyGroupLink(): Promise<void> {
     const encoded = encodeParticipants(this.participants());
-    const url = `${window.location.href.split('#')[0]}#grupo=${encoded}&inicio=${this.startMonth()}`;
+    const semente = this.seed() ? `&semente=${encodeURIComponent(this.seed())}` : '';
+    const url = `${window.location.href.split('#')[0]}#grupo=${encoded}&inicio=${this.startMonth()}${semente}`;
     this.shareUrl.set(url);
     try {
       await navigator.clipboard.writeText(url);
@@ -303,6 +333,61 @@ export class App {
 
   private focusMonth(month: number): void {
     window.setTimeout(() => this.document.getElementById(`start-month-${month}`)?.focus());
+  }
+
+  protected updateSeed(value: string): void {
+    this.seed.set(value.trim());
+    this.seedSearchState.set('idle');
+    this.sharedList.set(false);
+    this.shareUrl.set('');
+    this.saveConfiguration();
+    this.replayAfterConfigChange();
+  }
+
+  protected setHistoryWinner(key: string, winner: string): void {
+    this.historyChoice.update((choices) => ({ ...choices, [key]: winner }));
+    this.seedSearchState.set('idle');
+  }
+
+  /** Hunts for a seed that puts every already-announced month back on the right person. */
+  protected searchSeed(): void {
+    const start = parseMonthValue(this.startMonth());
+    if (!start) return;
+    const targets = this.historyMonths()
+      .filter((entry) => entry.chosen)
+      .map((entry) => ({ year: entry.year, month: entry.month, winner: entry.chosen }));
+    if (!targets.length) return;
+
+    this.seedSearchState.set('searching');
+    const wasAlreadyRight = targets.every((target) => {
+      const draw = calculateMonthlyDraw(
+        this.participants(), target.year, target.month, start.year, start.month, this.seed(),
+      );
+      return draw?.winner === target.winner;
+    });
+    if (wasAlreadyRight) {
+      this.seedSearchState.set('unchanged');
+      return;
+    }
+
+    const { seed } = findSeedForHistory(this.participants(), start.year, start.month, targets);
+    if (seed === null) {
+      this.seedSearchState.set('failed');
+      return;
+    }
+
+    this.seed.set(seed);
+    this.seedSearchState.set('found');
+    this.sharedList.set(false);
+    this.shareUrl.set('');
+    this.saveConfiguration();
+    this.replayAfterConfigChange();
+  }
+
+  private replayAfterConfigChange(): void {
+    this.isSpinning.set(false);
+    this.isRevealed.set(true);
+    window.setTimeout(() => this.wheelRotation.set(this.targetRotation()));
   }
 
   protected updateStartMonth(value: string): void {
@@ -428,6 +513,7 @@ export class App {
         return {
           participants: normalizeParticipants(parsed.participants.slice(0, 60)),
           startMonth: parsed.startMonth,
+          seed: typeof parsed.seed === 'string' ? parsed.seed : '',
           isShared: false,
         };
       }
@@ -439,12 +525,12 @@ export class App {
       const legacy = this.safeStorageGet(LEGACY_STORAGE_KEY);
       const parsed = legacy ? JSON.parse(legacy) : null;
       if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
-        return { participants: normalizeParticipants(parsed.slice(0, 60)), startMonth: currentStartMonth, isShared: false };
+        return { participants: normalizeParticipants(parsed.slice(0, 60)), startMonth: currentStartMonth, seed: '', isShared: false };
       }
     } catch {
       // A demonstrative list keeps the app useful when storage is unavailable.
     }
-    return { participants: DEMO_PARTICIPANTS, startMonth: currentStartMonth, isShared: false };
+    return { participants: DEMO_PARTICIPANTS, startMonth: currentStartMonth, seed: '', isShared: false };
   }
 
   private readConfigurationFromHash(): Omit<GroupConfiguration, 'isShared'> | null {
@@ -456,7 +542,11 @@ export class App {
     try {
       const parsed = decodeParticipants(encoded);
       if (parsed.length < 2) return null;
-      return { participants: parsed, startMonth: parseMonthValue(startMonth ?? '') ? startMonth! : this.currentMonthValue() };
+      return {
+        participants: parsed,
+        startMonth: parseMonthValue(startMonth ?? '') ? startMonth! : this.currentMonthValue(),
+        seed: parameters.get('semente') ?? parameters.get('seed') ?? '',
+      };
     } catch {
       return null;
     }
@@ -470,6 +560,7 @@ export class App {
     this.safeStorageSet(CONFIG_STORAGE_KEY, JSON.stringify({
       participants: this.participants(),
       startMonth: this.startMonth(),
+      seed: this.seed(),
     }));
   }
 
@@ -514,7 +605,9 @@ function formatMonthLabel(value: string): string {
     : 'mês informado';
 }
 
-function isStoredConfiguration(value: unknown): value is { participants: string[]; startMonth: string } {
+function isStoredConfiguration(
+  value: unknown,
+): value is { participants: string[]; startMonth: string; seed?: string } {
   return typeof value === 'object' && value !== null &&
     Array.isArray((value as { participants?: unknown }).participants) &&
     (value as { participants: unknown[] }).participants.every((person) => typeof person === 'string') &&
@@ -554,4 +647,8 @@ function fitLabel(name: string, budget: number): string {
   const short = name.split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
   if (budget >= short.length) return short;
   return short.slice(0, 1);
+}
+
+function fromSerial(serial: number): { year: number; month: number } {
+  return { year: Math.floor(serial / 12), month: (serial % 12) + 1 };
 }
