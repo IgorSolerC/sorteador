@@ -9,7 +9,7 @@
   --chrome: #e3eaf2; --chrome-dim: #93a6be; --sky: #bccde6;
   --paper: #faf6ec; --paper-quiet: #f0e9d9; --ink: #16233a; --ink-quiet: #5b6779;
   --white: #ffffff; --field: #ffffff; --yellow: #ffc53d; --live: #ffc53d;
-  --ok: #1f5c3a; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
+  --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
   --line: rgba(200, 220, 255, .17); --line-strong: rgba(200, 220, 255, .34); --line-paper: rgba(22, 35, 58, .18);
   --display: 'Fredoka Variable', 'Trebuchet MS', sans-serif;
   --mono: 'Martian Mono', ui-monospace, monospace;
@@ -172,7 +172,7 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .roster-count::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }
 .roster-intro h2 { color: var(--ink); }
 .roster-intro > p { max-width: 50ch; color: var(--ink-quiet); font-size: 1rem; line-height: 1.62; }
-.demo-note { padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: #4a3c1c !important; font-size: .92rem !important; }
+.demo-note { padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: var(--note-ink) !important; font-size: .92rem !important; }
 .add-form { margin-top: 2.4rem; }
 .add-form > label, .share-field, .start-field { display: block; margin-bottom: .55rem; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .field-row { display: flex; gap: .6rem; }
@@ -226,8 +226,8 @@ input:focus-visible { outline-color: var(--field-focus); }
 .history-list select { min-height: 40px; flex: 1; min-width: 0; max-width: 62%; padding: .35rem .5rem; background: var(--field); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 8px; font: inherit; font-size: .82rem; }
 .history-list select:focus-visible { outline-color: var(--field-focus); }
 .history-pick { flex: 1; min-width: 0; display: flex; justify-content: flex-end; }
-.synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: rgba(163, 18, 63, .16); border: 1px solid rgba(255, 140, 170, .4); border-radius: 8px; color: #ffc9d6; font-size: .82rem; line-height: 1.5; }
-.usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: #4a3c1c !important; font-size: .82rem !important; line-height: 1.5; }
+.synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: color-mix(in srgb, var(--field-error) 16%, transparent); border: 1px solid color-mix(in srgb, var(--error-light) 40%, transparent); border-radius: 8px; color: var(--error-light); font-size: .82rem; line-height: 1.5; }
+.usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: var(--note-ink) !important; font-size: .82rem !important; line-height: 1.5; }
 .usage-note.is-stopped { background: rgba(163, 18, 63, .1); border-color: rgba(163, 18, 63, .35); color: var(--field-error-ink) !important; }
 .seed-note { max-width: 46ch; margin: .9rem 0 0; font-size: .82rem; line-height: 1.5; }
 .seed-note b { font-family: var(--mono); font-size: .82rem; }

@@ -10,6 +10,8 @@ colors:
   chrome-dim: "#93a6be"
   sky: "#bccde6"
   ok: "#1f5c3a"
+  error-light: "#ffc9d6"
+  note-ink: "#4a3c1c"
   field: "#ffffff"
   field-line: "#a9b1bf"
   field-focus: "#b5761c"
