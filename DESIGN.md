@@ -12,6 +12,7 @@ colors:
   ok: "#1f5c3a"
   error-light: "#ffc9d6"
   note-ink: "#4a3c1c"
+  remove-ink: "#6d5560"
   field: "#ffffff"
   field-line: "#a9b1bf"
   field-focus: "#b5761c"

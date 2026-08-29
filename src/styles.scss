@@ -9,7 +9,7 @@
   --chrome: #e3eaf2; --chrome-dim: #93a6be; --sky: #bccde6;
   --paper: #faf6ec; --paper-quiet: #f0e9d9; --ink: #16233a; --ink-quiet: #5b6779;
   --white: #ffffff; --field: #ffffff; --yellow: #ffc53d; --live: #ffc53d;
-  --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
+  --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --remove-ink: #6d5560; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
   --line: rgba(200, 220, 255, .17); --line-strong: rgba(200, 220, 255, .34); --line-paper: rgba(22, 35, 58, .18);
   --display: 'Fredoka Variable', 'Trebuchet MS', sans-serif;
   --mono: 'Martian Mono', ui-monospace, monospace;
@@ -128,9 +128,9 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .result-copy { max-width: 52ch; margin: 1.5rem 0 0; color: var(--sky); font-size: 1rem; line-height: 1.62; }
 .result-actions { display: flex; align-items: center; gap: 1.4rem; margin-top: 2.2rem; }
 .primary-action, .add-form button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: .78rem 1.35rem; background: var(--yellow); color: var(--enamel-deep); border: 0; border-radius: 999px; box-shadow: 0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38); font-family: var(--display); font-size: 1rem; font-weight: 600; text-decoration: none; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
-.primary-action:hover:not(:disabled), .add-form button:hover { background: #ffd469; }
+.primary-action:hover:not(:disabled), .add-form button:hover { background: color-mix(in srgb, var(--yellow) 74%, var(--white)); }
 .primary-action:active:not(:disabled), .add-form button:active { box-shadow: 0 2px 0 #c48f16, 0 6px 12px rgba(4, 10, 22, .34); transform: translateY(4px); }
-.primary-action:disabled { background: var(--chrome-dim); box-shadow: 0 6px 0 #6c7d94; color: var(--enamel-deep); opacity: 1; }
+.primary-action:disabled { background: var(--chrome-dim); box-shadow: 0 6px 0 color-mix(in srgb, var(--chrome-dim) 76%, var(--enamel-deep)); color: var(--enamel-deep); opacity: 1; }
 .text-link { min-height: 44px; display: inline-flex; align-items: center; color: var(--chrome); font-weight: 700; }
 .serial-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; margin: 2.6rem 0 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
 .serial-grid div { display: grid; gap: .34rem; padding: .85rem .9rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -255,7 +255,7 @@ input:focus-visible { outline-color: var(--field-focus); }
 .person-index { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-variant-numeric: tabular-nums; }
 .person-capsule { width: 2.7rem; height: 2.7rem; display: grid; place-items: center; padding-bottom: .8rem; background: var(--capsule, var(--paper-quiet)); border-radius: 999px; box-shadow: inset 0 -.85rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); color: var(--ink); font-family: var(--display); font-size: .82rem; font-weight: 600; }
 .roster-list strong { font-size: 1rem; overflow-wrap: anywhere; }
-.roster-list button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .42rem; padding: .5rem; background: transparent; color: #6d5560; border: 0; font-size: .82rem; font-weight: 700; border-radius: 999px; }
+.roster-list button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .42rem; padding: .5rem; background: transparent; color: var(--remove-ink); border: 0; font-size: .82rem; font-weight: 700; border-radius: 999px; }
 .roster-list button:hover { background: color-mix(in srgb, var(--field-error) 9%, transparent); color: var(--field-error-ink); }
 .roster-list button svg { width: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .roster-empty { padding: 3rem 0; color: var(--ink-quiet); }
