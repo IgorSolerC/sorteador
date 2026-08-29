@@ -56,6 +56,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 
 /* ---- The machine front ---- */
 .machine { position: relative; z-index: 1; display: grid; place-items: center; align-content: center; gap: 1.6rem; padding: clamp(3rem, 6vw, 5rem) clamp(1.4rem, 4vw, 3.4rem) clamp(2.4rem, 4vw, 3.4rem); border-right: 1px solid var(--line); }
+// O host do componente não pode virar o item do grid: sem isto o SVG dimensiona
+// contra uma caixa inline e encolhe. `contents` devolve SVG e legenda ao grid da máquina.
+app-machine { display: contents; }
 .machine-front { width: min(100%, 452px); height: auto; }
 .body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .6s ease, stroke .6s ease; }
 .is-live .body-plate { fill: var(--live); stroke: rgba(10, 24, 48, .32); }
@@ -223,6 +226,9 @@ input:focus-visible { outline-color: var(--field-focus); }
 .history-list select { min-height: 40px; flex: 1; min-width: 0; max-width: 62%; padding: .35rem .5rem; background: var(--field); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 8px; font: inherit; font-size: .82rem; }
 .history-list select:focus-visible { outline-color: var(--field-focus); }
 .history-pick { flex: 1; min-width: 0; display: flex; justify-content: flex-end; }
+.synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: rgba(163, 18, 63, .16); border: 1px solid rgba(255, 140, 170, .4); border-radius: 8px; color: #ffc9d6; font-size: .82rem; line-height: 1.5; }
+.usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: #4a3c1c !important; font-size: .82rem !important; line-height: 1.5; }
+.usage-note.is-stopped { background: rgba(163, 18, 63, .1); border-color: rgba(163, 18, 63, .35); color: var(--field-error-ink) !important; }
 .seed-note { max-width: 46ch; margin: .9rem 0 0; font-size: .82rem; line-height: 1.5; }
 .seed-note b { font-family: var(--mono); font-size: .82rem; }
 .seed-note.is-good { color: var(--ok); }

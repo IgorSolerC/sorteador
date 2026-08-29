@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { App, readSyncedGroupId } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -73,5 +73,27 @@ describe('App', () => {
 
     localStorage.clear();
     fixture.destroy();
+  });
+});
+
+describe('roteamento por hash', () => {
+  it('reconhece um grupo sincronizado', () => {
+    expect(readSyncedGroupId('#/g/abc123')).toBe('abc123');
+    expect(readSyncedGroupId('/g/abc123')).toBe('abc123');
+  });
+
+  it('ignora o formato do modo por link', () => {
+    expect(readSyncedGroupId('#grupo=WyJBIl0&inicio=2026-08')).toBe('');
+  });
+
+  it('ignora hash vazio ou lixo', () => {
+    for (const hash of ['', '#', '#/g/', '#/g/tem espaço', '#/outro/abc', '#/g/a/b']) {
+      expect(readSyncedGroupId(hash)).toBe('');
+    }
+  });
+
+  it('aceita id longo do Firestore e recusa exagero', () => {
+    expect(readSyncedGroupId('#/g/' + 'a'.repeat(20))).toHaveLength(20);
+    expect(readSyncedGroupId('#/g/' + 'a'.repeat(65))).toBe('');
   });
 });
