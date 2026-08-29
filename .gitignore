@@ -56,3 +56,4 @@ Thumbs.db
 /firestore-debug.log
 /ui-debug.log
 /.firebase/
+/tmpjs/

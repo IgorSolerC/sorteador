@@ -1,0 +1,267 @@
+import type { Auth } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  writeBatch,
+} from 'firebase/firestore';
+
+import { GroupEvent, GroupState, replay } from './group-log';
+import { UsageGuard } from './usage-guard';
+
+/**
+ * A camada que fala com o Firestore. Duas regras a governam:
+ *
+ * 1. Toda ida à rede passa pelo UsageGuard. Se ele barrar, a operação não acontece —
+ *    é assim que a cota nunca chega perto da parede.
+ * 2. O vencedor nunca é lido de um campo; ele é derivado do log por `replay()`. O log
+ *    fica em cache local e só o delta é buscado, então o caso comum custa 1 leitura.
+ */
+
+export class UsageBlockedError extends Error {
+  constructor(readonly reason: string) {
+    super(`Operação bloqueada pelo orçamento de uso (${reason}).`);
+    this.name = 'UsageBlockedError';
+  }
+}
+
+export interface GroupSnapshot {
+  readonly groupId: string;
+  readonly name: string;
+  readonly logVersion: number;
+  readonly lastSpinAt: number | null;
+  readonly events: readonly GroupEvent[];
+  readonly state: GroupState;
+}
+
+export interface LogCache {
+  read(groupId: string): { logVersion: number; events: GroupEvent[] } | null;
+  write(groupId: string, value: { logVersion: number; events: GroupEvent[] }): void;
+}
+
+export const SPIN_COOLDOWN_MS = 30_000;
+const CACHE_PREFIX = 'mesa-do-mes:log:v1:';
+
+export class GroupStore {
+  constructor(
+    private readonly db: Firestore,
+    private readonly auth: Auth,
+    private readonly guard: UsageGuard,
+    private readonly cache: LogCache,
+  ) {}
+
+  async signIn(): Promise<string> {
+    if (this.auth.currentUser) return this.auth.currentUser.uid;
+    const credential = await signInAnonymously(this.auth);
+    return credential.user.uid;
+  }
+
+  async createGroup(name: string): Promise<string> {
+    this.requireBudget({ writes: 1 });
+    await this.signIn();
+
+    const ref = doc(collection(this.db, 'grupos'));
+    await this.run(() =>
+      setDoc(ref, {
+        nome: name.trim().slice(0, 60),
+        criadoEm: serverTimestamp(),
+        ultimoGiroEm: null,
+        versaoLog: 0,
+      }),
+    );
+    this.guard.recordWrite(1);
+    this.cache.write(ref.id, { logVersion: 0, events: [] });
+    return ref.id;
+  }
+
+  /**
+   * Uma leitura no caso comum: o doc do grupo diz quantos eventos existem, e se o cache
+   * local já tem todos, nada mais é buscado.
+   */
+  async load(groupId: string): Promise<GroupSnapshot> {
+    this.requireBudget({ reads: 1 });
+    await this.signIn();
+
+    const groupSnap = await this.run(() => getDoc(doc(this.db, 'grupos', groupId)));
+    this.guard.recordRead(1);
+    if (!groupSnap.exists()) throw new Error(`Grupo ${groupId} não encontrado.`);
+
+    const data = groupSnap.data();
+    const logVersion: number = data['versaoLog'] ?? 0;
+    const cached = this.cache.read(groupId);
+    // O cache só serve se for internamente coerente: tantos eventos quanto ele diz ter.
+    const cacheIntegro = !!cached && cached.events.length === cached.logVersion;
+    let events: GroupEvent[] = cacheIntegro ? cached!.events : [];
+
+    if (!cacheIntegro || cached!.logVersion !== logVersion) {
+      events = await this.fetchLog(groupId, logVersion, events);
+      this.cache.write(groupId, { logVersion, events });
+    }
+
+    return {
+      groupId,
+      name: data['nome'] ?? '',
+      logVersion,
+      lastSpinAt: toMillis(data['ultimoGiroEm']),
+      events,
+      state: replay(groupId, events),
+    };
+  }
+
+  addMember(groupId: string, name: string): Promise<void> {
+    return this.append(groupId, { tipo: 'member_added', nome: name.trim().slice(0, 60) });
+  }
+
+  removeMember(groupId: string, memberId: string): Promise<void> {
+    return this.append(groupId, { tipo: 'member_removed', memberId });
+  }
+
+  /** Marca o giro no doc do grupo junto com o evento, que é o que as rules exigem. */
+  spin(groupId: string): Promise<void> {
+    return this.append(groupId, { tipo: 'spin' }, { ultimoGiroEm: serverTimestamp() });
+  }
+
+  static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
+    return snapshot.lastSpinAt === null ? null : snapshot.lastSpinAt + SPIN_COOLDOWN_MS;
+  }
+
+  /**
+   * Busca só o que falta. Com `versaoLog` confiável — as rules garantem que ele sobe junto
+   * com cada evento — o delta é exatamente `versaoLog - o que já tenho`.
+   */
+  private async fetchLog(
+    groupId: string,
+    logVersion: number,
+    known: readonly GroupEvent[],
+  ): Promise<GroupEvent[]> {
+    const missing = logVersion - known.length;
+    if (missing <= 0) return [...known];
+
+    this.requireBudget({ reads: missing });
+    const events = collection(this.db, 'grupos', groupId, 'eventos');
+    // Do mais novo para trás, exatamente o que falta, e depois na ordem do log.
+    const snap = await this.run(() => getDocs(query(events, orderBy('em', 'desc'), limit(missing))));
+    this.guard.recordRead(snap.size);
+
+    const fresh = snap.docs
+      .map((document) => toEvent(document.data()))
+      .filter((event): event is GroupEvent => !!event)
+      .reverse();
+
+    return [...known, ...fresh];
+  }
+
+  private async append(
+    groupId: string,
+    payload: Record<string, unknown>,
+    groupExtra: Record<string, unknown> = {},
+  ): Promise<void> {
+    this.requireBudget({ reads: 1, writes: 2 });
+    await this.signIn();
+
+    // O contador precisa do valor atual do servidor: as rules exigem exatamente +1, então
+    // uma escrita concorrente falha em vez de furar a fila.
+    const groupRef = doc(this.db, 'grupos', groupId);
+    const groupSnap = await this.run(() => getDoc(groupRef));
+    this.guard.recordRead(1);
+    if (!groupSnap.exists()) throw new Error(`Grupo ${groupId} não encontrado.`);
+
+    const logVersion: number = groupSnap.data()['versaoLog'] ?? 0;
+    const batch = writeBatch(this.db);
+    batch.set(doc(collection(this.db, 'grupos', groupId, 'eventos')), {
+      ...payload,
+      em: serverTimestamp(),
+    });
+    batch.update(groupRef, { versaoLog: logVersion + 1, ...groupExtra });
+
+    await this.run(() => batch.commit());
+    this.guard.recordWrite(2);
+  }
+
+  private requireBudget({ reads = 0, writes = 0 }: { reads?: number; writes?: number }): void {
+    if (reads && !this.guard.canRead(reads)) {
+      throw new UsageBlockedError(this.guard.snapshot().stopReason ?? 'read-budget');
+    }
+    if (writes && !this.guard.canWrite(writes)) {
+      throw new UsageBlockedError(this.guard.snapshot().stopReason ?? 'write-budget');
+    }
+  }
+
+  /** O próprio Firestore avisando que a cota acabou é motivo para parar de vez. */
+  private async run<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'resource-exhausted') {
+        this.guard.tripQuotaExhausted();
+      }
+      throw error;
+    }
+  }
+}
+
+export function browserLogCache(storage: Storage | undefined): LogCache {
+  return {
+    read(groupId) {
+      try {
+        const raw = storage?.getItem(CACHE_PREFIX + groupId);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as { logVersion: number; events: GroupEvent[] };
+        return Array.isArray(parsed?.events) && typeof parsed.logVersion === 'number'
+          ? parsed
+          : null;
+      } catch {
+        return null;
+      }
+    },
+    write(groupId, value) {
+      try {
+        storage?.setItem(CACHE_PREFIX + groupId, JSON.stringify(value));
+      } catch {
+        // Cache indisponível custa leituras, nunca correção.
+      }
+    },
+  };
+}
+
+export function memoryLogCache(): LogCache {
+  const store = new Map<string, { logVersion: number; events: GroupEvent[] }>();
+  return {
+    read: (groupId) => store.get(groupId) ?? null,
+    write: (groupId, value) => void store.set(groupId, value),
+  };
+}
+
+function toMillis(value: unknown): number | null {
+  const candidate = value as { toMillis?: () => number } | null | undefined;
+  return typeof candidate?.toMillis === 'function' ? candidate.toMillis() : null;
+}
+
+function toEvent(data: Record<string, unknown>): GroupEvent | null {
+  const at = toMillis(data['em']);
+  if (at === null) return null;
+  const actor = typeof data['autor'] === 'string' ? data['autor'] : undefined;
+
+  switch (data['tipo']) {
+    case 'member_added':
+      return typeof data['nome'] === 'string'
+        ? { type: 'member_added', at, name: data['nome'], actor }
+        : null;
+    case 'member_removed':
+      return typeof data['memberId'] === 'string'
+        ? { type: 'member_removed', at, memberId: data['memberId'], actor }
+        : null;
+    case 'spin':
+      return { type: 'spin', at, actor };
+    default:
+      return null;
+  }
+}
