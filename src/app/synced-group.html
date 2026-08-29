@@ -94,6 +94,14 @@
         Cada giro ficou gravado com a hora do servidor e não pode ser reescrito nem apagado.
         <b>No globo agora: {{ pool().length }}.</b>
       </p>
+      <p class="log-freshness">
+        <button type="button" class="refresh-button" (click)="refresh()" [disabled]="busy() || loading()">
+          {{ loading() ? 'Buscando…' : 'Atualizar' }}
+        </button>
+        @if (loadedAgo()) {
+          <span>lido {{ loadedAgo() }}</span>
+        }
+      </p>
     </div>
 
     @if (snap.state.spins.length) {
@@ -104,6 +112,9 @@
             <span class="cell-capsule" aria-hidden="true" [style.background]="colorFor(spin.index)"></span>
             <span class="cell-month">Rodada {{ spin.round }} · {{ spin.at | date: 'dd/MM/yy HH:mm' }}</span>
             <strong>{{ spin.winnerName }}</strong>
+            @if (spin.actor) {
+              <span class="cell-actor">girado por {{ spin.actor }}</span>
+            }
             @if (spin.index === snap.state.spins.length - 1) {
               <span class="cell-status">Último</span>
             }
@@ -139,6 +150,19 @@
           }
         </p>
       }
+
+      <label class="seed-field author-field">
+        <span>Quem está mexendo</span>
+        <input
+          name="author"
+          type="text"
+          maxlength="60"
+          autocomplete="off"
+          placeholder="Opcional, fica no registro"
+          [ngModel]="author()"
+          (ngModelChange)="updateAuthor($event)"
+        />
+      </label>
 
       <form class="add-form" (ngSubmit)="addMember()" novalidate>
         <label for="synced-name">Nome da pessoa</label>

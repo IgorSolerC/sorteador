@@ -28,6 +28,8 @@ export interface SpinRecord {
   readonly index: number;
   readonly round: number;
   readonly at: number;
+  /** Quem apertou a manivela, quando se identificou. Não é verificado. */
+  readonly actor?: string;
   /** Who was in the pool when the crank turned, so history stays readable years later. */
   readonly eligible: readonly string[];
   readonly winnerId: string;
@@ -117,6 +119,7 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
           index,
           round,
           at: event.at,
+          actor: event.actor,
           eligible: available,
           winnerId,
           winnerName: winner.name,

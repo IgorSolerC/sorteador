@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -20,6 +20,7 @@ import { normalizeName, participantKey } from './draw-engine';
 export class SyncedGroup {
   readonly groupId = input.required<string>();
 
+  private readonly document = inject(DOCUMENT);
   private readonly store = inject(GROUP_STORE);
   private readonly guard = inject(USAGE_GUARD);
 
@@ -34,6 +35,8 @@ export class SyncedGroup {
   protected readonly revealed = signal(true);
   protected readonly rotation = signal(0);
   protected readonly now = signal(Date.now());
+  protected readonly lastLoadedAt = signal(0);
+  protected readonly author = signal(readAuthor());
 
   protected readonly MIN_MEMBERS = MIN_MEMBERS;
 
@@ -43,6 +46,12 @@ export class SyncedGroup {
       if (id) void this.reload(id);
     });
     window.setInterval(() => this.now.set(Date.now()), 1000);
+    this.document.addEventListener('visibilitychange', () => {
+      const parado = Date.now() - this.lastLoadedAt() > REFRESH_MIN_INTERVAL_MS;
+      if (this.document.visibilityState === 'visible' && parado && !this.busy()) {
+        void this.reload(this.groupId());
+      }
+    });
   }
 
   // --- o que a máquina mostra ---
@@ -121,13 +130,13 @@ export class SyncedGroup {
     }
 
     this.formError.set('');
-    await this.act(() => this.store.addMember(this.groupId(), name), `${name} entrou no globo.`);
+    await this.act(() => this.store.addMember(this.groupId(), name, this.author()), `${name} entrou no globo.`);
     this.draftName.set('');
   }
 
   protected async removeMember(member: GroupMember): Promise<void> {
     await this.act(
-      () => this.store.removeMember(this.groupId(), member.id),
+      () => this.store.removeMember(this.groupId(), member.id, this.author()),
       `${member.name} saiu do globo, mas continua no histórico.`,
     );
   }
@@ -141,7 +150,7 @@ export class SyncedGroup {
     this.rotation.set(0);
 
     try {
-      await this.store.spin(this.groupId());
+      await this.store.spin(this.groupId(), this.author());
       await this.reload(this.groupId(), { keepSpinning: true });
       const target = this.targetRotation();
       window.requestAnimationFrame(() => this.rotation.set(target));
@@ -177,6 +186,31 @@ export class SyncedGroup {
     return capsuleColor(index);
   }
 
+  protected updateAuthor(value: string): void {
+    const name = value.trim().slice(0, 60);
+    this.author.set(name);
+    try {
+      window.localStorage.setItem(AUTHOR_KEY, name);
+    } catch {
+      // Sem armazenamento, a assinatura vale só nesta sessão.
+    }
+  }
+
+  protected async refresh(): Promise<void> {
+    if (this.busy()) return;
+    await this.reload(this.groupId());
+  }
+
+  /** Há quanto tempo o que está na tela veio do servidor. */
+  protected readonly loadedAgo = computed(() => {
+    const at = this.lastLoadedAt();
+    if (!at) return '';
+    const seconds = Math.floor((this.now() - at) / 1000);
+    if (seconds < 10) return 'agora';
+    if (seconds < 60) return `há ${seconds}s`;
+    return `há ${Math.floor(seconds / 60)}min`;
+  });
+
   protected dismissNotice(): void {
     this.notice.set('');
   }
@@ -200,6 +234,7 @@ export class SyncedGroup {
     if (!keepSpinning) this.loading.set(true);
     try {
       this.snapshot.set(await this.store.load(id));
+      this.lastLoadedAt.set(Date.now());
       this.error.set('');
       // Sem giro animado, ninguém posiciona a roda: ela ficaria em zero enquanto os
       // rótulos já foram calculados para o repouso, e os nomes de baixo apareceriam
@@ -234,4 +269,15 @@ export class SyncedGroup {
   }
 
   protected readonly SPIN_COOLDOWN_S = SPIN_COOLDOWN_MS / 1000;
+}
+
+const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
+const REFRESH_MIN_INTERVAL_MS = 20_000;
+
+function readAuthor(): string {
+  try {
+    return window.localStorage.getItem(AUTHOR_KEY) ?? '';
+  } catch {
+    return '';
+  }
 }

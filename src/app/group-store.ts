@@ -116,17 +116,17 @@ export class GroupStore {
     };
   }
 
-  addMember(groupId: string, name: string): Promise<void> {
-    return this.append(groupId, { tipo: 'member_added', nome: name.trim().slice(0, 60) });
+  addMember(groupId: string, name: string, actor = ''): Promise<void> {
+    return this.append(groupId, { tipo: 'member_added', nome: name.trim().slice(0, 60) }, {}, actor);
   }
 
-  removeMember(groupId: string, memberId: string): Promise<void> {
-    return this.append(groupId, { tipo: 'member_removed', memberId });
+  removeMember(groupId: string, memberId: string, actor = ''): Promise<void> {
+    return this.append(groupId, { tipo: 'member_removed', memberId }, {}, actor);
   }
 
   /** Marca o giro no doc do grupo junto com o evento, que é o que as rules exigem. */
-  spin(groupId: string): Promise<void> {
-    return this.append(groupId, { tipo: 'spin' }, { ultimoGiroEm: serverTimestamp() });
+  spin(groupId: string, actor = ''): Promise<void> {
+    return this.append(groupId, { tipo: 'spin' }, { ultimoGiroEm: serverTimestamp() }, actor);
   }
 
   static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
@@ -163,6 +163,7 @@ export class GroupStore {
     groupId: string,
     payload: Record<string, unknown>,
     groupExtra: Record<string, unknown> = {},
+    actor = '',
   ): Promise<void> {
     this.requireBudget({ reads: 1, writes: 2 });
     await this.signIn();
@@ -176,9 +177,11 @@ export class GroupStore {
 
     const logVersion: number = groupSnap.data()['versaoLog'] ?? 0;
     const batch = writeBatch(this.db);
+    const assinado = actor.trim().slice(0, 60);
     batch.set(doc(collection(this.db, 'grupos', groupId, 'eventos')), {
       ...payload,
       em: serverTimestamp(),
+      ...(assinado ? { autor: assinado } : {}),
     });
     batch.update(groupRef, { versaoLog: logVersion + 1, ...groupExtra });
 

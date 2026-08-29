@@ -132,15 +132,31 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 
 | Fase | Situação |
 |---|---|
-| 0. Decisões de produto | ✅ tomadas, acima |
-| 1. Não quebrar o modo atual | ✅ intocado, testes congelados verdes |
-| 2. Motor por log, puro | ✅ `group-log.ts`, 85 testes (60 deles com log aleatório) |
-| 2b. Guarda de uso, puro | ✅ `usage-guard.ts`, 19 testes |
-| 3. Firestore + rules + emulador | ✅ projeto `sorteador-ed1c9`, rules publicadas, 35 testes |
-| 3b. Auth anônima ligada | ⛔ **pendente**, dois cliques no Console |
-| 4. Camada de dados (`group-store.ts`) | pendente |
-| 5. Interface do modo sincronizado | pendente |
-| 6. Importar link antigo para grupo | pendente |
+| 0. Decisões de produto | ✅ |
+| 1. Não quebrar o modo atual | ✅ 16 vetores congelados verdes |
+| 2. Motor por log, puro | ✅ `group-log.ts` |
+| 2b. Guarda de uso, puro | ✅ `usage-guard.ts` |
+| 3. Firestore + rules | ✅ `sorteador-ed1c9`, 35 testes no emulador |
+| 4. Camada de dados | ✅ `group-store.ts`, 13 testes de integração |
+| 5. Interface | ✅ `#/g/<id>`, verificada em produção |
+| 6. Criar grupo e importar lista | ✅ `#/novo` |
+| 7. Fumaça em produção | ✅ 10/10 |
+| 8. Ponta a ponta no navegador | ✅ 13/13, incluindo o servidor negando giro forçado |
+| 9. Merge e deploy | ⛔ pendente de aprovação |
+
+## Como rodar cada suíte
+
+```
+npm test              # 166 unitários e de componente
+npm run test:rules    # 35 rules no emulador, sem projeto nem rede
+npm run test:store    # 13 de integração da camada de dados
+node tests/e2e-spin.mjs <grupoId>   # ponta a ponta num navegador real
+node tests/shot.mjs <url> <saida.png> <esperaMs> <larg> <alt>
+```
+
+**Nunca capture com `--virtual-time-budget`** para telas que falam com o Firestore: o tempo
+virtual adianta o relógio e atropela os streams, fazendo uma página boa parecer travada.
+`tests/shot.mjs` dirige o Chrome por CDP e espera tempo real.
 
 ## O que ainda depende de você
 

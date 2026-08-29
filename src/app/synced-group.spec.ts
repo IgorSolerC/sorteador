@@ -231,4 +231,56 @@ describe('modo sincronizado', () => {
     expect(app.rotation()).toBeGreaterThan(0);
     fixture.destroy();
   });
+
+  it('quando o bolo esvazia, a rodada vira e todos voltam', async () => {
+    // Três pessoas, três giros: a rodada 1 fecha e a 2 abre com o globo cheio de novo.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 3));
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(texto).toContain('R2');
+    const noGlobo = (fixture.nativeElement as HTMLElement)
+      .querySelectorAll('.serial-grid dd')[1]?.textContent?.trim();
+    expect(noGlobo).toBe('3 / 3');
+    fixture.destroy();
+  });
+
+  it('o registro separa as rodadas', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 3));
+    const celulas = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.chart-cell')];
+    const rodadas = celulas.map((c) => c.querySelector('.cell-month')?.textContent?.trim() ?? '');
+
+    expect(rodadas.some((r) => r.includes('Rodada 1'))).toBe(true);
+    expect(rodadas.some((r) => r.includes('Rodada 2'))).toBe(true);
+    fixture.destroy();
+  });
+
+  it('assina quem operou, quando a pessoa se identifica', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno']);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      updateAuthor(v: string): void;
+      author: () => string;
+    };
+
+    app.updateAuthor('  Igor  ');
+    expect(app.author()).toBe('Igor');
+    fixture.destroy();
+  });
+
+  it('mostra quando o que está na tela foi lido', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    const app = fixture.componentInstance as unknown as { loadedAgo: () => string };
+    expect(app.loadedAgo()).toBe('agora');
+    fixture.destroy();
+  });
+
+  it('atualizar busca o servidor de novo', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno']);
+    const fixture = await render(store);
+    const antes = store.calls.filter((c) => c === 'load').length;
+
+    await (fixture.componentInstance as unknown as { refresh(): Promise<void> }).refresh();
+    expect(store.calls.filter((c) => c === 'load').length).toBe(antes + 1);
+    fixture.destroy();
+  });
 });
