@@ -1,0 +1,67 @@
+<section class="empty-stage" aria-labelledby="create-title">
+  <div class="empty-globe" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+  </div>
+
+  <div>
+    <h1 id="create-title">Uma máquina<br /><strong>para o clube</strong></h1>
+    <p>
+      Um grupo sincronizado guarda a lista e cada giro num registro compartilhado. O link
+      passa a ser o grupo: mexer nos nomes não gera link novo, e girar não espera o mês virar.
+    </p>
+
+    <form class="create-form" (ngSubmit)="create()" novalidate>
+      <label class="create-field">
+        <span>Nome do grupo</span>
+        <input
+          name="groupName"
+          type="text"
+          maxlength="60"
+          autocomplete="off"
+          placeholder="Clube de Jogos"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          [disabled]="busy()"
+        />
+      </label>
+
+      @if (importable().length) {
+        <label class="create-check">
+          <input
+            name="bringList"
+            type="checkbox"
+            [ngModel]="bringList()"
+            (ngModelChange)="bringList.set($event)"
+            [disabled]="busy()"
+          />
+          <span>
+            Trazer as {{ importable().length }} cápsulas que já estão aqui
+            <small>{{ importable().join(', ') }}</small>
+          </span>
+        </label>
+      }
+
+      <button class="primary-action" type="submit" [disabled]="busy() || usageStopped()">
+        {{ busy() ? 'Montando…' : 'Criar o grupo' }}
+      </button>
+
+      @if (progress()) {
+        <p class="create-progress" role="status">{{ progress() }}</p>
+      }
+      @if (error()) {
+        <p class="synced-error" role="alert">{{ error() }}</p>
+      }
+      @if (usageStopped()) {
+        <p class="synced-error" role="alert">
+          O uso deste aparelho bateu no limite que protege a cota gratuita. A criação volta
+          na virada do dia.
+        </p>
+      }
+    </form>
+
+    <p class="create-note">
+      O histórico antigo não vem junto: o grupo começa do zero, com a rodada 1 aberta.
+      Seu link atual continua funcionando e não muda em nada.
+    </p>
+  </div>
+</section>

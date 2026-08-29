@@ -201,6 +201,10 @@ export class SyncedGroup {
     try {
       this.snapshot.set(await this.store.load(id));
       this.error.set('');
+      // Sem giro animado, ninguém posiciona a roda: ela ficaria em zero enquanto os
+      // rótulos já foram calculados para o repouso, e os nomes de baixo apareceriam
+      // invertidos com a cápsula vencedora fora da calha.
+      if (!keepSpinning) this.rotation.set(this.targetRotation());
     } catch (error) {
       this.report(error);
     } finally {

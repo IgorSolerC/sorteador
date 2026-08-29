@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { App, readSyncedGroupId } from './app';
+import { App, isNewGroupRoute, readSyncedGroupId } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -95,5 +95,19 @@ describe('roteamento por hash', () => {
   it('aceita id longo do Firestore e recusa exagero', () => {
     expect(readSyncedGroupId('#/g/' + 'a'.repeat(20))).toHaveLength(20);
     expect(readSyncedGroupId('#/g/' + 'a'.repeat(65))).toBe('');
+  });
+});
+
+describe('rota de criação', () => {
+  it('reconhece #/novo', () => {
+    expect(isNewGroupRoute('#/novo')).toBe(true);
+    expect(isNewGroupRoute('#/novo/')).toBe(true);
+    expect(isNewGroupRoute('/novo')).toBe(true);
+  });
+
+  it('não confunde com as outras rotas', () => {
+    for (const hash of ['', '#', '#/g/abc', '#grupo=WyJBIl0', '#/novos', '#/novo/abc']) {
+      expect(isNewGroupRoute(hash)).toBe(false);
+    }
   });
 });

@@ -217,4 +217,18 @@ describe('modo sincronizado', () => {
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('.chart-cell').length).toBe(2);
     fixture.destroy();
   });
+
+  it('ao carregar, a roda já para na posição de repouso', async () => {
+    // Sem isto os rótulos ficam calculados para o repouso enquanto a roda está em zero:
+    // os nomes de baixo aparecem invertidos e a cápsula vencedora fica fora da calha.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1));
+    const app = fixture.componentInstance as unknown as {
+      rotation: () => number;
+      targetRotation(): number;
+    };
+
+    expect(app.rotation()).toBe(app.targetRotation());
+    expect(app.rotation()).toBeGreaterThan(0);
+    fixture.destroy();
+  });
 });

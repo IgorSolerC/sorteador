@@ -1,6 +1,7 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { capsuleColor, Machine } from './machine';
+import { CreateGroup } from './create-group';
 import { SyncedGroup } from './synced-group';
 import { FormsModule } from '@angular/forms';
 import { decodeParticipants, encodeParticipants } from './share-link';
@@ -36,7 +37,7 @@ interface GroupConfiguration {
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Machine, SyncedGroup],
+  imports: [CommonModule, FormsModule, Machine, SyncedGroup, CreateGroup],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -57,6 +58,7 @@ export class App {
 
   /** `#/g/<id>` abre o grupo sincronizado; qualquer outra coisa segue o modo por link. */
   protected readonly syncedGroupId = signal(readSyncedGroupId(this.document.defaultView?.location.hash ?? ''));
+  protected readonly creatingGroup = signal(isNewGroupRoute(this.document.defaultView?.location.hash ?? ''));
 
   protected readonly participants = signal<string[]>(this.initialConfiguration.participants);
   protected readonly startMonth = signal(this.initialConfiguration.startMonth);
@@ -140,7 +142,14 @@ export class App {
   });
 
   constructor() {
+    this.document.defaultView?.addEventListener('hashchange', () => this.syncRoute());
     window.setTimeout(() => this.spinOnEntry(), 280);
+  }
+
+  private syncRoute(): void {
+    const hash = this.document.defaultView?.location.hash ?? '';
+    this.syncedGroupId.set(readSyncedGroupId(hash));
+    this.creatingGroup.set(isNewGroupRoute(hash));
   }
 
   protected addParticipant(): void {
@@ -554,4 +563,9 @@ function fromSerial(serial: number): { year: number; month: number } {
 export function readSyncedGroupId(hash: string): string {
   const match = /^#?\/g\/([A-Za-z0-9_-]{1,64})$/.exec(hash.trim());
   return match ? match[1] : '';
+}
+
+/** `#/novo` abre a criação de grupo; o resto continua caindo no modo por link. */
+export function isNewGroupRoute(hash: string): boolean {
+  return /^#?\/novo\/?$/.test(hash.trim());
 }

@@ -1,4 +1,15 @@
-@if (syncedGroupId(); as grupo) {
+@if (creatingGroup()) {
+  @defer (on immediate) {
+    <app-create-group [seedNames]="participants()" />
+  } @placeholder {
+    <section class="empty-stage" aria-busy="true">
+      <div class="empty-globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3" /></svg>
+      </div>
+      <div><h1>Abrindo a<br /><strong>oficina</strong></h1></div>
+    </section>
+  }
+} @else if (syncedGroupId(); as grupo) {
   <!-- O SDK do Firebase só desce para quem abre um grupo sincronizado. Quem usa o modo
        por link continua com o pacote leve e sem rede. -->
   @defer (on immediate) {
@@ -233,6 +244,13 @@
         @if (startMonthError()) {
           <p class="field-error" id="start-month-error" role="alert">{{ startMonthError() }}</p>
         }
+        <h3 class="share-title">Grupo sincronizado</h3>
+        <p>
+          Cansou de depender do mês? Um grupo sincronizado guarda a lista e os giros num
+          registro compartilhado: mexer nos nomes não gera link novo, e você gira quando quiser.
+        </p>
+        <a class="secondary-action" href="#/novo">Criar um grupo sincronizado</a>
+
         <h3 class="share-title">Semente</h3>
         <p>
           Uma sequência livre de caracteres que entra no cálculo junto com a lista. Serve para
