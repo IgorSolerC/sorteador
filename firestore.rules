@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// O link do grupo é a credencial: quem o tem, lê e escreve. Estas regras não tentam
+// dizer quem é a pessoa — elas garantem o formato, e sobretudo que o log de eventos é
+// imutável e carimbado pelo servidor. É isso que impede alguém de gravar um resultado.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Auth anônima: não identifica a pessoa, mas dá um uid estável por dispositivo
+    // e impede que um script sem token nenhum escreva no banco.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function texto(valor, maximo) {
+      return valor is string && valor.size() > 0 && valor.size() <= maximo;
+    }
+
+    match /grupos/{grupoId} {
+      // Ler exige conhecer o id. Listar grupos é proibido: senão o link deixa de ser segredo.
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn() && grupoNovoValido();
+      allow update: if signedIn() && atualizacaoValida();
+      allow delete: if false;
+
+      function grupoNovoValido() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['nome', 'criadoEm', 'ultimoGiroEm', 'versaoLog', 'estado'])
+          && texto(d.nome, 60)
+          && d.criadoEm == request.time
+          && d.ultimoGiroEm == null
+          && d.versaoLog == 0;
+      }
+
+      function atualizacaoValida() {
+        let antes = resource.data;
+        let depois = request.resource.data;
+        return depois.nome == antes.nome
+          && depois.criadoEm == antes.criadoEm
+          // O contador de eventos só anda para frente, um de cada vez.
+          && depois.versaoLog == antes.versaoLog + 1
+          && depois.versaoLog <= 20000;
+      }
+
+      match /eventos/{eventoId} {
+        allow get, list: if signedIn();
+        allow create: if signedIn() && eventoValido();
+        // O log é a verdade: nada nele pode ser reescrito nem apagado.
+        allow update, delete: if false;
+
+        function eventoValido() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['tipo', 'em', 'nome', 'memberId', 'autor'])
+            // O carimbo é do servidor, sempre. É a única entrada que o cliente não
+            // escolhe, e é dela que o sorteio tira o resultado.
+            && d.em == request.time
+            && d.tipo in ['member_added', 'member_removed', 'spin']
+            && (!('autor' in d) || texto(d.autor, 60))
+            && (d.tipo != 'member_added' || texto(d.nome, 60))
+            && (d.tipo != 'member_removed' || texto(d.memberId, 32))
+            && (d.tipo != 'spin' || giroPermitido());
+        }
+
+        // Um giro a cada 30 segundos por grupo. Não impede má-fé — quem não gostou do
+        // resultado pode girar de novo — mas encarece, e o log deixa a tentativa à vista.
+        function giroPermitido() {
+          let grupo = get(/databases/$(database)/documents/grupos/$(grupoId)).data;
+          return !('ultimoGiroEm' in grupo)
+            || grupo.ultimoGiroEm == null
+            || request.time > grupo.ultimoGiroEm + duration.value(30, 's');
+        }
+      }
+    }
+
+    // Nada mais existe neste banco.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

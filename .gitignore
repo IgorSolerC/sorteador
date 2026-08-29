@@ -50,3 +50,9 @@ Thumbs.db
 /.claude/skills/
 # Design review captures are working artifacts; DESIGN.md and its sidecar are the record
 /.impeccable/review/
+
+# Firebase
+/firebase-debug.log
+/firestore-debug.log
+/ui-debug.log
+/.firebase/
