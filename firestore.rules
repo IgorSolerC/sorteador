@@ -1,8 +1,13 @@
 rules_version = '2';
 
-// O link do grupo é a credencial: quem o tem, lê e escreve. Estas regras não tentam
-// dizer quem é a pessoa — elas garantem o formato, e sobretudo que o log de eventos é
-// imutável e carimbado pelo servidor. É isso que impede alguém de gravar um resultado.
+// O link do grupo é a credencial: quem o tem, lê e escreve. Estas regras não dizem quem é
+// a pessoa — elas garantem o formato e, sobretudo, que o log de eventos é imutável e
+// carimbado pelo servidor.
+//
+// Decisão central: o grupo NÃO guarda estado derivado. Um campo de estado gravável seria
+// um vencedor forjável, porque nenhuma regra consegue replicar um log para conferi-lo.
+// O cliente deriva tudo do log. O que sobra no doc do grupo é só o que as regras sabem
+// validar sozinhas.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -17,8 +22,8 @@ service cloud.firestore {
     }
 
     match /grupos/{grupoId} {
-      // Ler exige conhecer o id. Listar grupos é proibido: senão o link deixa de ser segredo.
       allow get: if signedIn();
+      // Listar é proibido: senão o link deixa de ser segredo.
       allow list: if false;
 
       allow create: if signedIn() && grupoNovoValido();
@@ -27,7 +32,7 @@ service cloud.firestore {
 
       function grupoNovoValido() {
         let d = request.resource.data;
-        return d.keys().hasOnly(['nome', 'criadoEm', 'ultimoGiroEm', 'versaoLog', 'estado'])
+        return d.keys().hasOnly(['nome', 'criadoEm', 'ultimoGiroEm', 'versaoLog'])
           && texto(d.nome, 60)
           && d.criadoEm == request.time
           && d.ultimoGiroEm == null
@@ -37,11 +42,14 @@ service cloud.firestore {
       function atualizacaoValida() {
         let antes = resource.data;
         let depois = request.resource.data;
-        return depois.nome == antes.nome
+        return depois.keys().hasOnly(['nome', 'criadoEm', 'ultimoGiroEm', 'versaoLog'])
+          && depois.nome == antes.nome
           && depois.criadoEm == antes.criadoEm
-          // O contador de eventos só anda para frente, um de cada vez.
+          // O contador acompanha o log: um evento, um passo.
           && depois.versaoLog == antes.versaoLog + 1
-          && depois.versaoLog <= 20000;
+          && depois.versaoLog <= 20000
+          // A marca do último giro, quando muda, é a hora do servidor.
+          && (depois.ultimoGiroEm == antes.ultimoGiroEm || depois.ultimoGiroEm == request.time);
       }
 
       match /eventos/{eventoId} {
@@ -49,6 +57,14 @@ service cloud.firestore {
         allow create: if signedIn() && eventoValido();
         // O log é a verdade: nada nele pode ser reescrito nem apagado.
         allow update, delete: if false;
+
+        function grupoAntes() {
+          return get(/databases/$(database)/documents/grupos/$(grupoId)).data;
+        }
+
+        function grupoDepois() {
+          return getAfter(/databases/$(database)/documents/grupos/$(grupoId)).data;
+        }
 
         function eventoValido() {
           let d = request.resource.data;
@@ -60,15 +76,22 @@ service cloud.firestore {
             && (!('autor' in d) || texto(d.autor, 60))
             && (d.tipo != 'member_added' || texto(d.nome, 60))
             && (d.tipo != 'member_removed' || texto(d.memberId, 32))
-            && (d.tipo != 'spin' || giroPermitido());
+            && (d.tipo != 'spin' || giroPermitido())
+            && contadorAcompanha();
+        }
+
+        // Um evento não entra sozinho: o contador do grupo tem que subir na mesma escrita.
+        // Sem isso o contador mente, e um cliente que confia nele para buscar só as
+        // novidades nunca enxerga os eventos escondidos.
+        function contadorAcompanha() {
+          return grupoDepois().versaoLog == grupoAntes().versaoLog + 1;
         }
 
         // Um giro a cada 30 segundos por grupo. Não impede má-fé — quem não gostou do
         // resultado pode girar de novo — mas encarece, e o log deixa a tentativa à vista.
         function giroPermitido() {
-          let grupo = get(/databases/$(database)/documents/grupos/$(grupoId)).data;
-          return !('ultimoGiroEm' in grupo)
-            || grupo.ultimoGiroEm == null
+          let grupo = grupoAntes();
+          return grupo.ultimoGiroEm == null
             || request.time > grupo.ultimoGiroEm + duration.value(30, 's');
         }
       }

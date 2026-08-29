@@ -15,12 +15,13 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 
 /**
- * Rules run against the local emulator, so this suite needs no Firebase project and no
- * network. It is the only place the security model is actually proven: everything else
- * assumes the rules hold.
+ * As rules rodam contra o emulador local, então esta suíte não precisa de projeto nem de
+ * rede. É o único lugar onde o modelo de segurança é de fato provado: todo o resto assume
+ * que ele vale.
  */
 
 const testEnv = await initializeTestEnvironment({
@@ -51,7 +52,6 @@ const grupoNovo = {
   criadoEm: serverTimestamp(),
   ultimoGiroEm: null,
   versaoLog: 0,
-  estado: { membros: [], rodada: 1, bolo: [], ultimoVencedor: null },
 };
 
 async function comGrupo(extra = {}) {
@@ -63,6 +63,24 @@ async function comGrupo(extra = {}) {
     });
   });
 }
+
+/** Um evento só entra em lote com o incremento do contador, como as rules exigem. */
+function gravaEvento(db, dados, { versaoAtual = 0, incremento = 1, grupoExtra = {} } = {}) {
+  const batch = writeBatch(db);
+  batch.set(doc(collection(db, 'grupos', GRUPO, 'eventos')), dados);
+  batch.update(doc(db, 'grupos', GRUPO), {
+    versaoLog: versaoAtual + incremento,
+    ...grupoExtra,
+  });
+  return batch.commit();
+}
+
+function eventoSozinho(db, dados) {
+  return addDoc(collection(db, 'grupos', GRUPO, 'eventos'), dados);
+}
+
+const entrada = (nome = 'Ana') => ({ tipo: 'member_added', em: serverTimestamp(), nome });
+const giro = () => ({ tipo: 'spin', em: serverTimestamp() });
 
 // --- quem pode falar com o banco ---
 
@@ -85,6 +103,11 @@ await it('ninguém lista grupos: o link tem que continuar sendo o segredo', asyn
   await assertFails(getDocs(collection(alice(), 'grupos')));
 });
 
+await it('quem tem o link lê o log inteiro', async () => {
+  await comGrupo();
+  await assertSucceeds(getDocs(collection(alice(), 'grupos', GRUPO, 'eventos')));
+});
+
 // --- criação e forma do grupo ---
 
 await it('cria um grupo bem formado', async () => {
@@ -105,8 +128,14 @@ await it('recusa campo desconhecido no grupo', async () => {
   await assertFails(setDoc(doc(alice(), 'grupos', 'g4'), { ...grupoNovo, admin: true }));
 });
 
+await it('recusa o antigo campo de estado derivado', async () => {
+  await assertFails(
+    setDoc(doc(alice(), 'grupos', 'g5'), { ...grupoNovo, estado: { ultimoVencedor: 'Ana' } }),
+  );
+});
+
 await it('recusa nome vazio', async () => {
-  await assertFails(setDoc(doc(alice(), 'grupos', 'g5'), { ...grupoNovo, nome: '' }));
+  await assertFails(setDoc(doc(alice(), 'grupos', 'g6'), { ...grupoNovo, nome: '' }));
 });
 
 await it('nenhum grupo pode ser apagado', async () => {
@@ -116,69 +145,58 @@ await it('nenhum grupo pode ser apagado', async () => {
 
 // --- o log é append-only, que é o coração do modelo ---
 
-await it('aceita um evento carimbado pelo servidor', async () => {
+await it('aceita um evento carimbado pelo servidor, em lote com o contador', async () => {
   await comGrupo();
-  await assertSucceeds(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'member_added',
-      em: serverTimestamp(),
-      nome: 'Ana',
-    }),
-  );
+  await assertSucceeds(gravaEvento(alice(), entrada()));
+});
+
+await it('BURACO FECHADO: evento sozinho, sem mexer no contador, é recusado', async () => {
+  await comGrupo({ versaoLog: 5 });
+  await assertFails(eventoSozinho(alice(), entrada('Furtivo')));
+});
+
+await it('recusa evento com contador pulando', async () => {
+  await comGrupo({ versaoLog: 5 });
+  await assertFails(gravaEvento(alice(), entrada(), { versaoAtual: 5, incremento: 4 }));
+});
+
+await it('recusa evento com contador parado', async () => {
+  await comGrupo({ versaoLog: 5 });
+  await assertFails(gravaEvento(alice(), entrada(), { versaoAtual: 5, incremento: 0 }));
 });
 
 await it('recusa evento com hora escolhida pelo cliente', async () => {
   await comGrupo();
   await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'member_added',
-      em: new Date('2020-01-01'),
-      nome: 'Ana',
-    }),
+    gravaEvento(alice(), { tipo: 'member_added', em: new Date('2020-01-01'), nome: 'Ana' }),
   );
 });
 
 await it('recusa tipo de evento inventado', async () => {
   await comGrupo();
-  await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'definir_vencedor',
-      em: serverTimestamp(),
-      nome: 'Ana',
-    }),
-  );
+  await assertFails(gravaEvento(alice(), { tipo: 'definir_vencedor', em: serverTimestamp() }));
 });
 
 await it('recusa evento que tenta gravar um vencedor', async () => {
   await comGrupo();
   await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'spin',
-      em: serverTimestamp(),
-      vencedor: 'Ana',
-    }),
+    gravaEvento(alice(), { tipo: 'spin', em: serverTimestamp(), vencedor: 'Ana' }),
   );
 });
 
 await it('recusa entrada sem nome', async () => {
   await comGrupo();
-  await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'member_added',
-      em: serverTimestamp(),
-    }),
-  );
+  await assertFails(gravaEvento(alice(), { tipo: 'member_added', em: serverTimestamp() }));
 });
 
 await it('recusa nome absurdamente longo', async () => {
   await comGrupo();
-  await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'member_added',
-      em: serverTimestamp(),
-      nome: 'x'.repeat(61),
-    }),
-  );
+  await assertFails(gravaEvento(alice(), entrada('x'.repeat(61))));
+});
+
+await it('recusa saída sem memberId', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), { tipo: 'member_removed', em: serverTimestamp() }));
 });
 
 await it('um evento gravado não pode ser reescrito', async () => {
@@ -212,54 +230,60 @@ await it('um evento gravado não pode ser apagado', async () => {
 await it('aceita o primeiro giro do grupo', async () => {
   await comGrupo({ ultimoGiroEm: null });
   await assertSucceeds(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'spin',
-      em: serverTimestamp(),
-    }),
+    gravaEvento(alice(), giro(), { grupoExtra: { ultimoGiroEm: serverTimestamp() } }),
   );
 });
 
 await it('recusa um giro logo depois do anterior', async () => {
   await comGrupo({ ultimoGiroEm: new Date() });
   await assertFails(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'spin',
-      em: serverTimestamp(),
-    }),
+    gravaEvento(alice(), giro(), { grupoExtra: { ultimoGiroEm: serverTimestamp() } }),
   );
 });
 
 await it('aceita um giro passada a espera', async () => {
   await comGrupo({ ultimoGiroEm: new Date(Date.now() - 60_000) });
   await assertSucceeds(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'spin',
-      em: serverTimestamp(),
-    }),
+    gravaEvento(alice(), giro(), { grupoExtra: { ultimoGiroEm: serverTimestamp() } }),
   );
 });
 
 await it('a espera não bloqueia entrada e saída de gente', async () => {
   await comGrupo({ ultimoGiroEm: new Date() });
-  await assertSucceeds(
-    addDoc(collection(alice(), 'grupos', GRUPO, 'eventos'), {
-      tipo: 'member_added',
-      em: serverTimestamp(),
-      nome: 'Gabriela',
+  await assertSucceeds(gravaEvento(alice(), entrada('Gabriela')));
+});
+
+await it('a marca do último giro não pode ser antedatada', async () => {
+  await comGrupo({ ultimoGiroEm: null });
+  await assertFails(
+    gravaEvento(alice(), giro(), { grupoExtra: { ultimoGiroEm: new Date('2020-01-01') } }),
+  );
+});
+
+// --- o doc do grupo não guarda mais nada derivado ---
+
+await it('BURACO FECHADO: não dá para plantar um vencedor no doc do grupo', async () => {
+  await comGrupo({ versaoLog: 1 });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO), {
+      versaoLog: 2,
+      estado: { ultimoVencedor: { nome: 'Impostor' } },
     }),
   );
 });
 
-// --- contador de log ---
-
-await it('o contador anda de um em um', async () => {
-  await comGrupo({ versaoLog: 3 });
-  await assertSucceeds(updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 4 }));
+await it('o nome do grupo não muda numa atualização', async () => {
+  await comGrupo({ versaoLog: 1 });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 2, nome: 'Outro Clube' }),
+  );
 });
 
-await it('o contador não pula', async () => {
-  await comGrupo({ versaoLog: 3 });
-  await assertFails(updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 9 }));
+await it('a data de criação não pode ser reescrita', async () => {
+  await comGrupo({ versaoLog: 1 });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 2, criadoEm: serverTimestamp() }),
+  );
 });
 
 await it('o contador não anda para trás', async () => {
@@ -267,17 +291,15 @@ await it('o contador não anda para trás', async () => {
   await assertFails(updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 2 }));
 });
 
-await it('o nome do grupo não muda numa atualização de estado', async () => {
-  await comGrupo({ versaoLog: 1 });
-  await assertFails(
-    updateDoc(doc(alice(), 'grupos', GRUPO), { versaoLog: 2, nome: 'Outro Clube' }),
-  );
-});
-
 // --- nada fora do desenho existe ---
 
 await it('coleções fora do desenho são inacessíveis', async () => {
   await assertFails(setDoc(doc(alice(), 'qualquer', 'coisa'), { a: 1 }));
+});
+
+await it('subcoleção inventada dentro do grupo é inacessível', async () => {
+  await comGrupo();
+  await assertFails(setDoc(doc(alice(), 'grupos', GRUPO, 'segredos', 'x'), { a: 1 }));
 });
 
 await testEnv.cleanup();

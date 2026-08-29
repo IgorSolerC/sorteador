@@ -54,21 +54,16 @@ Mitigação adicional disponível nas rules: **um giro a cada 30s por grupo**, c
 
 ## Schema
 
-O doc do grupo é o **estado materializado**, para que abrir o app custe **1 leitura**, não N.
-O log só é lido quando alguém abre o histórico.
+O doc do grupo guarda **só o que as rules sabem validar sozinhas**. Ele não guarda estado
+derivado — ver a seção seguinte, porque essa decisão custou um buraco de segurança para ser
+aprendida.
 
 ```
 grupos/{grupoId}
   nome: string
-  criadoEm: timestamp
+  criadoEm: timestamp        ← request.time, imutável
   ultimoGiroEm: timestamp | null
-  versaoLog: number            ← quantos eventos existem; detecta divergência
-  estado: {                    ← cache derivado, nunca a verdade
-    membros: [{ id, nome, ativo, entrouEm, saiuEm }],
-    rodada: number,
-    bolo: [memberId],
-    ultimoVencedor: { id, nome, em } | null
-  }
+  versaoLog: number          ← quantos eventos existem; sobe junto com cada evento
 
 grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
   tipo: 'member_added' | 'member_removed' | 'spin'
@@ -78,47 +73,52 @@ grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
   autor?: string                         ← quem operou, não verificado
 ```
 
-Se `estado` divergir do replay do log, **o log ganha** e o `estado` é recalculado.
+## Dois buracos encontrados e fechados
 
-## Rules (esboço a validar no emulador)
+Sondas adversariais contra o emulador acharam duas falhas no desenho original:
+
+**1. Vencedor forjável.** O doc do grupo guardava um campo `estado` com a lista, a rodada e o
+último vencedor, para que abrir o app custasse 1 leitura em vez de N. Mas nenhuma rule
+consegue replicar um log para conferir esse cache — então qualquer portador do link podia
+gravar `estado.ultimoVencedor = 'eu'` e todo mundo veria a mentira, porque ninguém lia o log.
+
+Conserto: **o campo deixou de existir.** O cliente deriva do log, sempre. A classe inteira de
+vulnerabilidade sumiu junto com o campo, em vez de virar mais uma regra a manter.
+
+**2. Contador mentiroso.** Dava para gravar um evento sem incrementar `versaoLog`. O contador
+existe para o cliente saber se tem novidade sem reler o log inteiro; se ele mente, um evento
+fica invisível para quem confia nele.
+
+Conserto: gravar evento agora exige, via `getAfter()`, que o contador suba **na mesma escrita
+em lote**. Um evento não entra sozinho.
+
+## Custo de leitura, agora que o log é a verdade
+
+Sem cache no servidor, o cliente guarda o log em `localStorage` e busca só o delta:
+
+| Situação | Leituras |
+|---|---|
+| Abrir com cache em dia | 1 (só o doc do grupo) |
+| Abrir com N eventos novos | 1 + N |
+| Primeira vez num grupo antigo | 1 + tamanho do log |
+
+Para um clube jovem isso é irrelevante. Se um log passar de algumas centenas de eventos, a
+saída é gravar snapshots periódicos **dentro do próprio log** e replicar só a partir do
+último — fica anotado como otimização futura, não é necessária agora.
+
+Atenção: cada `get()` e `getAfter()` dentro de uma rule **conta como leitura na cota**. Gravar
+um evento custa 2 leituras de regra além da escrita.
+
+## Rules
+
+O arquivo real é `firestore.rules`, e ele é a fonte da verdade — não há esboço aqui para
+divergir dele. `tests/firestore-rules.test.mjs` prova 35 comportamentos contra o emulador:
 
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    match /grupos/{grupoId} {
-      allow get: if true;
-      allow list: if false;                 // link é a credencial; não se lista grupos
-      allow create: if grupoValido();
-      allow update: if soAtualizaEstado();
-      allow delete: if false;
-
-      match /eventos/{eventoId} {
-        allow get, list: if true;
-        allow create: if eventoValido();
-        allow update, delete: if false;     // append-only
-      }
-
-      function eventoValido() {
-        let d = request.resource.data;
-        return d.em == request.time
-          && d.tipo in ['member_added', 'member_removed', 'spin']
-          && (d.tipo != 'member_added' || (d.nome is string && d.nome.size() <= 60))
-          && (d.tipo != 'spin' || cooldownOk());
-      }
-
-      function cooldownOk() {
-        let g = get(/databases/$(db)/documents/grupos/$(grupoId)).data;
-        return g.ultimoGiroEm == null
-          || request.time > g.ultimoGiroEm + duration.value(30, 's');
-      }
-    }
-  }
-}
+npm run test:rules
 ```
 
-**Atenção de custo:** cada `get()` dentro de uma rule conta como leitura na cota. O cooldown
-custa 1 leitura por giro; leve isso no orçamento.
+Não precisa de projeto nem de rede. Rode antes de qualquer deploy de rules.
 
 ## O link
 
@@ -134,18 +134,23 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 |---|---|
 | 0. Decisões de produto | ✅ tomadas, acima |
 | 1. Não quebrar o modo atual | ✅ intocado, testes congelados verdes |
-| 2. Motor por log, puro | ✅ `group-log.ts`, 23 testes |
+| 2. Motor por log, puro | ✅ `group-log.ts`, 85 testes (60 deles com log aleatório) |
 | 2b. Guarda de uso, puro | ✅ `usage-guard.ts`, 19 testes |
-| 3. Firestore + rules + emulador | ⛔ **bloqueado**: falta o projeto Firebase |
-| 4. Interface do modo sincronizado | pendente |
-| 5. Importar link antigo para grupo | pendente |
+| 3. Firestore + rules + emulador | ✅ projeto `sorteador-ed1c9`, rules publicadas, 35 testes |
+| 3b. Auth anônima ligada | ⛔ **pendente**, dois cliques no Console |
+| 4. Camada de dados (`group-store.ts`) | pendente |
+| 5. Interface do modo sincronizado | pendente |
+| 6. Importar link antigo para grupo | pendente |
 
-## Para destravar a fase 3
+## O que ainda depende de você
 
-1. Criar um projeto Firebase **no plano Spark**, sem faturamento.
-2. Criar um Firestore em modo produção.
-3. Habilitar **Anonymous Authentication** (dá identidade estável por dispositivo e permite
-   limitar por `uid` nas rules; não cria contas nem custa nada).
-4. Registrar um app Web e passar a config (`apiKey`, `authDomain`, `projectId`, `appId`).
-   Essa config **não é segredo** — a segurança vem das rules, não dela. Pode ir no repositório.
-5. Autorizar `igorsolerc.github.io` nos domínios de Auth.
+Dois cliques no Console, e nada além disso:
+
+1. **Authentication → Sign-in method → Anônimo → Ativar.** Sem isso o app inteiro é negado
+   pelas rules, porque elas exigem `request.auth != null` até para ler.
+2. **Authentication → Settings → Authorized domains → adicionar `igorsolerc.github.io`.**
+
+Ordem correta das fases 3b em diante, e limpeza de sobra:
+
+- Apagar o projeto GCP vazio `mesa-do-mes-sorteador`, criado numa tentativa que esbarrou nos
+  Termos de Serviço. Está órfão e não custa nada, mas é lixo.
