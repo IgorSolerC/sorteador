@@ -1,5 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { GroupMember, MAX_MEMBERS, MIN_MEMBERS, activeMembers, poolMembers } from './group-log';
@@ -43,7 +43,11 @@ export class SyncedGroup {
   constructor() {
     effect(() => {
       const id = this.groupId();
-      if (id) void this.reload(id);
+      if (!id) return;
+      // Trocar de grupo tem que limpar o anterior: senão uma carga que falha deixa os
+      // dados do grupo antigo na tela, passando por dados do novo.
+      if (untracked(this.snapshot)?.groupId !== id) this.snapshot.set(null);
+      void this.reload(id);
     });
     window.setInterval(() => this.now.set(Date.now()), 1000);
     this.document.addEventListener('visibilitychange', () => {
@@ -194,6 +198,20 @@ export class SyncedGroup {
     } catch {
       // Sem armazenamento, a assinatura vale só nesta sessão.
     }
+  }
+
+  /**
+   * Um `#participantes` cru trocaria o hash e derrubaria a rota `#/g/<id>`: a pessoa seria
+   * expulsa do grupo de volta para o modo por link. Rola em vez de navegar.
+   */
+  protected jumpToRoster(event: Event): void {
+    const target = this.document.getElementById('participantes');
+    if (!target) return;
+    event.preventDefault();
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
   }
 
   protected async refresh(): Promise<void> {

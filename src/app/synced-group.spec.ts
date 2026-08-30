@@ -283,4 +283,35 @@ describe('modo sincronizado', () => {
     expect(store.calls.filter((c) => c === 'load').length).toBe(antes + 1);
     fixture.destroy();
   });
+
+  it('o link interno não derruba a rota do grupo', async () => {
+    // Sem preventDefault o hash viraria #participantes, a rota #/g/<id> deixaria de casar
+    // e a pessoa cairia de volta no modo por link, fora do grupo.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    const link = (fixture.nativeElement as HTMLElement)
+      .querySelector('.text-link') as HTMLAnchorElement;
+
+    const evento = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(evento);
+
+    expect(evento.defaultPrevented).toBe(true);
+    fixture.destroy();
+  });
+
+  it('trocar para um grupo que falha não mostra os dados do anterior', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
+    const fixture = await render(store);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cecília');
+
+    store.failWith = Object.assign(new Error('sumiu'), { code: 'not-found' });
+    fixture.componentRef.setInput('groupId', 'outro-grupo');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).not.toContain('Cecília');
+    expect(texto).toContain('Grupo não');
+    fixture.destroy();
+  });
 });

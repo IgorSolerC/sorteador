@@ -150,6 +150,18 @@ export class App {
     const hash = this.document.defaultView?.location.hash ?? '';
     this.syncedGroupId.set(readSyncedGroupId(hash));
     this.creatingGroup.set(isNewGroupRoute(hash));
+
+    // Voltar para um link de grupo tem que trazer a configuração daquele link. A lista só
+    // era lida na partida, então navegar por hash renderizava o modo por link com os dados
+    // errados — pior do que não renderizar.
+    const shared = this.readConfigurationFromHash();
+    if (!shared) return;
+    this.participants.set(shared.participants);
+    this.startMonth.set(shared.startMonth);
+    this.seed.set(shared.seed);
+    this.sharedList.set(true);
+    this.shareUrl.set('');
+    this.replayAfterConfigChange();
   }
 
   protected addParticipant(): void {
