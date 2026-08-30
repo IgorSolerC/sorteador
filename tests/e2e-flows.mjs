@@ -7,6 +7,9 @@ import { spawn } from 'node:child_process';
  */
 
 const base = process.argv[2] ?? 'http://localhost:4321';
+// Pela rede o chunk tardio do Firebase demora bem mais que em localhost; sem folga aqui
+// o primeiro passo falha e todos os seguintes cascateiam a partir de um id inválido.
+const slow = Number(process.env['E2E_SLOW'] ?? 1);
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const port = 9335;
 
@@ -59,6 +62,7 @@ const evaluate = async (expression) => {
   return result?.value;
 };
 const go = async (path, wait = 8000) => {
+  wait = Math.round(wait * slow);
   await send('Page.navigate', { url: base + path });
   await sleep(wait);
 };
@@ -84,7 +88,7 @@ await evaluate(`(() => {
 })()`);
 await sleep(500);
 await evaluate(`document.querySelector('.create-form .primary-action').click(); true`);
-await sleep(14000);
+await sleep(Math.round(14000 * slow));
 
 const depoisCriar = await evaluate(`(() => ({
   hash: location.hash,
