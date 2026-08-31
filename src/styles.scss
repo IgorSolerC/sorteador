@@ -31,7 +31,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 :focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
 ::-webkit-scrollbar { width: 11px; height: 9px; }
 ::-webkit-scrollbar-track { background: var(--enamel-deep); }
-::-webkit-scrollbar-thumb { background: var(--chrome-dim); border: 3px solid var(--enamel-deep); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--chrome-dim); border: 3px solid var(--enamel-deep); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--chrome); }
 * { scrollbar-width: thin; scrollbar-color: var(--chrome-dim) var(--enamel-deep); }
 
@@ -243,6 +243,13 @@ input:focus-visible { outline-color: var(--field-focus); }
 .refresh-button:hover:not(:disabled) { background: rgba(200, 220, 255, .09); }
 .author-field { margin-bottom: 1.6rem; }
 .cell-actor { color: var(--sky); font-size: .74rem; }
+.confirm-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
+.confirm-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(30rem, calc(100vw - 2.4rem)); padding: 1.7rem 1.6rem 1.5rem; background: var(--enamel-raised); border: 1px solid var(--line-strong); border-radius: 16px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
+.confirm-card h2 { margin: 0; color: var(--white); font-size: 1.32rem; line-height: 1.15; }
+.confirm-card p { max-width: none; margin: .9rem 0 0; color: var(--sky); font-size: .92rem; line-height: 1.55; }
+.confirm-actions { display: flex; align-items: center; gap: 1.2rem; margin-top: 1.5rem; }
+.confirm-cancel { background: transparent; border: 0; color: var(--chrome); font-weight: 700; text-decoration: underline; text-underline-offset: .24em; }
+@media (max-width: 620px) { .confirm-actions { align-items: stretch; flex-direction: column; gap: .7rem; } .confirm-cancel { min-height: 44px; } }
 .synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: color-mix(in srgb, var(--field-error) 16%, transparent); border: 1px solid color-mix(in srgb, var(--error-light) 40%, transparent); border-radius: 8px; color: var(--error-light); font-size: .82rem; line-height: 1.5; }
 .usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: var(--note-ink) !important; font-size: .82rem !important; line-height: 1.5; }
 .usage-note.is-stopped { background: rgba(163, 18, 63, .1); border-color: rgba(163, 18, 63, .35); color: var(--field-error-ink) !important; }

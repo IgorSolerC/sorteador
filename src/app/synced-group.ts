@@ -37,6 +37,7 @@ export class SyncedGroup {
   protected readonly now = signal(Date.now());
   protected readonly lastLoadedAt = signal(0);
   protected readonly author = signal(readAuthor());
+  protected readonly confirming = signal(false);
 
   protected readonly MIN_MEMBERS = MIN_MEMBERS;
 
@@ -145,7 +146,22 @@ export class SyncedGroup {
     );
   }
 
-  protected async spin(): Promise<void> {
+  protected askToSpin(): void {
+    if (!this.canSpinNow()) return;
+    this.confirming.set(true);
+  }
+
+  protected cancelSpin(): void {
+    this.confirming.set(false);
+    this.document.getElementById('spin-button')?.focus();
+  }
+
+  protected async confirmSpin(): Promise<void> {
+    this.confirming.set(false);
+    await this.spin();
+  }
+
+  private async spin(): Promise<void> {
     if (!this.canSpinNow()) return;
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;

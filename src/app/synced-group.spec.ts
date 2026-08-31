@@ -314,4 +314,49 @@ describe('modo sincronizado', () => {
     expect(texto).toContain('Grupo não');
     fixture.destroy();
   });
+
+  it('clicar em girar pede confirmação em vez de girar', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as { askToSpin(): void };
+
+    app.askToSpin();
+    fixture.detectChanges();
+
+    const aviso = (fixture.nativeElement as HTMLElement).querySelector('[role="alertdialog"]');
+    expect(aviso?.textContent).toContain('Tem certeza');
+    expect(aviso?.textContent).toContain('permanentemente');
+    expect(store.calls).not.toContain('spin');
+    fixture.destroy();
+  });
+
+  it('cancelar não gira', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      askToSpin(): void; cancelSpin(): void;
+    };
+
+    app.askToSpin();
+    app.cancelSpin();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alertdialog"]')).toBeNull();
+    expect(store.calls).not.toContain('spin');
+    fixture.destroy();
+  });
+
+  it('confirmar gira de verdade', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      askToSpin(): void; confirmSpin(): Promise<void>;
+    };
+
+    app.askToSpin();
+    await app.confirmSpin();
+
+    expect(store.calls).toContain('spin');
+    fixture.destroy();
+  });
 });
