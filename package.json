@@ -10,7 +10,8 @@
     "test:rules": "npm run emu:free && firebase emulators:exec --only firestore --project mesa-do-mes-rules-test \"node tests/firestore-rules.test.mjs\"",
     "build:testjs": "tsc src/app/draw-engine.ts src/app/group-log.ts src/app/usage-guard.ts src/app/group-store.ts --outDir tmpjs/src/app --module esnext --target es2022 --moduleResolution bundler --skipLibCheck && node tests/fix-esm-imports.mjs",
     "test:store": "npm run emu:free && npm run build:testjs && firebase emulators:exec --only firestore,auth --project mesa-do-mes-store-test \"node tests/group-store.test.mjs\"",
-    "emu:free": "node tests/free-ports.mjs"
+    "emu:free": "node tests/free-ports.mjs",
+    "test:migration": "npm run emu:free && npm run build:testjs && firebase emulators:exec --only firestore --project migracao-teste \"node tests/migrate.test.mjs\""
   },
   "private": true,
   "packageManager": "npm@10.9.2",
@@ -34,6 +35,7 @@
     "@angular/cli": "^21.2.22",
     "@angular/compiler-cli": "^21.2.0",
     "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase-admin": "^14.3.0",
     "firebase-tools": "^15.28.2",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",

@@ -57,3 +57,6 @@ Thumbs.db
 /ui-debug.log
 /.firebase/
 /tmpjs/
+backup-*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
