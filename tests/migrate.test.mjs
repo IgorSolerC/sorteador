@@ -75,7 +75,7 @@ async function aplicar(plano) {
   }
   batch.update(grupoRef, {
     versaoLog: plano.novos.length,
-    ultimoGiroEm: Timestamp.fromMillis(plano.spinAt),
+    ultimoGiroEm: Timestamp.fromMillis(plano.spinTimes[plano.spinTimes.length - 1]),
   });
   await batch.commit();
 }
@@ -83,30 +83,30 @@ async function aplicar(plano) {
 // --- o plano, sem banco ---
 
 await it('o plano acha um instante que faz o vencedor pedido sair', () => {
-  const plano = planMigration(GRUPO, { members: MEMBROS, winner: 'GU', spinAt: GIRO_ALVO });
+  const plano = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: 'GU', at: GIRO_ALVO }] });
   assert.ok(plano, 'deveria achar um instante');
   assert.equal(plano.state.spins[0].winnerName, 'GU');
 });
 
 await it('o giro fica no minuto pedido, não em outro', () => {
-  const plano = planMigration(GRUPO, { members: MEMBROS, winner: 'GU', spinAt: GIRO_ALVO });
-  assert.ok(plano.offset < 60_000, `saiu ${plano.offset}ms depois do alvo`);
+  const plano = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: 'GU', at: GIRO_ALVO }] });
+  assert.ok(plano.spinTimes[0] - GIRO_ALVO < 60_000, `saiu ${plano.spinTimes[0] - GIRO_ALVO}ms depois do alvo`);
 });
 
 await it('todo mundo está elegível no giro, que é o ponto da migração', () => {
-  const plano = planMigration(GRUPO, { members: MEMBROS, winner: 'GU', spinAt: GIRO_ALVO });
+  const plano = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: 'GU', at: GIRO_ALVO }] });
   assert.equal(plano.state.spins[0].eligible.length, MEMBROS.length);
 });
 
 await it('o plano é determinístico', () => {
-  const a = planMigration(GRUPO, { members: MEMBROS, winner: 'GU', spinAt: GIRO_ALVO });
-  const b = planMigration(GRUPO, { members: MEMBROS, winner: 'GU', spinAt: GIRO_ALVO });
-  assert.equal(a.spinAt, b.spinAt);
+  const a = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: 'GU', at: GIRO_ALVO }] });
+  const b = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: 'GU', at: GIRO_ALVO }] });
+  assert.deepEqual(a.spinTimes, b.spinTimes);
 });
 
 await it('funciona para qualquer vencedor da lista, não só o GU', () => {
   for (const nome of MEMBROS) {
-    const plano = planMigration(GRUPO, { members: MEMBROS, winner: nome, spinAt: GIRO_ALVO });
+    const plano = planMigration(GRUPO, { members: MEMBROS, spins: [{ winner: nome, at: GIRO_ALVO }] });
     assert.ok(plano, `não achou instante para ${nome}`);
     assert.equal(plano.state.spins[0].winnerName, nome);
   }
@@ -114,7 +114,7 @@ await it('funciona para qualquer vencedor da lista, não só o GU', () => {
 
 await it('desiste quando o vencedor não está na lista', () => {
   const plano = planMigration(GRUPO, {
-    members: MEMBROS, winner: 'NINGUEM', spinAt: GIRO_ALVO, maxSearchMs: 5000,
+    members: MEMBROS, spins: [{ winner: 'NINGUEM', at: GIRO_ALVO }], maxSearchMs: 5000,
   });
   assert.equal(plano, null);
 });
@@ -132,7 +132,7 @@ await it('a réplica reproduz o problema real: giro com só 2 elegíveis', async
 await it('depois da migração o giro tem os 9 elegíveis e o GU ganha', async () => {
   await semearReplica();
   const plano = planMigration(GRUPO, {
-    members: MEMBROS, winner: 'GU', actor: 'IGRU', spinAt: GIRO_ALVO,
+    members: MEMBROS, actor: 'IGRU', spins: [{ winner: 'GU', at: GIRO_ALVO }],
   });
   await aplicar(plano);
 
@@ -168,12 +168,32 @@ await it('o giro cai na data pedida', async () => {
 await it('rodar de novo dá o mesmo resultado', async () => {
   const antes = (await lerEstado()).state.spins[0];
   const plano = planMigration(GRUPO, {
-    members: MEMBROS, winner: 'GU', actor: 'IGRU', spinAt: GIRO_ALVO,
+    members: MEMBROS, actor: 'IGRU', spins: [{ winner: 'GU', at: GIRO_ALVO }],
   });
   await aplicar(plano);
   const depois = (await lerEstado()).state.spins[0];
   assert.equal(depois.winnerName, antes.winnerName);
   assert.equal(depois.at, antes.at);
+});
+
+
+await it('preserva mais de um giro, cada um com o vencedor certo', async () => {
+  await semearReplica();
+  const SEGUNDO = GIRO_ALVO + 4 * 24 * 60 * 60 * 1000;
+  const plano = planMigration(GRUPO, {
+    members: MEMBROS, actor: 'IGRU',
+    spins: [{ winner: 'GU', at: GIRO_ALVO }, { winner: 'VITINHO', at: SEGUNDO }],
+  });
+  assert.ok(plano, 'deveria achar instantes para os dois');
+  await aplicar(plano);
+
+  const { state } = await lerEstado();
+  assert.equal(state.spins.length, 2);
+  assert.equal(state.spins[0].winnerName, 'GU');
+  assert.equal(state.spins[1].winnerName, 'VITINHO');
+  assert.equal(state.spins[0].eligible.length, 9);
+  assert.equal(state.spins[1].eligible.length, 8);
+  assert.equal(state.pool.length, 7);
 });
 
 for (const r of results) {
