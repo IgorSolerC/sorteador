@@ -14,8 +14,13 @@ let id=0; const pend=new Map();
 ws.onmessage=e=>{const m=JSON.parse(e.data); if(m.id&&pend.has(m.id)){pend.get(m.id)(m.result);pend.delete(m.id);}};
 const send=(method,params={})=>new Promise(res=>{const i=++id;pend.set(i,res);ws.send(JSON.stringify({id:i,method,params}));});
 await send('Page.enable'); await send('Runtime.enable');
-await send('Page.navigate',{url:process.argv[2]}); await sleep(11000);
-await send('Runtime.evaluate',{expression:`(()=>{const b=document.getElementById('spin-button'); b.disabled=false; b.click();})()`});
+await send('Page.navigate',{url:process.argv[2]}); await sleep(Number(process.env["W"] ?? 11000));
+const diag=await send('Runtime.evaluate',{expression:`(()=>{
+  const b=document.getElementById('spin-button');
+  return JSON.stringify({ achou: !!b, texto: b?.textContent?.trim(), desabilitado: b?.disabled });
+})()`,returnByValue:true});
+console.log('botão:', diag.result.value);
+await send('Runtime.evaluate',{expression:`(()=>{const b=document.getElementById('spin-button'); if(!b) return 'sem botao'; b.click(); return 'clicado';})()`,returnByValue:true});
 await sleep(1200);
 const {result}=await send('Runtime.evaluate',{expression:`document.querySelector('[role="alertdialog"]')?.innerText ?? 'SEM AVISO'`,returnByValue:true});
 console.log(result.value);
