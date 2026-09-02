@@ -137,8 +137,14 @@ const legado = await evaluate(`(() => ({
   vencedor: document.querySelector('#result-title')?.textContent?.trim(),
   edicao: [...document.querySelectorAll('.serial-grid dd')].map(d => d.textContent.trim()).join('|'),
 }))()`);
-check('o modo por link segue com o resultado congelado',
-  legado.vencedor === 'Zilda' && legado.edicao.includes('1B454935'), `${legado.vencedor} | ${legado.edicao}`);
+// Cravar o vencedor aqui quebraria na virada do mês: no modo por link ele é o do mês
+// corrente. O que é congelado é a edição, que depende da lista e do início, não do mês.
+const QUARTETO = ['Zilda', 'Yuri', 'Xavier', 'Wanda'];
+check('o modo por link segue com a edição congelada e um vencedor da lista',
+  legado.edicao.includes('1B454935')
+    && legado.edicao.includes('maio de 2026')
+    && QUARTETO.includes(legado.vencedor ?? ''),
+  `${legado.vencedor} | ${legado.edicao}`);
 
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} fluxos verificados`);
