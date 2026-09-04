@@ -302,6 +302,120 @@ await it('subcoleção inventada dentro do grupo é inacessível', async () => {
   await assertFails(setDoc(doc(alice(), 'grupos', GRUPO, 'segredos', 'x'), { a: 1 }));
 });
 
+// --- etiquetas de giro ---
+
+const etiqueta = (giroIndex = 0, extra = {}) => ({
+  tipo: 'spin_annotated',
+  em: serverTimestamp(),
+  giro: giroIndex,
+  titulo: 'Click The Button!',
+  descricao: 'Nota final 8/10',
+  ...extra,
+});
+
+await it('etiqueta um giro já registrado, em lote com o contador', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), etiqueta(0), { versaoAtual: 2 }));
+});
+
+await it('etiqueta sozinha, sem mexer no contador, é recusada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(eventoSozinho(alice(), etiqueta(0)));
+});
+
+await it('recusa etiqueta de um giro além do fim do log', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), etiqueta(7), { versaoAtual: 2 }));
+});
+
+await it('recusa índice de giro negativo', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), etiqueta(-1), { versaoAtual: 2 }));
+});
+
+await it('recusa índice de giro fracionário', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), etiqueta(1.5), { versaoAtual: 2 }));
+});
+
+await it('recusa índice de giro que não é número', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), etiqueta('0'), { versaoAtual: 2 }));
+});
+
+await it('recusa título longo demais', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), etiqueta(0, { titulo: 'x'.repeat(81) }), { versaoAtual: 2 }),
+  );
+});
+
+await it('recusa descrição longa demais', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), etiqueta(0, { descricao: 'x'.repeat(281) }), { versaoAtual: 2 }),
+  );
+});
+
+await it('aceita etiqueta em branco: é assim que se retira uma', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(
+    gravaEvento(alice(), etiqueta(0, { titulo: '', descricao: '' }), { versaoAtual: 2 }),
+  );
+});
+
+await it('recusa etiqueta que também tenta entrar alguém no grupo', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), etiqueta(0, { nome: 'Impostor' }), { versaoAtual: 2 }));
+});
+
+await it('recusa campo de etiqueta num evento que não é etiqueta', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), { ...entrada('Ana'), titulo: 'Contrabando' }, { versaoAtual: 2 }),
+  );
+});
+
+await it('a espera entre giros não bloqueia etiquetar', async () => {
+  await comGrupo({ versaoLog: 2, ultimoGiroEm: new Date() });
+  await assertSucceeds(gravaEvento(alice(), etiqueta(0), { versaoAtual: 2 }));
+});
+
+await it('etiquetar não pode empurrar a espera do próximo giro', async () => {
+  await comGrupo({ versaoLog: 2, ultimoGiroEm: null });
+  await assertFails(
+    gravaEvento(alice(), etiqueta(0), {
+      versaoAtual: 2,
+      grupoExtra: { ultimoGiroEm: serverTimestamp() },
+    }),
+  );
+});
+
+await it('entrar no grupo também não pode empurrar a espera do giro', async () => {
+  await comGrupo({ ultimoGiroEm: null });
+  await assertFails(
+    gravaEvento(alice(), entrada('Gabriela'), { grupoExtra: { ultimoGiroEm: serverTimestamp() } }),
+  );
+});
+
+await it('uma etiqueta gravada não pode ser reescrita nem apagada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  let ref;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    ref = await addDoc(collection(ctx.firestore(), 'grupos', GRUPO, 'eventos'), {
+      tipo: 'spin_annotated',
+      em: new Date(),
+      giro: 0,
+      titulo: 'Tetris',
+      descricao: '',
+    });
+  });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id), { titulo: 'Outro jogo' }),
+  );
+  await assertFails(deleteDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id)));
+});
+
 await testEnv.cleanup();
 
 const failed = results.filter((r) => !r.ok);

@@ -2,10 +2,12 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { GroupMember, MAX_MEMBERS, MIN_MEMBERS, activeMembers, poolMembers } from './group-log';
+import { GroupMember, MAX_MEMBERS, MIN_MEMBERS, SpinRecord, activeMembers, poolMembers } from './group-log';
 import { GroupSnapshot, GroupStore, SPIN_COOLDOWN_MS, UsageBlockedError } from './group-store';
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
 import { Machine, capsuleColor } from './machine';
+import { NoteBench } from './note-bench';
+import { NoteEditor } from './note-editor';
 import { normalizeName, participantKey } from './draw-engine';
 
 /**
@@ -14,7 +16,7 @@ import { normalizeName, participantKey } from './draw-engine';
  */
 @Component({
   selector: 'app-synced-group',
-  imports: [CommonModule, FormsModule, Machine],
+  imports: [CommonModule, FormsModule, Machine, NoteEditor],
   templateUrl: './synced-group.html',
 })
 export class SyncedGroup {
@@ -38,6 +40,20 @@ export class SyncedGroup {
   protected readonly lastLoadedAt = signal(0);
   protected readonly author = signal(readAuthor());
   protected readonly confirming = signal(false);
+
+  /** A bancada de etiquetas, a mesma que o álbum abre sobre os mesmos giros. */
+  private readonly bench = new NoteBench(
+    this.document,
+    (spinIndex, note) =>
+      this.store
+        .annotateSpin(this.groupId(), spinIndex, note, this.author())
+        .then(() => this.reload(this.groupId())),
+    (error) => this.explain(error),
+  );
+
+  protected readonly editingSpinIndex = this.bench.spinIndex;
+  protected readonly noteError = this.bench.error;
+  protected readonly savingNote = this.bench.saving;
 
   protected readonly MIN_MEMBERS = MIN_MEMBERS;
 
@@ -118,6 +134,19 @@ export class SyncedGroup {
     () => `${location.href.split('#')[0]}#/g/${this.groupId()}`,
   );
 
+  protected readonly albumUrl = computed(() => `${this.shareUrl()}/album`);
+
+  /**
+   * O giro que está sendo etiquetado, relido do snapshot a cada carga: assim a bancada
+   * mostra a etiqueta que o servidor tem, não a que tinha quando ela abriu.
+   */
+  protected readonly editingSpin = computed<SpinRecord | null>(() => {
+    const index = this.editingSpinIndex();
+    const snap = this.snapshot();
+    if (index === null || !snap) return null;
+    return snap.state.spins[index] ?? null;
+  });
+
   // --- ações ---
 
   protected async addMember(): Promise<void> {
@@ -144,6 +173,31 @@ export class SyncedGroup {
       () => this.store.removeMember(this.groupId(), member.id, this.author()),
       `${member.name} saiu do globo, mas continua no histórico.`,
     );
+  }
+
+  // --- a etiqueta: o que o clube jogou, colado na cápsula que saiu ---
+
+  /** Abre a bancada para um giro, seja o de agora ou um de um ano atrás. */
+  protected openNote(spin: SpinRecord, event?: Event): void {
+    this.bench.open(spin, event);
+  }
+
+  protected closeNote(): void {
+    this.bench.close();
+  }
+
+  protected async commitNote(draft: { title: string; description: string }): Promise<void> {
+    const spin = this.editingSpin();
+    if (!spin) return;
+    const message = await this.bench.commit(spin, draft);
+    if (message) this.showNotice(message);
+  }
+
+  protected async removeNote(): Promise<void> {
+    const spin = this.editingSpin();
+    if (!spin) return;
+    const message = await this.bench.remove(spin);
+    if (message) this.showNotice(message);
   }
 
   protected askToSpin(): void {
@@ -282,19 +336,19 @@ export class SyncedGroup {
   }
 
   private report(error: unknown): void {
+    this.error.set(this.explain(error));
+  }
+
+  private explain(error: unknown): string {
     if (error instanceof UsageBlockedError) {
-      this.error.set(
-        'A máquina parou por segurança: o uso do dia bateu no limite que protege a cota gratuita. ' +
-        'Ela volta sozinha na virada do dia.',
-      );
-      return;
+      return 'A máquina parou por segurança: o uso do dia bateu no limite que protege a cota gratuita. ' +
+        'Ela volta sozinha na virada do dia.';
     }
     const code = (error as { code?: string })?.code;
     if (code === 'permission-denied') {
-      this.error.set('O servidor recusou a operação. Se foi um giro, a espera entre giros ainda não passou.');
-      return;
+      return 'O servidor recusou a operação. Se foi um giro, a espera entre giros ainda não passou.';
     }
-    this.error.set((error as Error)?.message ?? 'Algo deu errado ao falar com o servidor.');
+    return (error as Error)?.message ?? 'Algo deu errado ao falar com o servidor.';
   }
 
   private showNotice(message: string): void {

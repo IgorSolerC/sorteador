@@ -310,3 +310,115 @@ describe('invariantes sob log aleatório', () => {
     expect(replay(GRUPO, b).spins).toHaveLength(0);
   });
 });
+
+describe('etiqueta do giro', () => {
+  function note(spinIndex: number, title: string, description = '', actor?: string): GroupEvent {
+    return { type: 'spin_annotated', at: at(), spinIndex, title, description, actor };
+  }
+
+  const dupla = () => seed(['Ana', 'Breno']);
+
+  it('etiqueta o giro que acabou de sair', () => {
+    const state = replay(GRUPO, [...dupla(), spin(), note(0, 'Click The Button!', 'Nota final 8/10')]);
+
+    expect(state.lastSpin!.note).toEqual({
+      title: 'Click The Button!',
+      description: 'Nota final 8/10',
+      at: expect.any(Number),
+      actor: undefined,
+      revision: 1,
+    });
+  });
+
+  it('etiqueta um giro antigo sem tocar nos que vieram depois', () => {
+    const state = replay(GRUPO, [
+      ...dupla(),
+      spin(),
+      spin(),
+      note(0, 'Overcooked', 'Brigamos, mas valeu'),
+    ]);
+
+    expect(state.spins[0].note!.title).toBe('Overcooked');
+    expect(state.spins[1].note).toBeNull();
+  });
+
+  it('reescrever é gravar outra etiqueta: a última vale e a revisão sobe', () => {
+    const state = replay(GRUPO, [
+      ...dupla(),
+      spin(),
+      note(0, 'Overcooked', 'Nota 7/10', 'Igor'),
+      note(0, 'Overcooked 2', 'Nota 9/10', 'Bia'),
+    ]);
+
+    expect(state.spins[0].note).toMatchObject({
+      title: 'Overcooked 2',
+      description: 'Nota 9/10',
+      actor: 'Bia',
+      revision: 2,
+    });
+  });
+
+  it('etiqueta em branco é etiqueta retirada', () => {
+    const state = replay(GRUPO, [...dupla(), spin(), note(0, 'Tetris'), note(0, '   ', '\n ')]);
+    expect(state.spins[0].note).toBeNull();
+  });
+
+  it('não se etiqueta uma cápsula que ainda não caiu', () => {
+    const antes = replay(GRUPO, [...dupla(), note(0, 'Vai ser este'), spin()]);
+    expect(antes.spins[0].note).toBeNull();
+
+    const alem = replay(GRUPO, [...dupla(), spin(), note(9, 'Giro que não existe')]);
+    expect(alem.spins.some((s) => s.note)).toBe(false);
+  });
+
+  it('índice inválido é ignorado, não quebra o replay', () => {
+    for (const giro of [-1, 1.5, Number.NaN]) {
+      const state = replay(GRUPO, [...dupla(), spin(), note(giro, 'Nada')]);
+      expect(state.spins[0].note).toBeNull();
+    }
+  });
+
+  it('uma etiqueta nunca muda o sorteio', () => {
+    const base: GroupEvent[] = [...seed(['Ana', 'Breno', 'Cecília']), spin(), spin(), spin(), spin()];
+    const semNotas = replay(GRUPO, base);
+    const comNotas = replay(GRUPO, [
+      base[0], base[1], base[2],
+      base[3], note(0, 'Um'),
+      base[4], note(1, 'Dois', 'com descrição'),
+      base[5], note(0, 'Um, corrigido'),
+      base[6],
+    ]);
+
+    expect(comNotas.round).toBe(semNotas.round);
+    expect(comNotas.pool).toEqual(semNotas.pool);
+    expect(comNotas.spins.map((s) => s.winnerName)).toEqual(semNotas.spins.map((s) => s.winnerName));
+    expect(comNotas.spins.map((s) => s.at)).toEqual(semNotas.spins.map((s) => s.at));
+  });
+
+  it('a etiqueta sobrevive ao fechamento da rodada', () => {
+    const state = replay(GRUPO, [...dupla(), spin(), spin(), note(0, 'Rodada passada')]);
+
+    expect(state.round).toBe(2);
+    expect(state.spins[0].round).toBe(1);
+    expect(state.spins[0].note!.title).toBe('Rodada passada');
+  });
+
+  it('o título é uma linha só e o corte respeita emoji', () => {
+    const state = replay(GRUPO, [
+      ...dupla(),
+      spin(),
+      note(0, '  Click\nThe   Button!  ', '🎮'.repeat(400)),
+    ]);
+
+    expect(state.spins[0].note!.title).toBe('Click The Button!');
+    // O corte é na medida do servidor (unidades UTF-16) e nunca parte um emoji ao meio.
+    expect(state.spins[0].note!.description.length).toBeLessThanOrEqual(280);
+    expect(state.spins[0].note!.description).not.toMatch(/[�-�](?![�-�])/);
+    expect(state.spins[0].note!.description.startsWith('🎮')).toBe(true);
+  });
+
+  it('um evento de versão futura é contado e ignorado', () => {
+    const state = replay(GRUPO, [...dupla(), { type: 'unknown', at: at() }, spin()]);
+    expect(state.spins).toHaveLength(1);
+  });
+});

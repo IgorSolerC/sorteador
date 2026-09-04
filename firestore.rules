@@ -21,6 +21,11 @@ service cloud.firestore {
       return valor is string && valor.size() > 0 && valor.size() <= maximo;
     }
 
+    // Etiqueta em branco é etiqueta retirada, então aqui o vazio é legítimo.
+    function textoOpcional(valor, maximo) {
+      return valor is string && valor.size() <= maximo;
+    }
+
     match /grupos/{grupoId} {
       allow get: if signedIn();
       // Listar é proibido: senão o link deixa de ser segredo.
@@ -68,16 +73,44 @@ service cloud.firestore {
 
         function eventoValido() {
           let d = request.resource.data;
-          return d.keys().hasOnly(['tipo', 'em', 'nome', 'memberId', 'autor'])
+          return d.keys().hasOnly(['tipo', 'em', 'nome', 'memberId', 'autor', 'giro', 'titulo', 'descricao'])
             // O carimbo é do servidor, sempre. É a única entrada que o cliente não
             // escolhe, e é dela que o sorteio tira o resultado.
             && d.em == request.time
-            && d.tipo in ['member_added', 'member_removed', 'spin']
+            && d.tipo in ['member_added', 'member_removed', 'spin', 'spin_annotated']
             && (!('autor' in d) || texto(d.autor, 60))
             && (d.tipo != 'member_added' || texto(d.nome, 60))
             && (d.tipo != 'member_removed' || texto(d.memberId, 32))
             && (d.tipo != 'spin' || giroPermitido())
+            && (d.tipo != 'spin_annotated' || anotacaoValida())
+            && (d.tipo == 'spin_annotated' || semCamposDeEtiqueta())
+            && (d.tipo == 'spin' || marcaDeGiroIntacta())
             && contadorAcompanha();
+        }
+
+        // A etiqueta descreve um giro; ela nunca decide nada. As regras não conseguem
+        // replicar o log para saber que o giro existe, mas sabem que ele não pode estar
+        // além do fim do log — e o replay descarta o que sobrar.
+        function anotacaoValida() {
+          let d = request.resource.data;
+          return d.giro is int
+            && d.giro >= 0
+            && d.giro < grupoAntes().versaoLog
+            && textoOpcional(d.titulo, 80)
+            && textoOpcional(d.descricao, 280)
+            && !('nome' in d)
+            && !('memberId' in d);
+        }
+
+        function semCamposDeEtiqueta() {
+          let d = request.resource.data;
+          return !('giro' in d) && !('titulo' in d) && !('descricao' in d);
+        }
+
+        // Só um giro mexe no relógio do giro. Sem isto, anotar em rajada empurraria a
+        // espera de 30s e travaria a máquina do grupo inteiro sem girar uma vez.
+        function marcaDeGiroIntacta() {
+          return grupoDepois().ultimoGiroEm == grupoAntes().ultimoGiroEm;
         }
 
         // Um evento não entra sozinho: o contador do grupo tem que subir na mesma escrita.

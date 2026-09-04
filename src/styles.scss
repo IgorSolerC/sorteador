@@ -20,7 +20,7 @@
 * { box-sizing: border-box; }
 html { background: var(--enamel); scroll-behavior: smooth; }
 body { margin: 0; background: var(--enamel); color: var(--white); }
-button, input { font: inherit; }
+button, input, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .5; }
@@ -177,9 +177,10 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .add-form > label, .share-field, .start-field { display: block; margin-bottom: .55rem; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .field-row { display: flex; gap: .6rem; }
 input { min-width: 0; min-height: 48px; padding: .78rem .95rem; background: var(--field); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 8px; caret-color: var(--field-focus); }
-input::placeholder { color: var(--ink-quiet); opacity: 1; }
-input[aria-invalid='true'] { border-color: var(--field-error); }
-input:focus-visible { outline-color: var(--field-focus); }
+textarea { min-width: 0; padding: .78rem .95rem; background: var(--field); color: var(--ink); border: 1.5px solid var(--field-line); border-radius: 8px; caret-color: var(--field-focus); line-height: 1.55; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--ink-quiet); opacity: 1; }
+input[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: var(--field-error); }
+input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus); }
 .field-row input { flex: 1; }
 .field-error { margin: .6rem 0 0; color: var(--field-error-ink); font-size: .82rem; }
 .share-block { margin-top: 3.2rem; padding-top: 1.6rem; border-top: 1px solid var(--line-paper); }
@@ -239,7 +240,7 @@ input:focus-visible { outline-color: var(--field-focus); }
 .empty-stage .secondary-action, .roster-intro a.secondary-action { display: inline-flex; align-items: center; text-decoration: none; }
 .log-freshness { display: flex; align-items: center; gap: .75rem; margin: .9rem 0 0; }
 .log-freshness span { color: var(--sky); font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; }
-.refresh-button { min-height: 38px; padding: .4rem .9rem; background: transparent; color: var(--chrome); border: 1px solid var(--line-strong); border-radius: 999px; font-size: .82rem; font-weight: 700; }
+.refresh-button { min-height: 44px; padding: .55rem 1rem; background: transparent; color: var(--chrome); border: 1px solid var(--line-strong); border-radius: 999px; font-size: .82rem; font-weight: 700; }
 .refresh-button:hover:not(:disabled) { background: rgba(200, 220, 255, .09); }
 .author-field { margin-bottom: 1.6rem; }
 .cell-actor { color: var(--sky); font-size: .74rem; }
@@ -250,6 +251,54 @@ input:focus-visible { outline-color: var(--field-focus); }
 .confirm-actions { display: flex; align-items: center; gap: 1.2rem; margin-top: 1.5rem; }
 .confirm-cancel { background: transparent; border: 0; color: var(--chrome); font-weight: 700; text-decoration: underline; text-underline-offset: .24em; }
 @media (max-width: 620px) { .confirm-actions { align-items: stretch; flex-direction: column; gap: .7rem; } .confirm-cancel { min-height: 44px; } }
+
+/* ---- A etiqueta: papel colado na cápsula que já saiu ---- */
+/* O papel volta aqui porque escrever uma etiqueta é administrar, e porque a etiqueta
+   é literalmente papel: o mesmo material do adesivo do mês, colado sobre o esmalte. */
+.note-sticker { position: relative; display: block; width: min(100%, 33rem); margin: 2.2rem 0 0; padding: 1.15rem 3.6rem 1rem 1.3rem; background: var(--paper); border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); color: var(--ink); text-align: left; transform: rotate(-.9deg); }
+.note-chip { position: absolute; top: 1.2rem; right: 1.3rem; width: 1.55rem; height: 1.1rem; background: var(--capsule); border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }
+.note-serial { display: block; margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.note-title { display: block; margin: .5rem 0 0; color: var(--ink); font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1.18; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.note-description { display: block; max-width: 46ch; margin: .5rem 0 0; color: var(--ink-quiet); font-size: .92rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.note-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .55rem 0 0; padding-top: .35rem; border-top: 1px solid var(--line-paper); color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.note-edit { min-height: 44px; flex: none; padding: 0 .2rem; background: transparent; border: 0; color: var(--ink); font-family: var(--body); font-size: .82rem; font-weight: 700; letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
+.note-edit:hover { color: var(--field-focus); }
+
+/* A etiqueta em branco é um objeto, não um botão de "adicionar": papel ainda não escrito. */
+.note-sticker.is-blank { background: var(--paper-quiet); box-shadow: 0 8px 20px rgba(6, 14, 28, .34); transition: transform .16s ease, background .16s ease, box-shadow .16s ease; }
+.note-sticker.is-blank::after { content: ''; position: absolute; inset: 6px; border: 1.5px dashed rgba(22, 35, 58, .3); border-radius: 4px; pointer-events: none; }
+.note-sticker.is-blank:hover { background: var(--paper); box-shadow: 0 15px 30px rgba(6, 14, 28, .48); transform: rotate(-.9deg) translateY(-2px); }
+.note-sticker.is-blank:active { box-shadow: 0 6px 14px rgba(6, 14, 28, .4); transform: rotate(-.9deg) translateY(1px); }
+.note-sticker.is-blank .note-description { margin-bottom: .15rem; }
+
+/* ---- A bancada: onde a etiqueta é escrita ---- */
+.note-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
+.note-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(34rem, calc(100vw - 2.4rem)); max-height: calc(100svh - 2.4rem); overflow-y: auto; padding: 1.7rem 1.7rem 1.5rem; background: var(--paper); color: var(--ink); border-radius: 12px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
+.note-card::after { content: ''; position: absolute; right: 1rem; bottom: 1rem; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
+.note-card-serial { margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.note-card h2 { display: flex; align-items: center; gap: .75rem; margin: .7rem 0 0; color: var(--ink); font-size: 2.4rem; line-height: 1; overflow-wrap: anywhere; }
+.note-card-capsule { width: 2.4rem; height: 2.4rem; flex: none; display: grid; place-items: center; padding-bottom: .7rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -.75rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); font-size: .82rem; }
+.note-form { display: grid; gap: 1.15rem; margin-top: 1.6rem; }
+.note-field { display: block; }
+.note-field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.note-field-head b { flex: none; color: var(--ink-quiet); font-weight: 700; font-variant-numeric: tabular-nums; }
+.note-field-head b.is-full { color: var(--field-error-ink); }
+.note-field input, .note-field textarea { width: 100%; display: block; }
+.note-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.1rem; margin-top: .25rem; }
+.note-cancel { min-height: 44px; background: transparent; border: 0; color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
+.note-remove { min-height: 44px; margin-left: auto; padding: 0 .7rem; background: transparent; border: 0; border-radius: 999px; color: var(--remove-ink); font-weight: 700; }
+.note-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--field-error) 9%, transparent); color: var(--field-error-ink); }
+/* A goteira à direita é a marca de registro do impressor: o texto não corre por baixo dela. */
+.note-card-history { max-width: 48ch; margin: 1.4rem 0 0; padding: 1rem 1.9rem 0 0; border-top: 1px solid var(--line-paper); color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
+
+/* ---- A célula do registro vira o modo de abrir a etiqueta ---- */
+.chart-cell:has(.cell-open) { padding: 0; }
+.cell-open { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; background: transparent; border: 0; border-radius: 0 8px 8px 0; color: inherit; text-align: left; transition: background .16s ease; }
+.cell-open:hover { background: rgba(200, 220, 255, .07); }
+.cell-open:hover .cell-note { text-decoration: underline; text-underline-offset: .22em; text-decoration-thickness: 1.5px; }
+.cell-open:hover .cell-note.is-blank { color: var(--chrome); text-decoration: none; }
+.cell-note { display: block; margin-top: .1rem; color: var(--white); font-family: var(--body); font-size: .82rem; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+.cell-note.is-blank { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: color-mix(in srgb, var(--field-error) 16%, transparent); border: 1px solid color-mix(in srgb, var(--error-light) 40%, transparent); border-radius: 8px; color: var(--error-light); font-size: .82rem; line-height: 1.5; }
 .usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: var(--note-ink) !important; font-size: .82rem !important; line-height: 1.5; }
 .usage-note.is-stopped { background: rgba(163, 18, 63, .1); border-color: rgba(163, 18, 63, .35); color: var(--field-error-ink) !important; }
@@ -341,9 +390,90 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
   .person-capsule { width: 2.4rem; height: 2.4rem; }
   .roster-list button svg { display: none; }
   .toast { right: .75rem; bottom: .75rem; max-width: calc(100vw - 1.5rem); }
+  .note-sticker { padding: 1rem 3.2rem .9rem 1.05rem; transform: rotate(-.5deg); }
+  .note-sticker.is-blank:hover { transform: rotate(-.5deg) translateY(-2px); }
+  .note-sticker.is-blank:active { transform: rotate(-.5deg) translateY(1px); }
+  .note-meta { align-items: flex-start; flex-direction: column; gap: .2rem; }
+  .note-card { padding: 1.35rem 1.15rem 1.2rem; }
+  .note-actions { gap: .8rem; }
+  .note-remove { margin-left: 0; }
   footer { align-items: flex-start; flex-direction: column; gap: .5rem; padding-inline: 1.1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ---- O álbum: a parede de etiquetas ---- */
+/* Papel sobre esmalte, e nada mais: cada cartão é uma etiqueta de verdade colada na
+   parede da máquina. A superfície continua sendo o esmalte — o papel são os objetos. */
+.album-back { flex: none; }
+.album-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: end; gap: clamp(2rem, 5vw, 4rem); padding: clamp(3.5rem, 7vw, 6rem) 5vw clamp(2.2rem, 4vw, 3rem); background: var(--enamel); }
+.album-head h1 { color: var(--white); }
+.album-lede { max-width: 46ch; margin: 1.3rem 0 0; color: var(--sky); font-size: 1rem; line-height: 1.62; }
+.album-lede strong { color: var(--white); font-weight: 400; }
+/* Quatro valores em quatro colunas estreitas viravam 3 + 1 órfão; 2x2 fecha o bloco. */
+.album-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.album-error { margin: 0 5vw 1.5rem; }
+.empty-stage .album-error { max-width: 46ch; margin: 1.4rem 0 0; }
+
+.album-people { padding: clamp(1.8rem, 3.5vw, 2.6rem) 5vw; background: var(--enamel-deep); border-block: 1px solid var(--line); }
+.album-people h2 { margin: 0 0 1.05rem; color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.people-chips { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.people-chip { min-height: 44px; display: inline-flex; align-items: center; gap: .55rem; padding: .5rem 1rem; background: rgba(200, 220, 255, .06); color: var(--white); border: 1px solid var(--line); border-radius: 999px; font-family: var(--display); font-size: .95rem; font-weight: 600; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.people-chip:hover { background: rgba(200, 220, 255, .13); border-color: var(--line-strong); }
+/* Amarelo aqui é marcador de estado, não uma segunda ação primária. */
+.people-chip.is-on { background: var(--yellow); color: var(--enamel-deep); border-color: var(--yellow); }
+.people-chip b { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.people-chip.is-on b { color: rgba(10, 24, 48, .72); }
+.chip-capsule { width: 1.15rem; height: .82rem; flex: none; background: var(--capsule); border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.24rem 0 rgba(233, 242, 252, .42); }
+.album-filter-state { margin: 1.05rem 0 0; color: var(--sky); font-size: .82rem; line-height: 1.5; }
+.album-filter-state strong { color: var(--white); font-weight: 700; }
+
+.album-wall { padding: clamp(2.4rem, 5vw, 3.6rem) 5vw clamp(4rem, 8vw, 7rem); background: var(--enamel); }
+.round-rule { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: clamp(2.4rem, 5vw, 3.6rem) 0 1.5rem; padding-top: .7rem; border-top: 2px solid var(--line-strong); color: var(--white); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.round-rule:first-child { margin-top: 0; }
+.round-rule b { flex: none; color: var(--sky); font-variant-numeric: tabular-nums; }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); gap: clamp(1.5rem, 2.6vw, 2.4rem); margin: 0; padding: 0; list-style: none; }
+.album-grid > li { display: flex; }
+
+.album-card { position: relative; width: 100%; display: flex; flex-direction: column; gap: .4rem; padding: 1.15rem 1.25rem 1.05rem; background: var(--paper); color: var(--ink); border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(4, 10, 22, .45); text-align: left; transform: rotate(var(--tilt, 0deg)); transition: transform .18s ease, box-shadow .18s ease; }
+/* Passar o mouse endireita e levanta a etiqueta, como quem descola uma figurinha. */
+.album-card:hover, .album-card:focus-visible { box-shadow: 0 20px 38px rgba(4, 10, 22, .55); transform: rotate(0deg) translateY(-4px); }
+.album-card:active { box-shadow: 0 8px 16px rgba(4, 10, 22, .42); transform: rotate(0deg) translateY(-1px); }
+.album-card.is-blank { background: var(--paper-quiet); box-shadow: 0 8px 20px rgba(4, 10, 22, .36); }
+.album-card.is-blank::after { content: ''; position: absolute; inset: 6px; border: 1.5px dashed rgba(22, 35, 58, .28); border-radius: 4px; pointer-events: none; }
+.album-card-head { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.album-capsule { width: 2.1rem; height: 1.5rem; flex: none; background: var(--capsule); border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.45rem 0 rgba(233, 242, 252, .5), inset 0 0 0 1px rgba(22, 35, 58, .14); }
+.album-who { display: grid; gap: .12rem; min-width: 0; }
+.album-serial { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.album-name { font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1.1; letter-spacing: -.03em; overflow-wrap: anywhere; }
+/* A picotagem do bloquinho, a mesma marca de impressor da coleção. */
+.album-perf { height: 3px; margin: .5rem 0 .35rem; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }
+.album-title { font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.album-title-blank { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.album-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; color: var(--ink-quiet); font-size: .92rem; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.album-meta { margin-top: auto; padding-top: .6rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+.album-empty { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(2rem, 5vw, 4rem); padding: clamp(1.5rem, 4vw, 3rem) 0; }
+.album-empty .empty-globe { width: min(28vw, 250px); }
+.album-empty h2 { margin: 0; color: var(--white); font-size: clamp(2.4rem, 4.6vw, 4rem); line-height: .95; }
+.album-empty h2 strong { display: block; color: var(--yellow); font-weight: 600; }
+.album-empty p { max-width: 46ch; color: var(--sky); font-size: 1rem; line-height: 1.6; }
+.album-empty .primary-action { margin-top: 1.5rem; }
+.album-foot { justify-content: flex-start; gap: 1.2rem; }
+.album-foot p { max-width: 52ch; }
+
+@media (max-width: 980px) {
+  .album-head, .album-empty { grid-template-columns: 1fr; }
+  .album-empty .empty-globe { width: min(52vw, 230px); }
+}
+@media (max-width: 620px) {
+  .album-head { padding: 2.8rem 1.1rem 2rem; }
+  .album-people, .album-wall { padding-inline: 1.1rem; }
+  .album-error { margin-inline: 1.1rem; }
+  .album-grid { grid-template-columns: 1fr; }
+  /* Numa coluna só, a inclinação cheia beira a borda: metade dela basta para o efeito. */
+  .album-card { transform: rotate(calc(var(--tilt, 0deg) * .5)); }
+  .album-card:hover, .album-card:focus-visible, .album-card:active { transform: rotate(0deg) translateY(-3px); }
 }

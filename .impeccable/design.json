@@ -1,70 +1,541 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-26T00:00:00-03:00",
+  "generatedAt": "2026-09-04T02:15:26.848Z",
   "title": "Design System: Mesa do Mês",
   "extensions": {
     "colorMeta": {
-      "enamel": { "role": "primary", "displayName": "Esmalte Azul-Noite", "canonical": "#10233f", "tonalRamp": ["#06101f","#0a1830","#10233f","#173352","#20456b","#3c6494","#7d9cc4","#c8d8ec"] },
-      "enamel-deep": { "role": "primary", "displayName": "Esmalte Profundo", "canonical": "#0a1830", "tonalRamp": ["#040a17","#0a1830","#102446","#173260","#22457e","#3c67a6","#7b9bcb","#c6d7ee"] },
-      "enamel-raised": { "role": "primary", "displayName": "Esmalte Elevado", "canonical": "#17304f", "tonalRamp": ["#081426","#0f2038","#17304f","#204169","#2c5688","#4a76ab","#87a5ca","#cadaed"] },
-      "enamel-lit": { "role": "primary", "displayName": "Esmalte Iluminado", "canonical": "#1e3d63", "tonalRamp": ["#0a1728","#122740","#1e3d63","#295180","#37699f","#5688bd","#93b0d3","#d0deef"] },
-      "chrome": { "role": "tertiary", "displayName": "Cromo", "canonical": "#e3eaf2", "tonalRamp": ["#20262e","#39404a","#535b67","#727b88","#93a6be","#b6c4d6","#e3eaf2","#f6f9fc"] },
-      "chrome-dim": { "role": "tertiary", "displayName": "Cromo Fosco", "canonical": "#93a6be", "tonalRamp": ["#1c2530","#2f3b4a","#455465","#5f7086","#7b8da5","#93a6be","#bccbdc","#e6edf4"] },
-      "sky": { "role": "tertiary", "displayName": "Céu", "canonical": "#bccde6", "tonalRamp": ["#1b2634","#2c3c52","#405370","#586e90","#7a8fb1","#9cb0cd","#bccde6","#e4ecf7"] },
-      "field": { "role": "neutral", "displayName": "Superfície de Campo", "canonical": "#ffffff", "tonalRamp": ["#242628","#3e4143","#5a5d60","#7b7e81","#9ea1a4","#c2c4c6","#e4e5e6","#ffffff"] },
-      "field-line": { "role": "neutral", "displayName": "Borda de Campo", "canonical": "#a9b1bf", "tonalRamp": ["#151b25","#2d333e","#474d59","#656c79","#828a97","#a9b1bf","#c0c8d6","#dde5f4"] },
-      "field-focus": { "role": "secondary", "displayName": "Âmbar de Foco", "canonical": "#b5761c", "tonalRamp": ["#291600","#492b00","#6c4200","#8e5900","#b5761c","#d39240","#f8b564","#ffdeba"] },
-      "field-error": { "role": "secondary", "displayName": "Carmim de Erro", "canonical": "#a3123f", "tonalRamp": ["#31000c","#56001c","#7a002b","#a3123f","#c13657","#ec5e79","#ff98a6","#ffd5d9"] },
-      "field-error-ink": { "role": "secondary", "displayName": "Tinta de Erro", "canonical": "#8f0f37", "tonalRamp": ["#2d000b","#4e0019","#6c0026","#8f0f37","#aa2f4c","#d75971","#ff8c9e","#ffd0d5"] },
-      "paper": { "role": "neutral", "displayName": "Papel Quente", "canonical": "#faf6ec", "tonalRamp": ["#2b271d","#484234","#67604e","#8a826d","#b0a894","#d3cbb8","#f0e9d9","#faf6ec"] },
-      "paper-quiet": { "role": "neutral", "displayName": "Papel Silencioso", "canonical": "#f0e9d9", "tonalRamp": ["#292418","#453f2d","#645c45","#877e63","#aca286","#cfc5aa","#e6dcc6","#f0e9d9"] },
-      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#16233a", "tonalRamp": ["#0a111d","#16233a","#213353","#2e4671","#425f92","#6482b2","#9aafcc","#d5deeb"] },
-      "ink-quiet": { "role": "neutral", "displayName": "Tinta Silenciosa", "canonical": "#5b6779", "tonalRamp": ["#15191f","#262d37","#3b4451","#4e5a6b","#5b6779","#7f8b9c","#a9b3c0","#d8dee6"] },
-      "white": { "role": "neutral", "displayName": "Branco", "canonical": "#ffffff", "tonalRamp": ["#242628","#3e4143","#5a5d60","#7b7e81","#9ea1a4","#c2c4c6","#e4e5e6","#ffffff"] },
-      "yellow": { "role": "secondary", "displayName": "Amarelo de Ação", "canonical": "#ffc53d", "tonalRamp": ["#3a2903","#5d4308","#855f0d","#ad7d13","#d29a1c","#ffc53d","#ffd97e","#fff0c8"] },
-      "capsule-amber": { "role": "secondary", "displayName": "Cápsula Âmbar", "canonical": "#ffc53d", "tonalRamp": ["#3a2903","#5d4308","#855f0d","#ad7d13","#d29a1c","#ffc53d","#ffd97e","#fff0c8"] },
-      "capsule-mint": { "role": "secondary", "displayName": "Cápsula Menta", "canonical": "#4fe0c8", "tonalRamp": ["#04302a","#075045","#0b7264","#109485","#1fb5a3","#4fe0c8","#95efe0","#d6faf3"] },
-      "capsule-coral": { "role": "secondary", "displayName": "Cápsula Coral", "canonical": "#ff6b7d", "tonalRamp": ["#3d0611","#631021","#8b1b33","#b32948","#d9435f","#ff6b7d","#ffa2ae","#ffd9de"] },
-      "capsule-violet": { "role": "secondary", "displayName": "Cápsula Violeta", "canonical": "#a78bff", "tonalRamp": ["#1d0f4a","#2f1a72","#43289b","#5838c1","#7a5ce0","#a78bff","#c7b4ff","#e8e0ff"] },
-      "capsule-tangerine": { "role": "secondary", "displayName": "Cápsula Tangerina", "canonical": "#ff9a3c", "tonalRamp": ["#3b1e02","#5f3306","#87490b","#b06110","#d67b1c","#ff9a3c","#ffbe83","#ffe4c9"] },
-      "capsule-rose": { "role": "secondary", "displayName": "Cápsula Rosa", "canonical": "#ff8fc7", "tonalRamp": ["#3f0a27","#66163f","#8f2559","#b93875","#e05494","#ff8fc7","#ffb9dc","#ffe0ef"] },
-      "line": { "role": "neutral", "displayName": "Linha", "canonical": "rgba(200, 220, 255, .17)", "tonalRamp": ["rgba(200,220,255,.04)","rgba(200,220,255,.08)","rgba(200,220,255,.12)","rgba(200,220,255,.17)","rgba(200,220,255,.24)","rgba(200,220,255,.34)","rgba(200,220,255,.55)","rgba(200,220,255,.8)"] },
-      "line-strong": { "role": "neutral", "displayName": "Linha Forte", "canonical": "rgba(200, 220, 255, .34)", "tonalRamp": ["rgba(200,220,255,.06)","rgba(200,220,255,.11)","rgba(200,220,255,.17)","rgba(200,220,255,.24)","rgba(200,220,255,.34)","rgba(200,220,255,.48)","rgba(200,220,255,.66)","rgba(200,220,255,.88)"] },
-      "line-paper": { "role": "neutral", "displayName": "Linha de Papel", "canonical": "rgba(22, 35, 58, .18)", "tonalRamp": ["rgba(22,35,58,.05)","rgba(22,35,58,.09)","rgba(22,35,58,.13)","rgba(22,35,58,.18)","rgba(22,35,58,.26)","rgba(22,35,58,.4)","rgba(22,35,58,.6)","rgba(22,35,58,.82)"] }
+      "enamel": {
+        "role": "primary",
+        "displayName": "Esmalte Azul-Noite",
+        "canonical": "#10233f",
+        "tonalRamp": [
+          "#06101f",
+          "#0a1830",
+          "#10233f",
+          "#173352",
+          "#20456b",
+          "#3c6494",
+          "#7d9cc4",
+          "#c8d8ec"
+        ]
+      },
+      "enamel-deep": {
+        "role": "primary",
+        "displayName": "Esmalte Profundo",
+        "canonical": "#0a1830",
+        "tonalRamp": [
+          "#040a17",
+          "#0a1830",
+          "#102446",
+          "#173260",
+          "#22457e",
+          "#3c67a6",
+          "#7b9bcb",
+          "#c6d7ee"
+        ]
+      },
+      "enamel-raised": {
+        "role": "primary",
+        "displayName": "Esmalte Elevado",
+        "canonical": "#17304f",
+        "tonalRamp": [
+          "#081426",
+          "#0f2038",
+          "#17304f",
+          "#204169",
+          "#2c5688",
+          "#4a76ab",
+          "#87a5ca",
+          "#cadaed"
+        ]
+      },
+      "enamel-lit": {
+        "role": "primary",
+        "displayName": "Esmalte Iluminado",
+        "canonical": "#1e3d63",
+        "tonalRamp": [
+          "#0a1728",
+          "#122740",
+          "#1e3d63",
+          "#295180",
+          "#37699f",
+          "#5688bd",
+          "#93b0d3",
+          "#d0deef"
+        ]
+      },
+      "chrome": {
+        "role": "tertiary",
+        "displayName": "Cromo",
+        "canonical": "#e3eaf2",
+        "tonalRamp": [
+          "#20262e",
+          "#39404a",
+          "#535b67",
+          "#727b88",
+          "#93a6be",
+          "#b6c4d6",
+          "#e3eaf2",
+          "#f6f9fc"
+        ]
+      },
+      "chrome-dim": {
+        "role": "tertiary",
+        "displayName": "Cromo Fosco",
+        "canonical": "#93a6be",
+        "tonalRamp": [
+          "#1c2530",
+          "#2f3b4a",
+          "#455465",
+          "#5f7086",
+          "#7b8da5",
+          "#93a6be",
+          "#bccbdc",
+          "#e6edf4"
+        ]
+      },
+      "sky": {
+        "role": "tertiary",
+        "displayName": "Céu",
+        "canonical": "#bccde6",
+        "tonalRamp": [
+          "#1b2634",
+          "#2c3c52",
+          "#405370",
+          "#586e90",
+          "#7a8fb1",
+          "#9cb0cd",
+          "#bccde6",
+          "#e4ecf7"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Superfície de Campo",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#242628",
+          "#3e4143",
+          "#5a5d60",
+          "#7b7e81",
+          "#9ea1a4",
+          "#c2c4c6",
+          "#e4e5e6",
+          "#ffffff"
+        ]
+      },
+      "field-line": {
+        "role": "neutral",
+        "displayName": "Borda de Campo",
+        "canonical": "#a9b1bf",
+        "tonalRamp": [
+          "#151b25",
+          "#2d333e",
+          "#474d59",
+          "#656c79",
+          "#828a97",
+          "#a9b1bf",
+          "#c0c8d6",
+          "#dde5f4"
+        ]
+      },
+      "field-focus": {
+        "role": "secondary",
+        "displayName": "Âmbar de Foco",
+        "canonical": "#b5761c",
+        "tonalRamp": [
+          "#291600",
+          "#492b00",
+          "#6c4200",
+          "#8e5900",
+          "#b5761c",
+          "#d39240",
+          "#f8b564",
+          "#ffdeba"
+        ]
+      },
+      "field-error": {
+        "role": "secondary",
+        "displayName": "Carmim de Erro",
+        "canonical": "#a3123f",
+        "tonalRamp": [
+          "#31000c",
+          "#56001c",
+          "#7a002b",
+          "#a3123f",
+          "#c13657",
+          "#ec5e79",
+          "#ff98a6",
+          "#ffd5d9"
+        ]
+      },
+      "field-error-ink": {
+        "role": "secondary",
+        "displayName": "Tinta de Erro",
+        "canonical": "#8f0f37",
+        "tonalRamp": [
+          "#2d000b",
+          "#4e0019",
+          "#6c0026",
+          "#8f0f37",
+          "#aa2f4c",
+          "#d75971",
+          "#ff8c9e",
+          "#ffd0d5"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papel Quente",
+        "canonical": "#faf6ec",
+        "tonalRamp": [
+          "#2b271d",
+          "#484234",
+          "#67604e",
+          "#8a826d",
+          "#b0a894",
+          "#d3cbb8",
+          "#f0e9d9",
+          "#faf6ec"
+        ]
+      },
+      "paper-quiet": {
+        "role": "neutral",
+        "displayName": "Papel Silencioso",
+        "canonical": "#f0e9d9",
+        "tonalRamp": [
+          "#292418",
+          "#453f2d",
+          "#645c45",
+          "#877e63",
+          "#aca286",
+          "#cfc5aa",
+          "#e6dcc6",
+          "#f0e9d9"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#16233a",
+        "tonalRamp": [
+          "#0a111d",
+          "#16233a",
+          "#213353",
+          "#2e4671",
+          "#425f92",
+          "#6482b2",
+          "#9aafcc",
+          "#d5deeb"
+        ]
+      },
+      "ink-quiet": {
+        "role": "neutral",
+        "displayName": "Tinta Silenciosa",
+        "canonical": "#5b6779",
+        "tonalRamp": [
+          "#15191f",
+          "#262d37",
+          "#3b4451",
+          "#4e5a6b",
+          "#5b6779",
+          "#7f8b9c",
+          "#a9b3c0",
+          "#d8dee6"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Branco",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#242628",
+          "#3e4143",
+          "#5a5d60",
+          "#7b7e81",
+          "#9ea1a4",
+          "#c2c4c6",
+          "#e4e5e6",
+          "#ffffff"
+        ]
+      },
+      "yellow": {
+        "role": "secondary",
+        "displayName": "Amarelo de Ação",
+        "canonical": "#ffc53d",
+        "tonalRamp": [
+          "#3a2903",
+          "#5d4308",
+          "#855f0d",
+          "#ad7d13",
+          "#d29a1c",
+          "#ffc53d",
+          "#ffd97e",
+          "#fff0c8"
+        ]
+      },
+      "capsule-amber": {
+        "role": "secondary",
+        "displayName": "Cápsula Âmbar",
+        "canonical": "#ffc53d",
+        "tonalRamp": [
+          "#3a2903",
+          "#5d4308",
+          "#855f0d",
+          "#ad7d13",
+          "#d29a1c",
+          "#ffc53d",
+          "#ffd97e",
+          "#fff0c8"
+        ]
+      },
+      "capsule-mint": {
+        "role": "secondary",
+        "displayName": "Cápsula Menta",
+        "canonical": "#4fe0c8",
+        "tonalRamp": [
+          "#04302a",
+          "#075045",
+          "#0b7264",
+          "#109485",
+          "#1fb5a3",
+          "#4fe0c8",
+          "#95efe0",
+          "#d6faf3"
+        ]
+      },
+      "capsule-coral": {
+        "role": "secondary",
+        "displayName": "Cápsula Coral",
+        "canonical": "#ff6b7d",
+        "tonalRamp": [
+          "#3d0611",
+          "#631021",
+          "#8b1b33",
+          "#b32948",
+          "#d9435f",
+          "#ff6b7d",
+          "#ffa2ae",
+          "#ffd9de"
+        ]
+      },
+      "capsule-violet": {
+        "role": "secondary",
+        "displayName": "Cápsula Violeta",
+        "canonical": "#a78bff",
+        "tonalRamp": [
+          "#1d0f4a",
+          "#2f1a72",
+          "#43289b",
+          "#5838c1",
+          "#7a5ce0",
+          "#a78bff",
+          "#c7b4ff",
+          "#e8e0ff"
+        ]
+      },
+      "capsule-tangerine": {
+        "role": "secondary",
+        "displayName": "Cápsula Tangerina",
+        "canonical": "#ff9a3c",
+        "tonalRamp": [
+          "#3b1e02",
+          "#5f3306",
+          "#87490b",
+          "#b06110",
+          "#d67b1c",
+          "#ff9a3c",
+          "#ffbe83",
+          "#ffe4c9"
+        ]
+      },
+      "capsule-rose": {
+        "role": "secondary",
+        "displayName": "Cápsula Rosa",
+        "canonical": "#ff8fc7",
+        "tonalRamp": [
+          "#3f0a27",
+          "#66163f",
+          "#8f2559",
+          "#b93875",
+          "#e05494",
+          "#ff8fc7",
+          "#ffb9dc",
+          "#ffe0ef"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Linha",
+        "canonical": "rgba(200, 220, 255, .17)",
+        "tonalRamp": [
+          "rgba(200,220,255,.04)",
+          "rgba(200,220,255,.08)",
+          "rgba(200,220,255,.12)",
+          "rgba(200,220,255,.17)",
+          "rgba(200,220,255,.24)",
+          "rgba(200,220,255,.34)",
+          "rgba(200,220,255,.55)",
+          "rgba(200,220,255,.8)"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Linha Forte",
+        "canonical": "rgba(200, 220, 255, .34)",
+        "tonalRamp": [
+          "rgba(200,220,255,.06)",
+          "rgba(200,220,255,.11)",
+          "rgba(200,220,255,.17)",
+          "rgba(200,220,255,.24)",
+          "rgba(200,220,255,.34)",
+          "rgba(200,220,255,.48)",
+          "rgba(200,220,255,.66)",
+          "rgba(200,220,255,.88)"
+        ]
+      },
+      "line-paper": {
+        "role": "neutral",
+        "displayName": "Linha de Papel",
+        "canonical": "rgba(22, 35, 58, .18)",
+        "tonalRamp": [
+          "rgba(22,35,58,.05)",
+          "rgba(22,35,58,.09)",
+          "rgba(22,35,58,.13)",
+          "rgba(22,35,58,.18)",
+          "rgba(22,35,58,.26)",
+          "rgba(22,35,58,.4)",
+          "rgba(22,35,58,.6)",
+          "rgba(22,35,58,.82)"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Nome na Cápsula", "purpose": "O nome vencedor e os títulos de estado de espera, em escala gigante na cor da cápsula." },
-      "display-narrow": { "displayName": "Nome na Cápsula (Estreito)", "purpose": "O mesmo nome vencedor abaixo de 620px, em escala maior que o display para que a hierarquia de contraste sobreviva no telefone." },
-      "headline": { "displayName": "Título de Faixa", "purpose": "Títulos de seção: a cartela, a coleção, o método." },
-      "title": { "displayName": "Título de Configuração", "purpose": "Subtítulos dentro da seção de papel." },
-      "action": { "displayName": "Rótulo de Ação", "purpose": "Texto de botão e iniciais no disco da pessoa." },
-      "body": { "displayName": "Corpo Hiperlegível", "purpose": "Parágrafos, campos e instruções, sob mandato de acessibilidade." },
-      "label": { "displayName": "Etiqueta", "purpose": "Links de texto, dica de trilho e mensagens curtas de estado." },
-      "serial": { "displayName": "Valor de Série", "purpose": "Valores conferíveis: grade de série, contadores, link compartilhável." },
-      "serial-label": { "displayName": "Rótulo de Série", "purpose": "Rótulos em caixa alta acima dos valores, meses da cartela e plaqueta da máquina." }
+      "display": {
+        "displayName": "Nome na Cápsula",
+        "purpose": "O nome vencedor e os títulos de estado de espera, em escala gigante na cor da cápsula."
+      },
+      "display-narrow": {
+        "displayName": "Nome na Cápsula (Estreito)",
+        "purpose": "O mesmo nome vencedor abaixo de 620px, em escala maior que o display para que a hierarquia de contraste sobreviva no telefone."
+      },
+      "headline": {
+        "displayName": "Título de Faixa",
+        "purpose": "Títulos de seção: a cartela, a coleção, o método."
+      },
+      "title": {
+        "displayName": "Título de Configuração",
+        "purpose": "Subtítulos dentro da seção de papel."
+      },
+      "action": {
+        "displayName": "Rótulo de Ação",
+        "purpose": "Texto de botão e iniciais no disco da pessoa."
+      },
+      "body": {
+        "displayName": "Corpo Hiperlegível",
+        "purpose": "Parágrafos, campos e instruções, sob mandato de acessibilidade."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Links de texto, dica de trilho e mensagens curtas de estado."
+      },
+      "serial": {
+        "displayName": "Valor de Série",
+        "purpose": "Valores conferíveis: grade de série, contadores, link compartilhável."
+      },
+      "serial-label": {
+        "displayName": "Rótulo de Série",
+        "purpose": "Rótulos em caixa alta acima dos valores, meses da cartela e plaqueta da máquina."
+      }
     },
     "shadows": [
-      { "name": "globe-well", "value": "drop-shadow(0 22px 40px rgba(4, 10, 22, .55))", "purpose": "O globo de acrílico assentado sobre o gabinete." },
-      { "name": "part-lifted", "value": "drop-shadow(0 6px 12px rgba(4, 10, 22, .5))", "purpose": "Peças menores levantadas da chapa, como a placa da manivela." },
-      { "name": "part-small", "value": "drop-shadow(0 2px 3px rgba(4, 10, 22, .45))", "purpose": "Cápsulas soltas no interior do globo." },
-      { "name": "sticker", "value": "0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px var(--paper)", "purpose": "Adesivo redondo do mês: sombra de colagem mais borda branca de recorte." },
-      { "name": "molded-wall-primary", "value": "0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38)", "purpose": "Parede lateral de plástico moldado do botão primário, com sombra ambiente." },
-      { "name": "molded-wall-primary-active", "value": "0 2px 0 #c48f16, 0 6px 12px rgba(4, 10, 22, .34)", "purpose": "A mesma parede colapsada sob o pressionar do botão." },
-      { "name": "molded-wall-secondary", "value": "0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28)", "purpose": "Parede lateral do botão de esmalte na seção de papel." },
-      { "name": "toast", "value": "0 14px 30px rgba(4, 10, 22, .48)", "purpose": "O aviso flutuante, único elemento fora do plano da página." },
-      { "name": "chosen-capsule", "value": "saturate(1.25) brightness(1.14) drop-shadow(0 0 12px color-mix(in srgb, var(--live) 65%, transparent))", "purpose": "A cunha vencedora acendendo no aro do globo." }
+      {
+        "name": "globe-well",
+        "value": "drop-shadow(0 22px 40px rgba(4, 10, 22, .55))",
+        "purpose": "O globo de acrílico assentado sobre o gabinete."
+      },
+      {
+        "name": "part-lifted",
+        "value": "drop-shadow(0 6px 12px rgba(4, 10, 22, .5))",
+        "purpose": "Peças menores levantadas da chapa, como a placa da manivela."
+      },
+      {
+        "name": "part-small",
+        "value": "drop-shadow(0 2px 3px rgba(4, 10, 22, .45))",
+        "purpose": "Cápsulas soltas no interior do globo."
+      },
+      {
+        "name": "sticker",
+        "value": "0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px var(--paper)",
+        "purpose": "Adesivo redondo do mês: sombra de colagem mais borda branca de recorte."
+      },
+      {
+        "name": "molded-wall-primary",
+        "value": "0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38)",
+        "purpose": "Parede lateral de plástico moldado do botão primário, com sombra ambiente."
+      },
+      {
+        "name": "molded-wall-primary-active",
+        "value": "0 2px 0 #c48f16, 0 6px 12px rgba(4, 10, 22, .34)",
+        "purpose": "A mesma parede colapsada sob o pressionar do botão."
+      },
+      {
+        "name": "molded-wall-secondary",
+        "value": "0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28)",
+        "purpose": "Parede lateral do botão de esmalte na seção de papel."
+      },
+      {
+        "name": "toast",
+        "value": "0 14px 30px rgba(4, 10, 22, .48)",
+        "purpose": "O aviso flutuante, único elemento fora do plano da página."
+      },
+      {
+        "name": "chosen-capsule",
+        "value": "saturate(1.25) brightness(1.14) drop-shadow(0 0 12px color-mix(in srgb, var(--live) 65%, transparent))",
+        "purpose": "A cunha vencedora acendendo no aro do globo."
+      }
     ],
     "motion": [
-      { "name": "spin", "value": "4.3s cubic-bezier(.12, .72, .12, 1)", "purpose": "O giro do globo até encaixar a cápsula vencedora na calha às seis horas; a manivela e o assentamento das cápsulas soltas compartilham essa duração." },
-      { "name": "deliver", "value": "0.92s cubic-bezier(.22, .9, .3, 1)", "purpose": "A queda da cápsula na bandeja." },
-      { "name": "crack", "value": "1.5s cubic-bezier(.22, .9, .3, 1)", "purpose": "A abertura da cúpula da cápsula entregue." },
-      { "name": "press", "value": "0.16s ease", "purpose": "Colapso da parede moldada e descida do botão no :active." },
-      { "name": "state", "value": "0.5s–0.7s ease", "purpose": "Repintura da chapa e do brilho do palco quando a rodada é revelada." },
-      { "name": "reduced-motion", "value": "CSS: .01ms; JS: 120ms", "purpose": "prefers-reduced-motion é honrado nos dois lugares — durações de CSS zeradas e a entrega resolvida em 120ms em vez de 4300ms." }
+      {
+        "name": "spin",
+        "value": "4.3s cubic-bezier(.12, .72, .12, 1)",
+        "purpose": "O giro do globo até encaixar a cápsula vencedora na calha às seis horas; a manivela e o assentamento das cápsulas soltas compartilham essa duração."
+      },
+      {
+        "name": "deliver",
+        "value": "0.92s cubic-bezier(.22, .9, .3, 1)",
+        "purpose": "A queda da cápsula na bandeja."
+      },
+      {
+        "name": "crack",
+        "value": "1.5s cubic-bezier(.22, .9, .3, 1)",
+        "purpose": "A abertura da cúpula da cápsula entregue."
+      },
+      {
+        "name": "press",
+        "value": "0.16s ease",
+        "purpose": "Colapso da parede moldada e descida do botão no :active."
+      },
+      {
+        "name": "state",
+        "value": "0.5s–0.7s ease",
+        "purpose": "Repintura da chapa e do brilho do palco quando a rodada é revelada."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "CSS: .01ms; JS: 120ms",
+        "purpose": "prefers-reduced-motion é honrado nos dois lugares — durações de CSS zeradas e a entrega resolvida em 120ms em vez de 4300ms."
+      }
     ],
     "breakpoints": [
-      { "name": "lap", "value": "980px" },
-      { "name": "hand", "value": "620px" }
+      {
+        "name": "lap",
+        "value": "980px"
+      },
+      {
+        "name": "hand",
+        "value": "620px"
+      }
     ]
   },
   "components": [
@@ -147,6 +618,22 @@
       "description": "Confirmação de ação com desfazer, no canto inferior direito, sobre esmalte elevado.",
       "html": "<div class=\"ds-toast is-visible\" role=\"status\"><span>Cecília saiu do globo.</span><button type=\"button\">Desfazer</button><button class=\"ds-toast-close\" type=\"button\" aria-label=\"Fechar aviso\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"></path></svg></button></div>",
       "css": ".ds-toast { max-width: 460px; min-height: 58px; display: flex; align-items: center; gap: 1rem; padding: .7rem .7rem .7rem 1.15rem; background: #17304f; color: #ffffff; border: 1px solid rgba(200, 220, 255, .34); border-radius: 12px; box-shadow: 0 14px 30px rgba(4, 10, 22, .48); opacity: 0; transform: translateY(1rem); transition: opacity .2s ease, transform .2s ease; } .ds-toast.is-visible { opacity: 1; transform: translateY(0); } .ds-toast > span { flex: 1; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .92rem; } .ds-toast button { min-height: 42px; padding: .45rem .85rem; background: #ffc53d; color: #0a1830; border: 0; border-radius: 999px; font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; cursor: pointer; } .ds-toast button:hover { background: #ffd469; } .ds-toast button:focus-visible { outline: 3px solid #ffc53d; outline-offset: 3px; } .ds-toast .ds-toast-close { width: 42px; padding: .55rem; background: transparent; color: #e3eaf2; } .ds-toast .ds-toast-close:hover { background: rgba(200, 220, 255, .12); } .ds-toast-close svg { width: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }"
+    },
+    {
+      "name": "Etiqueta do Giro",
+      "kind": "card",
+      "refersTo": "note-sticker",
+      "description": "O papel colado na cápsula que já saiu, com o que o clube jogou. Levemente torto, como um adesivo de verdade.",
+      "html": "<article class=\"ds-note-sticker\"><span class=\"ds-note-chip\"></span><p class=\"ds-note-serial\">Etiqueta · cápsula 3</p><h2 class=\"ds-note-title\">Click The Button!</h2><p class=\"ds-note-description\">Nota final 8/10. Jogamos em cinco.</p><p class=\"ds-note-meta\"><span>por Igor · 12/09/26</span><button class=\"ds-note-edit\" type=\"button\">Editar</button></p></article>",
+      "css": ".ds-note-sticker { position: relative; width: min(100%, 33rem); padding: 1.15rem 3.6rem 1rem 1.3rem; background: #faf6ec; color: #16233a; border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); text-align: left; transform: rotate(-.9deg); font-family: \"Atkinson Hyperlegible\", sans-serif; }\n.ds-note-chip { position: absolute; top: 1.2rem; right: 1.3rem; width: 1.55rem; height: 1.1rem; background: #ff6b7d; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }\n.ds-note-serial { margin: 0; color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }\n.ds-note-title { margin: .5rem 0 0; font-family: \"Fredoka Variable\", sans-serif; font-size: 1.42rem; font-weight: 600; line-height: 1.18; letter-spacing: -.03em; }\n.ds-note-description { max-width: 46ch; margin: .5rem 0 0; color: #5b6779; font-size: .92rem; line-height: 1.55; }\n.ds-note-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .55rem 0 0; padding-top: .35rem; border-top: 1px solid rgba(22, 35, 58, .18); color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n.ds-note-edit { min-height: 44px; padding: 0 .2rem; background: transparent; border: 0; color: #16233a; font-family: \"Atkinson Hyperlegible\", sans-serif; font-size: .82rem; font-weight: 700; text-transform: none; letter-spacing: normal; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }"
+    },
+    {
+      "name": "Cartão do Álbum",
+      "kind": "card",
+      "refersTo": "album-card",
+      "description": "A etiqueta na parede do álbum: inclinação fixa por posição, e o hover endireita e levanta, como quem descola uma figurinha.",
+      "html": "<button class=\"ds-album-card\" type=\"button\"><span class=\"ds-album-head\"><span class=\"ds-album-capsule\"></span><span class=\"ds-album-who\"><span class=\"ds-album-serial\">Cápsula 7 · 05/06/26</span><span class=\"ds-album-name\">Ana</span></span></span><span class=\"ds-album-perf\"></span><span class=\"ds-album-title\">Pico Park</span><span class=\"ds-album-description\">Nota 9/10. Cooperação pura. Repetiríamos.</span><span class=\"ds-album-meta\">etiquetada por Bia</span></button>",
+      "css": ".ds-album-card { --tilt: -1.7deg; position: relative; width: min(100%, 22rem); display: flex; flex-direction: column; gap: .4rem; padding: 1.15rem 1.25rem 1.05rem; background: #faf6ec; color: #16233a; border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(4, 10, 22, .45); text-align: left; transform: rotate(var(--tilt)); transition: transform .18s ease, box-shadow .18s ease; font-family: \"Atkinson Hyperlegible\", sans-serif; }\n.ds-album-card:hover, .ds-album-card:focus-visible { box-shadow: 0 20px 38px rgba(4, 10, 22, .55); transform: rotate(0deg) translateY(-4px); }\n.ds-album-head { display: flex; align-items: center; gap: .7rem; }\n.ds-album-capsule { width: 2.1rem; height: 1.5rem; flex: none; background: #ffc53d; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.45rem 0 rgba(233, 242, 252, .5), inset 0 0 0 1px rgba(22, 35, 58, .14); }\n.ds-album-who { display: grid; gap: .12rem; }\n.ds-album-serial { color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n.ds-album-name { font-family: \"Fredoka Variable\", sans-serif; font-size: 1.42rem; font-weight: 600; line-height: 1.1; letter-spacing: -.03em; }\n.ds-album-perf { height: 3px; margin: .5rem 0 .35rem; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }\n.ds-album-title { font-family: \"Fredoka Variable\", sans-serif; font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; }\n.ds-album-description { color: #5b6779; font-size: .92rem; line-height: 1.5; }\n.ds-album-meta { margin-top: auto; padding-top: .6rem; color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }"
     }
   ],
   "narrative": {
@@ -161,19 +648,71 @@
       "Um único momento animado: manivela, giro, encaixe, queda e abertura."
     ],
     "rules": [
-      { "name": "A Regra da Cápsula Portante", "body": "Toda cor de cápsula passa de 4.5:1 sobre enamel, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados.", "section": "colors" },
-      { "name": "A Regra da Repintura Total", "body": "Quando a rodada é revelada, o corpo da máquina (.body-plate) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.", "section": "colors" },
-      { "name": "A Regra da Única Quebra", "body": "O papel aparece uma vez, na seção da coleção, porque é ali que se administra. Nenhuma outra superfície clara. Se algo precisa de papel, precisa antes justificar por que é administração.", "section": "colors" },
-      { "name": "A Regra do Amarelo de Ação", "body": "O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (button-secondary) ou o link de texto.", "section": "colors" },
-      { "name": "A Regra da Mono de Série", "body": "Martian Mono só aparece em valores de série e medição: grade de série, mês da cartela, índice da pessoa, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia \"técnica\" em texto corrido, botão ou título.", "section": "typography" },
-      { "name": "A Regra da Escala Sozinha", "body": "A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.", "section": "typography" },
-      { "name": "A Regra do Nome Inteiro", "body": "O nome vencedor sempre aparece por extenso no h1. A degradação — primeiro nome, iniciais, uma letra — existe apenas dentro do aro do globo, onde o comprimento do arco manda.", "section": "typography" },
-      { "name": "A Regra do Alvo de 44px", "body": "Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho da cartela e na lista da coleção.", "section": "layout" },
-      { "name": "A Regra do Decalque de Bancada", "body": "Os decalques com linha-guia na máquina são desktop-only: ocultos abaixo de 980px, porque a linha-guia precisa de espaço lateral para apontar sem cruzar a peça. A placa da máquina no cabeçalho some abaixo de 620px por ser plaqueta de identificação, não conteúdo.", "section": "layout" },
-      { "name": "A Regra da Parede Moldada", "body": "O botão tem uma parede lateral de plástico moldado — preenchimento sólido mais escuro em 0 Npx 0, acompanhado de uma sombra ambiente real e desfocada — e essa parede colapsa sob um translateY no :active, como plástico que afunda. É moldagem, não a sombra diagonal dura de bloco: nunca use deslocamento em X, e nunca use a parede sem a sombra ambiente que a acompanha.", "section": "elevation" },
-      { "name": "A Regra do Material Antes da Camada", "body": "Profundidade se resolve com gradiente, canelura e hairline dentro da peça. Uma sombra só é adicionada quando um objeto físico estaria levantado; nenhum contêiner de conteúdo recebe sombra para parecer \"card\".", "section": "elevation" },
-      { "name": "A Regra do Momento Único", "body": "Nada mais na página anima sozinho. Sem carrossel, sem contador que sobe, sem entrada por scroll, sem pulso de atenção. A animação da entrega é o único movimento autoral, e ela nunca altera o resultado — só o revela.", "section": "components" },
-      { "name": "A Regra do Movimento Reduzido nos Dois Lugares", "body": "prefers-reduced-motion é honrado em CSS (todas as durações caem para .01ms) e em JS (a entrega roda em 120ms em vez de 4300ms). Qualquer sequência nova precisa dos dois desligamentos; desligar só o CSS deixa a página parada esperando um timer longo.", "section": "components" }
+      {
+        "name": "A Regra da Cápsula Portante",
+        "body": "Toda cor de cápsula passa de 4.5:1 sobre enamel, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Repintura Total",
+        "body": "Quando a rodada é revelada, o corpo da máquina (.body-plate) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Única Quebra",
+        "body": "O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a seção da coleção, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. No álbum o papel são os cartões, nunca o fundo: a parede continua sendo esmalte. Uma terceira superfície clara precisa antes provar que é administração.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Amarelo de Ação",
+        "body": "O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (button-secondary) ou o link de texto.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Mono de Série",
+        "body": "Martian Mono só aparece em valores de série e medição: grade de série, mês da cartela, índice da pessoa, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia \"técnica\" em texto corrido, botão ou título.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Escala Sozinha",
+        "body": "A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra do Nome Inteiro",
+        "body": "O nome vencedor sempre aparece por extenso no h1. A degradação — primeiro nome, iniciais, uma letra — existe apenas dentro do aro do globo, onde o comprimento do arco manda.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra do Alvo de 44px",
+        "body": "Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho da cartela e na lista da coleção.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra do Decalque de Bancada",
+        "body": "Os decalques com linha-guia na máquina são desktop-only: ocultos abaixo de 980px, porque a linha-guia precisa de espaço lateral para apontar sem cruzar a peça. A placa da máquina no cabeçalho some abaixo de 620px por ser plaqueta de identificação, não conteúdo.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra da Parede Moldada",
+        "body": "O botão tem uma parede lateral de plástico moldado — preenchimento sólido mais escuro em 0 Npx 0, acompanhado de uma sombra ambiente real e desfocada — e essa parede colapsa sob um translateY no :active, como plástico que afunda. É moldagem, não a sombra diagonal dura de bloco: nunca use deslocamento em X, e nunca use a parede sem a sombra ambiente que a acompanha.",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra do Material Antes da Camada",
+        "body": "Profundidade se resolve com gradiente, canelura e hairline dentro da peça. Uma sombra só é adicionada quando um objeto físico estaria levantado; nenhum contêiner de conteúdo recebe sombra para parecer \"card\".",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra do Momento Único",
+        "body": "Nada mais na página anima sozinho. Sem carrossel, sem contador que sobe, sem entrada por scroll, sem pulso de atenção. A animação da entrega é o único movimento autoral, e ela nunca altera o resultado — só o revela.",
+        "section": "components"
+      },
+      {
+        "name": "A Regra do Movimento Reduzido nos Dois Lugares",
+        "body": "prefers-reduced-motion é honrado em CSS (todas as durações caem para .01ms) e em JS (a entrega roda em 120ms em vez de 4300ms). Qualquer sequência nova precisa dos dois desligamentos; desligar só o CSS deixa a página parada esperando um timer longo.",
+        "section": "components"
+      }
     ],
     "dos": [
       "Do deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.",

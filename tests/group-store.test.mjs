@@ -194,6 +194,112 @@ await it('duas rodadas completas não repetem ninguém dentro da rodada', async 
   assert.equal(new Set(rodada1).size, rodada1.length);
 });
 
+await it('etiqueta um giro e a etiqueta volta do log', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.annotateSpin(id, 0, { title: 'Click The Button!', description: 'Nota final 8/10' }, 'Igor');
+
+  const snap = await store.load(id);
+  assert.equal(snap.state.lastSpin.note.title, 'Click The Button!');
+  assert.equal(snap.state.lastSpin.note.description, 'Nota final 8/10');
+  assert.equal(snap.state.lastSpin.note.actor, 'Igor');
+  assert.equal(snap.state.lastSpin.note.revision, 1);
+});
+
+await it('outro aparelho lê a etiqueta pelo delta, sem reler o log inteiro', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  // Um segundo cliente, cache próprio, já em dia com o log.
+  const outro = novaLoja(FOLGADO);
+  await outro.store.load(id);
+  const antes = outro.guard.snapshot().reads;
+
+  await store.annotateSpin(id, 0, { title: 'Overcooked', description: '' });
+  const snap = await outro.store.load(id);
+
+  assert.equal(snap.state.spins[0].note.title, 'Overcooked');
+  // 1 leitura do doc do grupo + 1 do único evento novo.
+  assert.equal(outro.guard.snapshot().reads - antes, 2);
+});
+
+await it('reescrever a etiqueta é outro evento, e a última vale', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.annotateSpin(id, 0, { title: 'Tetris', description: 'Nota 7/10' }, 'Ana');
+  await store.annotateSpin(id, 0, { title: 'Tetris Effect', description: 'Nota 9/10' }, 'Breno');
+
+  const snap = await store.load(id);
+  assert.equal(snap.state.spins[0].note.title, 'Tetris Effect');
+  assert.equal(snap.state.spins[0].note.revision, 2);
+  assert.equal(snap.state.spins[0].note.actor, 'Breno');
+  // Nada foi reescrito: as três escritas continuam no log.
+  assert.equal(snap.logVersion, 5);
+});
+
+await it('retirar a etiqueta é gravá-la em branco', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  await store.annotateSpin(id, 0, { title: 'Tetris', description: '' });
+  await store.clearSpinNote(id, 0);
+
+  const snap = await store.load(id);
+  assert.equal(snap.state.spins[0].note, null);
+});
+
+await it('texto longo com emoji atravessa as rules em vez de ser recusado', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.annotateSpin(id, 0, { title: '🎮'.repeat(200), description: '🕹️'.repeat(600) });
+
+  const snap = await store.load(id);
+  // As rules medem em unidades UTF-16; o cliente corta na mesma medida, sem partir emoji.
+  assert.ok(snap.state.spins[0].note.title.length <= 80);
+  assert.ok(snap.state.spins[0].note.description.length <= 280);
+  assert.ok([...snap.state.spins[0].note.title].every((c) => c.codePointAt(0) !== 0xfffd));
+  assert.equal(snap.state.spins[0].note.title, '🎮'.repeat(40));
+});
+
+await it('etiquetar não gasta a espera do próximo giro', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  const antes = (await store.load(id)).lastSpinAt;
+
+  await store.annotateSpin(id, 0, { title: 'Pico Park', description: '' });
+
+  assert.equal((await store.load(id)).lastSpinAt, antes);
+});
+
+await it('etiquetar um giro que não existe é recusado pelo servidor', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+
+  await assert.rejects(() => store.annotateSpin(id, 99, { title: 'Fantasma', description: '' }));
+  await assert.rejects(() => store.annotateSpin(id, -1, { title: 'Fantasma', description: '' }));
+});
+
 for (const r of results) {
   console.log(`${r.ok ? '  ok  ' : ' FAIL '} ${r.name}`);
   if (!r.ok) console.log(`        ${r.error?.message?.split('\n')[0] ?? r.error}`);

@@ -66,10 +66,13 @@ grupos/{grupoId}
   versaoLog: number          ← quantos eventos existem; sobe junto com cada evento
 
 grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
-  tipo: 'member_added' | 'member_removed' | 'spin'
+  tipo: 'member_added' | 'member_removed' | 'spin' | 'spin_annotated'
   em: timestamp                          ← obrigatoriamente request.time
   nome?: string                          ← member_added
   memberId?: string                      ← member_removed
+  giro?: number                          ← spin_annotated: índice do giro etiquetado
+  titulo?: string                        ← spin_annotated, até 80
+  descricao?: string                     ← spin_annotated, até 280
   autor?: string                         ← quem operou, não verificado
 ```
 
@@ -109,10 +112,51 @@ saída é gravar snapshots periódicos **dentro do próprio log** e replicar só
 Atenção: cada `get()` e `getAfter()` dentro de uma rule **conta como leitura na cota**. Gravar
 um evento custa 2 leituras de regra além da escrita.
 
+## Etiquetas: o que foi jogado e como foi
+
+Um giro pode receber um **título** e uma **descrição** — `Click The Button!` / `Nota final
+8/10`. Elas descrevem o giro; nunca participam dele. `group-log.spec.ts` trava isso: com e
+sem etiquetas, o vencedor, o bolo e a rodada são idênticos.
+
+**A etiqueta é um evento, não um campo.** O giro não ganhou colunas: quem etiqueta grava um
+`spin_annotated` apontando para o índice do giro. Editar é gravar outro; o replay faz a
+última valer, e as anteriores continuam no log — é assim que a interface mostra "editado
+por Fulano" sem que exista um caminho para reescrever o passado. Retirar a etiqueta é
+gravá-la em branco, e a retirada também fica registrada.
+
+**Por que o índice do giro, e não o id do documento.** `replay()` já atribui
+`index = spins.length` no momento em que processa o giro, e esse número é função só do
+prefixo do log: eventos futuros nunca o mudam, e um giro que virou no-op continua no-op.
+O índice é tão congelado quanto o vencedor, e o cache local não precisou mudar de formato.
+Por isso etiquetar o giro de ontem e o de um ano atrás é literalmente a mesma operação, sem
+backfill nenhum nos grupos que já existem.
+
+**Alternativa rejeitada: uma subcoleção `anotacoes/{giro}` com `allow update`.** Custaria uma
+segunda consulta em toda carga — o cache por `versaoLog` não a cobre — dobrando o custo do
+caso comum, hoje 1 leitura. E reintroduziria exatamente a classe de bug do campo `estado`
+descrita acima: um documento mutável que nenhuma regra consegue conferir contra o log.
+
+**O que as rules garantem.** O índice é inteiro, não-negativo e menor que `versaoLog` — o
+`get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título
+e descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem `memberId`,
+e nenhum outro tipo de evento pode carregar campos de etiqueta. A espera de 30s **não** se
+aplica a etiquetar — corrigir um título nunca bloqueia o próximo giro — e, em contrapartida,
+**só um giro pode mexer em `ultimoGiroEm`**, senão etiquetar em rajada empurraria a espera e
+travaria a máquina do grupo inteiro sem girar uma vez.
+
+**Medida de texto.** `size()` nas rules conta **unidades UTF-16**, o mesmo que `.length` em
+JavaScript — não bytes, não pontos de código. Isso foi medido por sonda no emulador depois
+que o teste de integração recusou um título de emoji que parecia caber. É por isso que
+`noteText()` corta caractere a caractere até o orçamento em unidades: um `slice` cru na
+mesma medida partiria um par substituto e gravaria meio emoji.
+
+**Custo.** Etiquetar é 1 leitura + 2 escritas, idêntico a adicionar alguém. Nenhum índice
+novo. Cada edição soma um evento ao log, o que entra na mesma conta de crescimento acima.
+
 ## Rules
 
 O arquivo real é `firestore.rules`, e ele é a fonte da verdade — não há esboço aqui para
-divergir dele. `tests/firestore-rules.test.mjs` prova 35 comportamentos contra o emulador:
+divergir dele. `tests/firestore-rules.test.mjs` prova 50 comportamentos contra o emulador:
 
 ```
 npm run test:rules
@@ -136,21 +180,22 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 | 1. Não quebrar o modo atual | ✅ 16 vetores congelados verdes |
 | 2. Motor por log, puro | ✅ `group-log.ts` |
 | 2b. Guarda de uso, puro | ✅ `usage-guard.ts` |
-| 3. Firestore + rules | ✅ `sorteador-ed1c9`, 35 testes no emulador |
-| 4. Camada de dados | ✅ `group-store.ts`, 13 testes de integração |
+| 3. Firestore + rules | ✅ `sorteador-ed1c9`, 50 testes no emulador |
+| 4. Camada de dados | ✅ `group-store.ts`, 20 testes de integração |
 | 5. Interface | ✅ `#/g/<id>`, verificada em produção |
 | 6. Criar grupo e importar lista | ✅ `#/novo` |
 | 7. Fumaça em produção | ✅ 10/10 |
-| 8. Ponta a ponta no navegador | ✅ 13/13, incluindo o servidor negando giro forçado |
+| 8. Ponta a ponta no navegador | ✅ 13/13, mais 21/21 do ciclo da etiqueta e do álbum |
 | 9. Merge e deploy | ⛔ pendente de aprovação |
 
 ## Como rodar cada suíte
 
 ```
-npm test              # 166 unitários e de componente
-npm run test:rules    # 35 rules no emulador, sem projeto nem rede
-npm run test:store    # 13 de integração da camada de dados
+npm test              # 214 unitários e de componente
+npm run test:rules    # 50 rules no emulador, sem projeto nem rede
+npm run test:store    # 20 de integração da camada de dados
 node tests/e2e-spin.mjs <grupoId>   # ponta a ponta num navegador real
+npm run test:etiqueta -- "http://localhost:4200/?emu=1" demo   # etiqueta e álbum, ponta a ponta
 node tests/shot.mjs <url> <saida.png> <esperaMs> <larg> <alt>
 ```
 

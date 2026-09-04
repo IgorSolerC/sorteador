@@ -49,6 +49,11 @@ O app está em uso e há links de grupo em circulação desde agosto de 2026. A 
 - Aceitar uma semente livre de caracteres que entra no cálculo junto com a lista, para consertar o histórico quando alguém entra ou sai do grupo.
 - Procurar automaticamente uma semente que devolva os meses já anunciados às pessoas que de fato ganharam.
 - Incluir participantes, mês de início e semente no fragmento do link compartilhável.
+- No grupo sincronizado, etiquetar qualquer giro — o de agora ou um antigo — com um título e
+  uma descrição do que foi jogado, editáveis por quem tem o link e com o rastro de quem
+  escreveu. A etiqueta descreve o giro e nunca altera o resultado.
+- Reunir num álbum todas as cápsulas já entregues por um grupo, agrupadas por rodada e
+  filtráveis por pessoa, com a etiqueta de cada uma.
 - Funcionar sem API, conta, banco de dados ou custo de hospedagem.
 - GitHub Pages não sincroniza alterações de participantes entre navegadores; visitantes só reproduzem o mesmo resultado quando usam a mesma lista.
 - Nomes duplicados, vazios ou compostos apenas por espaços não são aceitos.

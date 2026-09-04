@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
-import { GroupEvent, memberId, replay } from './group-log';
+import { GroupEvent, SpinRecord, memberId, replay } from './group-log';
 import { GroupSnapshot } from './group-store';
 import { SyncedGroup } from './synced-group';
 import { UsageGuard } from './usage-guard';
@@ -50,6 +50,18 @@ class FakeStore {
   async removeMember(_id: string, id: string) {
     this.calls.push(`remove:${id}`);
     this.events.push({ type: 'member_removed', at: (this.clock += 1000), memberId: id });
+  }
+
+  async annotateSpin(_id: string, spinIndex: number, note: { title: string; description: string }) {
+    this.calls.push(`note:${spinIndex}:${note.title}`);
+    if (this.failWith) throw this.failWith;
+    this.events.push({
+      type: 'spin_annotated',
+      at: (this.clock += 1000),
+      spinIndex,
+      title: note.title,
+      description: note.description,
+    });
   }
 
   async spin() {
@@ -357,6 +369,141 @@ describe('modo sincronizado', () => {
     await app.confirmSpin();
 
     expect(store.calls).toContain('spin');
+    fixture.destroy();
+  });
+});
+
+describe('etiqueta do giro', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  type Bancada = {
+    openNote(spin: SpinRecord, event?: Event): void;
+    closeNote(): void;
+    commitNote(draft: { title: string; description: string }): Promise<void>;
+    removeNote(): Promise<void>;
+    noteError: () => string;
+    editingSpin: () => SpinRecord | null;
+  };
+
+  const bancada = (fixture: { componentInstance: unknown }) =>
+    fixture.componentInstance as unknown as Bancada;
+
+  const spinsOf = (store: FakeStore) => replay(GRUPO, store.events).spins;
+
+  it('um giro sem etiqueta oferece a etiqueta em branco', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
+    const branco = (fixture.nativeElement as HTMLElement).querySelector('.note-sticker.is-blank');
+
+    expect(branco).not.toBeNull();
+    expect(branco?.textContent).toContain('Etiquetar este giro');
+    fixture.destroy();
+  });
+
+  it('a etiqueta do último giro aparece no palco', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    store.events.push({
+      type: 'spin_annotated', at: Date.now(), spinIndex: 0,
+      title: 'Click The Button!', description: 'Nota final 8/10', actor: 'Igor',
+    });
+    const fixture = await render(store);
+    const texto = (fixture.nativeElement as HTMLElement).querySelector('.note-sticker')?.textContent ?? '';
+
+    expect(texto).toContain('Click The Button!');
+    expect(texto).toContain('Nota final 8/10');
+    expect(texto).toContain('Igor');
+    fixture.destroy();
+  });
+
+  it('salvar grava a etiqueta e fecha a bancada', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openNote(spinsOf(store)[0]);
+    await app.commitNote({ title: 'Overcooked', description: 'Nota 9/10' });
+    fixture.detectChanges();
+
+    expect(store.calls).toContain('note:0:Overcooked');
+    expect(app.editingSpin()).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Overcooked');
+    fixture.destroy();
+  });
+
+  it('etiquetar um giro antigo usa o índice daquele giro', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 2);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openNote(spinsOf(store)[0]);
+    await app.commitNote({ title: 'O primeiro de todos', description: '' });
+
+    expect(store.calls).toContain('note:0:O primeiro de todos');
+    expect(replay(GRUPO, store.events).spins[0].note?.title).toBe('O primeiro de todos');
+    expect(replay(GRUPO, store.events).spins[1].note).toBeNull();
+    fixture.destroy();
+  });
+
+  it('descrição sem título é recusada antes de ir à rede', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openNote(spinsOf(store)[0]);
+    await app.commitNote({ title: '', description: 'Só a descrição' });
+
+    expect(store.calls.some((c) => c.startsWith('note:'))).toBe(false);
+    expect(app.noteError()).toContain('título');
+    expect(app.editingSpin()).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('retirar grava a etiqueta em branco', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    store.events.push({
+      type: 'spin_annotated', at: Date.now(), spinIndex: 0, title: 'Tetris', description: '',
+    });
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openNote(spinsOf(store)[0]);
+    await app.removeNote();
+
+    expect(store.calls).toContain('note:0:');
+    expect(replay(GRUPO, store.events).spins[0].note).toBeNull();
+    fixture.destroy();
+  });
+
+  it('toda célula do registro abre a bancada, não só a última', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 2));
+    const celulas = (fixture.nativeElement as HTMLElement).querySelectorAll('.cell-open');
+
+    expect(celulas.length).toBe(2);
+    (celulas[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const bancadaAberta = (fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]');
+    expect(bancadaAberta).not.toBeNull();
+    expect(bancadaAberta?.textContent).toContain('Cápsula 1');
+    fixture.destroy();
+  });
+
+  it('um erro do servidor fica na bancada, sem perder o que foi digitado', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openNote(spinsOf(store)[0]);
+    store.failWith = { code: 'permission-denied' };
+    await app.commitNote({ title: 'Pico Park', description: '' });
+    fixture.detectChanges();
+
+    // A bancada não fecha: fechá-la levaria embora o texto digitado. Que o rascunho
+    // sobrevive é propriedade do editor, e está provado em `note-editor.spec.ts`.
+    expect(app.editingSpin()).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]')).not.toBeNull();
+    expect(app.noteError()).toContain('recusou');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.field-error')?.textContent)
+      .toContain('recusou');
     fixture.destroy();
   });
 });

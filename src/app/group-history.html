@@ -1,0 +1,217 @@
+<header class="topbar">
+  <a class="brand" [href]="machineUrl()" aria-label="Mesa do Mês — voltar à máquina">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
+      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
+      <path class="brand-seam" d="M6 20h28" />
+    </svg>
+    <span>Mesa do Mês</span>
+  </a>
+  <a class="text-link album-back" [href]="machineUrl()">Voltar à máquina</a>
+</header>
+
+@if (loading() && !snapshot()) {
+  <section class="empty-stage" aria-busy="true">
+    <div class="empty-globe" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3" /></svg>
+    </div>
+    <div>
+      <h1>Abrindo o<br /><strong>álbum</strong></h1>
+      <p>Buscando o registro deste grupo.</p>
+    </div>
+  </section>
+} @else if (snapshot(); as snap) {
+  <section class="album-head" aria-labelledby="album-title">
+    <div>
+      <h1 id="album-title">O álbum</h1>
+      <p class="album-lede">
+        @if (spins().length) {
+          Toda cápsula que já saiu da máquina de <strong>{{ snap.name }}</strong>, com a
+          etiqueta colada nela. Abra qualquer uma para escrever o que o clube jogou.
+        } @else {
+          O álbum de <strong>{{ snap.name }}</strong> guarda cada cápsula que a máquina
+          entregar, com a etiqueta do que o clube jogou. Ele começa no primeiro giro.
+        }
+      </p>
+    </div>
+
+    <dl class="serial-grid album-stats">
+      <div>
+        <dt>Cápsulas</dt>
+        <dd>{{ spins().length }}</dd>
+      </div>
+      <div>
+        <dt>Etiquetadas</dt>
+        <dd>{{ labelled() }} / {{ spins().length }}</dd>
+      </div>
+      <div>
+        <dt>Rodadas</dt>
+        <dd>{{ snap.state.round }}</dd>
+      </div>
+      <div>
+        <dt>Já saíram</dt>
+        <dd>{{ winners().length }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (error()) {
+    <p class="synced-error album-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (winners().length) {
+    <section class="album-people" aria-labelledby="album-people-title">
+      <h2 id="album-people-title">Quem já saiu</h2>
+      <ul class="people-chips">
+        <li>
+          <button
+            type="button"
+            class="people-chip is-all"
+            [class.is-on]="!filterId()"
+            [attr.aria-pressed]="!filterId()"
+            (click)="clearFocus()"
+          >
+            Todas <b>{{ spins().length }}</b>
+          </button>
+        </li>
+        @for (winner of winners(); track winner.id) {
+          <li>
+            <button
+              type="button"
+              class="people-chip"
+              [class.is-on]="filterId() === winner.id"
+              [attr.aria-pressed]="filterId() === winner.id"
+              (click)="focusOn(winner.id)"
+            >
+              <span class="chip-capsule" aria-hidden="true" [style.--capsule]="winner.color"></span>
+              {{ winner.name }} <b>{{ winner.wins }}</b>
+            </button>
+          </li>
+        }
+      </ul>
+      <p class="album-filter-state" role="status">
+        @if (focused(); as pessoa) {
+          Mostrando as {{ visibleCount() }} de <strong>{{ pessoa.name }}</strong>,
+          {{ pessoa.labelled }} com etiqueta.
+        } @else {
+          Mostrando o álbum inteiro.
+        }
+      </p>
+    </section>
+  }
+
+  <section class="album-wall" aria-labelledby="album-title">
+    @if (visibleCount()) {
+      @for (section of rounds(); track section.round) {
+        <h2 class="round-rule">
+          <span>Rodada {{ section.round }}</span>
+          <b>{{ section.spins.length }}{{ section.spins.length === 1 ? ' cápsula' : ' cápsulas' }}</b>
+        </h2>
+        <ol class="album-grid">
+          @for (spin of section.spins; track spin.index) {
+            <li>
+              <button
+                type="button"
+                class="album-card"
+                [class.is-blank]="!spin.note"
+                [style.--tilt]="tiltFor(spin.index)"
+                [style.--capsule]="colorFor(spin.index)"
+                (click)="openNote(spin, $event)"
+                [attr.aria-label]="
+                  (spin.note ? 'Editar a etiqueta de ' : 'Etiquetar a cápsula de ') +
+                  spin.winnerName + ', cápsula ' + (spin.index + 1)
+                "
+              >
+                <span class="album-card-head">
+                  <span class="album-capsule" aria-hidden="true"></span>
+                  <span class="album-who">
+                    <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
+                    <span class="album-name">{{ spin.winnerName }}</span>
+                  </span>
+                </span>
+
+                <span class="album-perf" aria-hidden="true"></span>
+
+                @if (spin.note; as note) {
+                  <span class="album-title">{{ note.title }}</span>
+                  @if (note.description) {
+                    <span class="album-description">{{ note.description }}</span>
+                  }
+                  <span class="album-meta">
+                    {{ note.actor ? 'etiquetada por ' + note.actor : 'etiqueta sem assinatura' }}
+                    @if (note.revision > 1) {
+                      · reescrita {{ note.revision }}×
+                    }
+                  </span>
+                } @else {
+                  <span class="album-title album-title-blank">Sem etiqueta</span>
+                  <span class="album-description">
+                    Ninguém anotou o que o clube jogou nesta. Abra para escrever.
+                  </span>
+                  @if (spin.actor) {
+                    <span class="album-meta">girada por {{ spin.actor }}</span>
+                  }
+                }
+              </button>
+            </li>
+          }
+        </ol>
+      }
+    } @else {
+      <div class="album-empty">
+        <div class="empty-globe" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+        </div>
+        <div>
+          <h2>O álbum está<br /><strong>sem cápsulas</strong></h2>
+          <p>
+            Nenhum giro foi registrado neste grupo ainda. A primeira cápsula chega quando
+            alguém girar a manivela.
+          </p>
+          <a class="primary-action" [href]="machineUrl()">Ir para a máquina</a>
+        </div>
+      </div>
+    }
+  </section>
+
+  <footer class="album-foot">
+    <span>O álbum</span>
+    <p>
+      As etiquetas ficam no mesmo registro dos giros: nada aqui pode ser apagado, só
+      reescrito — e cada versão anterior continua guardada.
+    </p>
+  </footer>
+} @else {
+  <!-- Sem snapshot e sem carga em curso, a página não pode ficar em branco: o que houve
+       foi uma recusa do servidor, e ela precisa aparecer. -->
+  <section class="empty-stage">
+    <div class="empty-globe" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+    </div>
+    <div>
+      <h1>Álbum não<br /><strong>encontrado</strong></h1>
+      <p class="album-error" role="alert">
+        {{ error() || 'O link pode estar incompleto ou o grupo pode ter sido criado noutro projeto.' }}
+      </p>
+      <a class="primary-action" href=".">Voltar ao início</a>
+    </div>
+  </section>
+}
+
+@if (editingSpin(); as spin) {
+  <app-note-editor
+    [spin]="spin"
+    [saving]="savingNote()"
+    [error]="noteError()"
+    (commit)="commitNote($event)"
+    (remove)="removeNote()"
+    (dismiss)="closeNote()"
+  />
+}
+
+<div class="toast" [class.is-visible]="notice()" role="status" aria-live="polite">
+  <span>{{ notice() }}</span>
+  <button class="toast-close" type="button" (click)="dismissNotice()" aria-label="Fechar aviso">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+  </button>
+</div>

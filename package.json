@@ -11,7 +11,9 @@
     "build:testjs": "tsc src/app/draw-engine.ts src/app/group-log.ts src/app/usage-guard.ts src/app/group-store.ts --outDir tmpjs/src/app --module esnext --target es2022 --moduleResolution bundler --skipLibCheck && node tests/fix-esm-imports.mjs",
     "test:store": "npm run emu:free && npm run build:testjs && firebase emulators:exec --only firestore,auth --project mesa-do-mes-store-test \"node tests/group-store.test.mjs\"",
     "emu:free": "node tests/free-ports.mjs",
-    "test:migration": "npm run emu:free && npm run build:testjs && firebase emulators:exec --only firestore --project migracao-teste \"node tests/migrate.test.mjs\""
+    "test:migration": "npm run emu:free && npm run build:testjs && firebase emulators:exec --only firestore --project migracao-teste \"node tests/migrate.test.mjs\"",
+    "test:etiqueta": "node tests/e2e-etiqueta.mjs",
+    "test:a11y": "node tests/audit-a11y.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.2",

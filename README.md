@@ -39,6 +39,19 @@ O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) public
 
 No GitHub, abra **Settings → Pages → Build and deployment** e selecione **GitHub Actions** como fonte. Depois envie o projeto para a branch `main`.
 
+## Grupo sincronizado, etiquetas e álbum
+
+Além do modo por link, há o **grupo sincronizado** (`#/g/<id>`), que guarda os giros num log
+append-only no Firestore. Ver [FIREBASE.md](FIREBASE.md).
+
+- **Etiqueta.** Qualquer giro — o de agora ou o de um ano atrás — recebe um **título** e uma
+  **descrição** do que o clube jogou: `Click The Button!` / `Nota final 8/10`. A etiqueta
+  descreve o giro e nunca altera o vencedor.
+- **Reescrever, nunca apagar.** Editar é gravar outra etiqueta; o replay faz a última valer e
+  as anteriores continuam no registro, com quem escreveu cada uma.
+- **O álbum** (`#/g/<id>/album`) é a parede de todas as cápsulas que já saíram, agrupadas por
+  rodada e filtráveis por pessoa. Dá para etiquetar por lá também.
+
 ## Persistência e compartilhamento
 
 - A lista editada e a data de início ficam no `localStorage` daquele navegador.

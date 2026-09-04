@@ -1,4 +1,19 @@
-@if (creatingGroup()) {
+@if (albumGroupId(); as album) {
+  <!-- O álbum lê o mesmo log da máquina, então também só desce para quem abre um grupo. -->
+  @defer (on immediate) {
+    <app-group-history [groupId]="album" />
+  } @placeholder {
+    <section class="empty-stage" aria-busy="true">
+      <div class="empty-globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3" /></svg>
+      </div>
+      <div>
+        <h1>Abrindo o<br /><strong>álbum</strong></h1>
+        <p>Carregando o histórico do grupo.</p>
+      </div>
+    </section>
+  }
+} @else if (creatingGroup()) {
   @defer (on immediate) {
     <app-create-group [seedNames]="participants()" />
   } @placeholder {

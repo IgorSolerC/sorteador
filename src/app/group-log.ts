@@ -14,7 +14,20 @@ import { hashString, normalizeName, participantKey } from './draw-engine';
 export type GroupEvent =
   | { readonly type: 'member_added'; readonly at: number; readonly name: string; readonly actor?: string }
   | { readonly type: 'member_removed'; readonly at: number; readonly memberId: string; readonly actor?: string }
-  | { readonly type: 'spin'; readonly at: number; readonly actor?: string };
+  | { readonly type: 'spin'; readonly at: number; readonly actor?: string }
+  | {
+      readonly type: 'spin_annotated';
+      readonly at: number;
+      readonly spinIndex: number;
+      readonly title: string;
+      readonly description: string;
+      readonly actor?: string;
+    }
+  /**
+   * Um evento que este código ainda não entende — gravado por uma versão mais nova do app.
+   * Ele existe para que a contagem bata com `versaoLog`; o replay o ignora.
+   */
+  | { readonly type: 'unknown'; readonly at: number };
 
 export interface GroupMember {
   readonly id: string;
@@ -23,6 +36,25 @@ export interface GroupMember {
   readonly joinedAt: number;
   readonly leftAt: number | null;
 }
+
+/**
+ * A etiqueta colada na cápsula depois que ela saiu: o que foi escolhido e como foi.
+ * Ela descreve o giro e nunca participa dele — ver `replay()`, onde uma anotação não
+ * toca no bolo, na rodada nem no vencedor.
+ */
+export interface SpinNote {
+  readonly title: string;
+  readonly description: string;
+  /** Quando a etiqueta ficou como está, não quando o giro aconteceu. */
+  readonly at: number;
+  /** Quem escreveu esta versão da etiqueta. Não é verificado. */
+  readonly actor?: string;
+  /** 1 na primeira escrita; a partir de 2 a etiqueta foi reescrita. */
+  readonly revision: number;
+}
+
+export const MAX_NOTE_TITLE = 80;
+export const MAX_NOTE_DESCRIPTION = 280;
 
 export interface SpinRecord {
   readonly index: number;
@@ -34,6 +66,8 @@ export interface SpinRecord {
   readonly eligible: readonly string[];
   readonly winnerId: string;
   readonly winnerName: string;
+  /** O que foi jogado e como foi, quando alguém etiquetou. */
+  readonly note: SpinNote | null;
 }
 
 export interface GroupState {
@@ -67,6 +101,9 @@ export function emptyState(): GroupState {
 export function replay(groupId: string, events: readonly GroupEvent[]): GroupState {
   const members = new Map<string, GroupMember>();
   const spins: SpinRecord[] = [];
+  // Etiquetas por índice de giro. A última anotação de um giro é a que vale; as anteriores
+  // continuam no log, que é o que permite mostrar "editado por" sem poder reescrever nada.
+  const notes = new Map<number, SpinNote>();
   let round = 1;
   let pool: string[] = [];
   // Who has already been drawn in the round now open; a rejoin must not clear this.
@@ -123,6 +160,7 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
           eligible: available,
           winnerId,
           winnerName: winner.name,
+          note: null,
         });
 
         drawnThisRound.add(winnerId);
@@ -136,16 +174,72 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
         }
         break;
       }
+
+      case 'spin_annotated': {
+        // Só se etiqueta uma cápsula que já caiu na bandeja. Sem isto daria para escrever
+        // a etiqueta do próximo giro antes de ele acontecer, e a etiqueta viraria aposta.
+        if (!Number.isInteger(event.spinIndex)) break;
+        if (event.spinIndex < 0 || event.spinIndex >= spins.length) break;
+
+        const title = noteText(event.title, MAX_NOTE_TITLE, { singleLine: true });
+        const description = noteText(event.description, MAX_NOTE_DESCRIPTION);
+
+        // Etiqueta em branco é etiqueta retirada — e a retirada também fica no log.
+        if (!title && !description) {
+          notes.delete(event.spinIndex);
+          break;
+        }
+
+        notes.set(event.spinIndex, {
+          title,
+          description,
+          at: event.at,
+          actor: event.actor,
+          revision: (notes.get(event.spinIndex)?.revision ?? 0) + 1,
+        });
+        break;
+      }
+
+      // Um evento de uma versão mais nova do app: contado, nunca interpretado.
+      case 'unknown':
+        break;
     }
   }
+
+  const annotated: SpinRecord[] = notes.size
+    ? spins.map((spin) => ({ ...spin, note: notes.get(spin.index) ?? null }))
+    : spins;
 
   return {
     members: [...members.values()].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)),
     round,
     pool,
-    spins,
-    lastSpin: spins.length ? spins[spins.length - 1] : null,
+    spins: annotated,
+    lastSpin: annotated.length ? annotated[annotated.length - 1] : null,
   };
+}
+
+/**
+ * Texto de etiqueta, cortado exatamente na medida que o servidor usa. `size()` nas rules
+ * conta unidades UTF-16 — o mesmo que `.length` — mas um `slice` cru nessa medida parte um
+ * par substituto ao meio e grava meio emoji. Então o corte anda de caractere em caractere
+ * e para antes de estourar o orçamento em unidades. "Nota 8/10 🎮" é uso real aqui.
+ */
+export function noteText(value: string, max: number, { singleLine = false } = {}): string {
+  if (typeof value !== 'string') return '';
+  const collapsed = singleLine
+    ? value.replace(/\s+/g, ' ')
+    : value.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n');
+
+  const trimmed = collapsed.trim();
+  if (trimmed.length <= max) return trimmed;
+
+  let cut = '';
+  for (const character of trimmed) {
+    if (cut.length + character.length > max) break;
+    cut += character;
+  }
+  return cut.trim();
 }
 
 /** The spin's only unpredictable input is the server's clock, which the client never sets. */
@@ -169,4 +263,14 @@ export function poolMembers(state: GroupState): readonly GroupMember[] {
 
 export function spinsOfRound(state: GroupState, round: number): readonly SpinRecord[] {
   return state.spins.filter((spin) => spin.round === round);
+}
+
+/** A etiqueta de um giro, se alguém colou uma. */
+export function spinNote(state: GroupState, spinIndex: number): SpinNote | null {
+  return state.spins[spinIndex]?.note ?? null;
+}
+
+/** Só os giros já etiquetados — a estante do que o clube jogou. */
+export function annotatedSpins(state: GroupState): readonly SpinRecord[] {
+  return state.spins.filter((spin) => spin.note);
 }

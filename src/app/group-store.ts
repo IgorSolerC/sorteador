@@ -14,7 +14,14 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-import { GroupEvent, GroupState, replay } from './group-log';
+import {
+  GroupEvent,
+  GroupState,
+  MAX_NOTE_DESCRIPTION,
+  MAX_NOTE_TITLE,
+  noteText,
+  replay,
+} from './group-log';
 import { UsageGuard } from './usage-guard';
 
 /**
@@ -127,6 +134,38 @@ export class GroupStore {
   /** Marca o giro no doc do grupo junto com o evento, que é o que as rules exigem. */
   spin(groupId: string, actor = ''): Promise<void> {
     return this.append(groupId, { tipo: 'spin' }, { ultimoGiroEm: serverTimestamp() }, actor);
+  }
+
+  /**
+   * Cola (ou reescreve) a etiqueta de um giro. Não existe update no log: uma etiqueta nova
+   * é outro evento, e o replay faz a última valer. Por isso anotar o giro de ontem e o de
+   * um ano atrás é a mesma operação — o índice do giro é congelado assim que ele acontece.
+   */
+  annotateSpin(
+    groupId: string,
+    spinIndex: number,
+    note: { title: string; description: string },
+    actor = '',
+  ): Promise<void> {
+    if (!Number.isInteger(spinIndex) || spinIndex < 0) {
+      return Promise.reject(new Error(`Índice de giro inválido: ${spinIndex}.`));
+    }
+    return this.append(
+      groupId,
+      {
+        tipo: 'spin_annotated',
+        giro: spinIndex,
+        titulo: noteText(note.title, MAX_NOTE_TITLE, { singleLine: true }),
+        descricao: noteText(note.description, MAX_NOTE_DESCRIPTION),
+      },
+      {},
+      actor,
+    );
+  }
+
+  /** Retirar a etiqueta é escrevê-la em branco; a retirada também fica no registro. */
+  clearSpinNote(groupId: string, spinIndex: number, actor = ''): Promise<void> {
+    return this.annotateSpin(groupId, spinIndex, { title: '', description: '' }, actor);
   }
 
   static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
@@ -264,7 +303,21 @@ function toEvent(data: Record<string, unknown>): GroupEvent | null {
         : null;
     case 'spin':
       return { type: 'spin', at, actor };
+    case 'spin_annotated':
+      return typeof data['giro'] === 'number'
+        ? {
+            type: 'spin_annotated',
+            at,
+            spinIndex: data['giro'],
+            title: typeof data['titulo'] === 'string' ? data['titulo'] : '',
+            description: typeof data['descricao'] === 'string' ? data['descricao'] : '',
+            actor,
+          }
+        : null;
     default:
-      return null;
+      // Um evento de uma versão mais nova do app. Descartá-lo faria a contagem local ficar
+      // menor que `versaoLog` para sempre, o cache ser julgado incoerente e o log inteiro
+      // ser rebuscado em toda abertura. Ele entra inerte só para a conta fechar.
+      return { type: 'unknown', at };
   }
 }

@@ -242,7 +242,7 @@ Atribuídas por posição no ciclo (`índice % 6`), fixas e nunca sorteadas: **�
 
 **A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.
 
-**A Regra da Única Quebra.** O papel aparece uma vez, na seção da coleção, porque é ali que se administra. Nenhuma outra superfície clara. Se algo precisa de papel, precisa antes justificar por que é administração.
+**A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a seção da coleção, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. Uma terceira superfície clara precisa antes provar que é administração.
 
 **A Regra do Amarelo de Ação.** O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (`button-secondary`) ou o link de texto.
 
@@ -344,6 +344,26 @@ A máquina é um único SVG (`viewBox="-26 -26 452 576"`) desenhado em espaço p
 - **Rótulos no aro:** cada nome corre tangencialmente pelo aro via `textPath`. O arco do rótulo é invertido para as cápsulas que param na metade inferior, de modo que nenhum nome fique de cabeça para baixo. O texto degrada por orçamento de arco — primeiro nome, iniciais, uma letra — conforme o número de participantes; o tamanho da fonte é `min(17, max(8, 46/√n))`.
 - **Calha às seis horas:** a rotação de destino é calculada para que a cápsula vencedora pare exatamente na calha, na base do globo.
 - **Estado ao vivo:** revelada a rodada, a chapa recebe a cor da cápsula, os elementos montados nela viram tinta escura, e um brilho radial suave da mesma cor aparece atrás do palco.
+
+### A Etiqueta
+
+A etiqueta é o papel colado na cápsula depois que ela caiu: o que o clube jogou e como foi. Ela nunca é um "card de metadados" — é um objeto do mesmo mundo do adesivo do mês.
+
+- **Etiqueta escrita:** retângulo de papel quente (`paper`), raio `4px`, largura `min(100%, 33rem)`, rotacionado `-0.9deg` (`-0.5deg` abaixo de 620px), com sombra de colagem `0 12px 26px rgba(6, 14, 28, .45)`. Rótulo de série em mono no topo, título em Fredoka `1.42rem`, descrição em corpo `0.92rem` preservando quebras de linha, e um rodapé em mono separado por hairline de papel com a assinatura e o botão **Editar**. Uma cápsula plana na cor da pessoa fica ancorada no canto superior direito, pela Regra da Cápsula Portante.
+- **Etiqueta em branco:** o mesmo objeto em `paper-quiet`, com uma segunda borda tracejada 6px para dentro — papel ainda não escrito, não um botão de "adicionar". É o `<button>` inteiro, e levanta 2px no hover.
+- **Bancada:** a etiqueta é escrita numa sobreposição de papel (`12px`, `min(34rem, 100vw - 2.4rem)`) sobre um véu de esmalte com `blur(2px)`, carregando a mesma marca de registro do impressor da seção da coleção. Cabeçalho com a série do giro, o disco de iniciais na cor da cápsula e o nome em `2.4rem`. Cada campo tem contador tabular no cabeçalho do rótulo, que vira `field-error-ink` no limite. A ação é o botão de esmalte, nunca o amarelo — é papel, pela Regra do Amarelo de Ação. **Retirar** vive separado à direita, em `remove-ink`.
+- **No registro:** a célula inteira vira o controle que abre a bancada. Uma célula sem etiqueta diz `SEM ETIQUETA` em mono de série, e é assim que o retroativo se anuncia sem precisar de um botão por célula.
+
+### O Álbum
+
+O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colada no esmalte. A superfície continua sendo o esmalte — o papel são os objetos, não o fundo, e é isso que mantém a Regra da Única Quebra de pé com dezenas de cartões na tela.
+
+- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
+- **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor de uma pessoa no álbum é a da primeira cápsula dela, para que ela seja sempre a mesma em toda a parede.
+- **Régua de rodada:** filete de 2px com o número da rodada à esquerda e a contagem à direita, em mono de série. A ordem é da rodada mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer.
+- **Cartão:** a etiqueta de papel, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, descrição cortada em quatro linhas e o rodapé de assinatura preso na base para que os cartões de uma fileira terminem alinhados. O cartão inteiro é o controle que abre a bancada.
+- **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
+- **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM ETIQUETA` em mono. É como o retroativo se anuncia, sem precisar de um botão por cartão.
 
 ### Motion
 Existe um único momento autoral por visita, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s` e a cúpula se abre em `1.5s`. Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).

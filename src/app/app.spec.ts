@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { App, isNewGroupRoute, readSyncedGroupId } from './app';
+import { App, isNewGroupRoute, readAlbumGroupId, readSyncedGroupId } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -36,11 +36,18 @@ describe('App', () => {
   });
 
   it('preserva o mês já anunciado quando entra alguém novo', () => {
-    // O clube rodou agosto/2026 com seis pessoas; agora entra a sétima.
+    // O clube rodou o mês corrente com seis pessoas; agora entra a sétima.
+    //
+    // O início é o próprio mês de hoje, e não uma data fixa: com um mês fixo o histórico
+    // cresce a cada virada de calendário, e a busca passa a ter que satisfazer meses
+    // consecutivos do mesmo ciclo ao mesmo tempo — o que é insatisfazível por construção,
+    // porque dentro de um ciclo ninguém repete. Ancorado em hoje, o alvo é sempre um só.
     const clube = ['Ana', 'Breno', 'Cecília', 'Davi', 'Elisa', 'Fátima'];
+    const hoje = new Date();
+    const mesCorrente = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
     localStorage.setItem(
       'mesa-do-mes:configuration:v1',
-      JSON.stringify({ participants: clube, startMonth: '2026-08' }),
+      JSON.stringify({ participants: clube, startMonth: mesCorrente }),
     );
 
     const fixture = TestBed.createComponent(App);
@@ -108,6 +115,29 @@ describe('rota de criação', () => {
   it('não confunde com as outras rotas', () => {
     for (const hash of ['', '#', '#/g/abc', '#grupo=WyJBIl0', '#/novos', '#/novo/abc']) {
       expect(isNewGroupRoute(hash)).toBe(false);
+    }
+  });
+});
+
+describe('rota do álbum', () => {
+  it('reconhece #/g/<id>/album', () => {
+    expect(readAlbumGroupId('#/g/abc123/album')).toBe('abc123');
+    expect(readAlbumGroupId('#/g/abc123/album/')).toBe('abc123');
+    expect(readAlbumGroupId('/g/abc123/album')).toBe('abc123');
+  });
+
+  it('não rouba as rotas que já existiam', () => {
+    for (const hash of ['', '#', '#/g/abc123', '#/novo', '#grupo=WyJBIl0&inicio=2026-08']) {
+      expect(readAlbumGroupId(hash)).toBe('');
+    }
+    // E o caminho contrário: a máquina continua sendo só `#/g/<id>`.
+    expect(readSyncedGroupId('#/g/abc123/album')).toBe('');
+    expect(isNewGroupRoute('#/g/abc123/album')).toBe(false);
+  });
+
+  it('recusa lixo no lugar do id', () => {
+    for (const hash of ['#/g//album', '#/g/tem espaço/album', '#/g/' + 'a'.repeat(65) + '/album']) {
+      expect(readAlbumGroupId(hash)).toBe('');
     }
   });
 });

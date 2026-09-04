@@ -2,6 +2,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { capsuleColor, Machine } from './machine';
 import { CreateGroup } from './create-group';
+import { GroupHistory } from './group-history';
 import { SyncedGroup } from './synced-group';
 import { FormsModule } from '@angular/forms';
 import { decodeParticipants, encodeParticipants } from './share-link';
@@ -37,7 +38,7 @@ interface GroupConfiguration {
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, FormsModule, Machine, SyncedGroup, CreateGroup],
+  imports: [CommonModule, FormsModule, Machine, SyncedGroup, CreateGroup, GroupHistory],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -59,6 +60,7 @@ export class App {
   /** `#/g/<id>` abre o grupo sincronizado; qualquer outra coisa segue o modo por link. */
   protected readonly syncedGroupId = signal(readSyncedGroupId(this.document.defaultView?.location.hash ?? ''));
   protected readonly creatingGroup = signal(isNewGroupRoute(this.document.defaultView?.location.hash ?? ''));
+  protected readonly albumGroupId = signal(readAlbumGroupId(this.document.defaultView?.location.hash ?? ''));
 
   protected readonly participants = signal<string[]>(this.initialConfiguration.participants);
   protected readonly startMonth = signal(this.initialConfiguration.startMonth);
@@ -150,6 +152,7 @@ export class App {
     const hash = this.document.defaultView?.location.hash ?? '';
     this.syncedGroupId.set(readSyncedGroupId(hash));
     this.creatingGroup.set(isNewGroupRoute(hash));
+    this.albumGroupId.set(readAlbumGroupId(hash));
 
     // Voltar para um link de grupo tem que trazer a configuração daquele link. A lista só
     // era lida na partida, então navegar por hash renderizava o modo por link com os dados
@@ -580,4 +583,13 @@ export function readSyncedGroupId(hash: string): string {
 /** `#/novo` abre a criação de grupo; o resto continua caindo no modo por link. */
 export function isNewGroupRoute(hash: string): boolean {
   return /^#?\/novo\/?$/.test(hash.trim());
+}
+
+/**
+ * `#/g/<id>/album` abre o álbum daquele grupo. É uma rota nova ao lado das que já existem:
+ * `#/g/<id>` continua abrindo a máquina, e nenhum link em circulação muda de destino.
+ */
+export function readAlbumGroupId(hash: string): string {
+  const match = /^#?\/g\/([A-Za-z0-9_-]{1,64})\/album\/?$/.exec(hash.trim());
+  return match ? match[1] : '';
 }
