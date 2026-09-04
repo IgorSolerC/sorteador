@@ -86,6 +86,12 @@ if (process.env['SHOT_AUTOR']) {
 }
 
 await send('Page.navigate', { url });
+// Ir de /base/ para /base/#rota é só troca de hash: o navegador não recarrega, e o app
+// segue de pé com o crachá que ele leu antes de existir. Um reload resolve.
+if (process.env['SHOT_AUTOR']) {
+  await sleep(600);
+  await send('Page.reload', { ignoreCache: false });
+}
 await sleep(waitMs);
 
 // Uma tela que só existe depois de um clique — a gaveta, a bancada — precisa do clique.

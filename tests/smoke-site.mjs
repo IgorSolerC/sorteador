@@ -38,10 +38,23 @@ const check = (n, ok, d = '') => { results.push(ok); console.log(`${ok ? '  ok  
 
 await send('Page.enable'); await send('Runtime.enable');
 
+// A porta pergunta quem é a pessoa antes de qualquer rota, e um perfil de navegador novo
+// nunca tem crachá. Sem isto a fumaça veria a porta e reportaria a máquina como quebrada.
+await send('Page.navigate', { url: BASE });
+await sleep(6000);
+check('a porta aparece para quem chega sem crachá', await ev(`!!document.querySelector('.gate')`));
+await ev(`localStorage.setItem('mesa-do-mes:autor:v1', 'Fumaça')`);
+
 await send('Page.navigate', { url: `${BASE}#/g/${GRUPO}` });
-await sleep(16000);
+// Ir de /base/ para /base/#rota é só troca de hash: o navegador não recarrega, e o app
+// segue de pé com o crachá que ele leu antes de existir. Um reload resolve.
+await sleep(600);
+await send('Page.reload', { ignoreCache: false });
+// A máquina abre encenando a entrega: 4,3s de cena antes de o nome aparecer.
+await sleep(18000);
 const vencedor = await ev(`document.querySelector('#synced-title')?.textContent?.trim() ?? ''`);
-check('a máquina abre em produção', !!vencedor, vencedor);
+check('a máquina abre em produção', !!vencedor && vencedor !== 'Entregando', vencedor);
+check('a coleção é uma gaveta no cabeçalho', await ev(`!!document.querySelector('#roster-button')`));
 check('a etiqueta do palco existe no build publicado',
   (await ev(`!!document.querySelector('.note-sticker')`)) === true);
 check('as células do registro abrem a etiqueta',
