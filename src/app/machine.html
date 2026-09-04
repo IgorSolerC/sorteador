@@ -1,128 +1,150 @@
-<svg
-          class="machine-front"
-          viewBox="-26 -26 452 576"
-          role="img"
-          [attr.aria-label]="'Globo com ' + capsules().length + ' cápsulas, uma por participante'"
-        >
-          <defs>
-            <linearGradient id="chrome" x1="0" y1="0" x2="0.35" y2="1">
-              <stop offset="0" stop-color="#F4F8FC" />
-              <stop offset="0.34" stop-color="#93A6BE" />
-              <stop offset="0.52" stop-color="#E6EDF5" />
-              <stop offset="0.78" stop-color="#7C8DA6" />
-              <stop offset="1" stop-color="#D8E2ED" />
-            </linearGradient>
-            <radialGradient id="well" cx="0.38" cy="0.3" r="0.86">
-              <stop offset="0" stop-color="#26436B" />
-              <stop offset="1" stop-color="#0A1830" />
-            </radialGradient>
-            <linearGradient id="acrylic" x1="0.18" y1="0" x2="0.7" y2="1">
-              <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42" />
-              <stop offset="0.36" stop-color="#FFFFFF" stop-opacity="0.06" />
-              <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.16" />
-            </linearGradient>
-            <radialGradient id="core-glass" cx="0.42" cy="0.34" r="0.78">
-              <stop offset="0" stop-color="#12294a" stop-opacity="0.18" />
-              <stop offset="0.62" stop-color="#08152c" stop-opacity="0.52" />
-              <stop offset="1" stop-color="#040d1e" stop-opacity="0.82" />
-            </radialGradient>
-            <linearGradient id="inner-edge" x1="0.12" y1="0.04" x2="0.78" y2="0.94">
-              <stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
-              <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.04" />
-              <stop offset="1" stop-color="#ffffff" stop-opacity="0.24" />
-            </linearGradient>
-            <clipPath id="globe-clip"><circle cx="200" cy="200" r="170" /></clipPath>
-          </defs>
+<!-- A máquina inteira é o controle de reencenar: quem clica no globo espera que ele gire,
+     e um alvo do tamanho da máquina serve tanto ao toque quanto ao teclado. A cena não
+     decide nada — o resultado já está no registro, e reencená-lo devolve o mesmo nome. -->
+<button
+  type="button"
+  class="machine-replay"
+  [disabled]="busy()"
+  (click)="askReplay()"
+  [attr.aria-label]="busy() ? 'A máquina está entregando' : 'Girar a roleta de novo, só a animação'"
+>
+  <svg class="machine-front" viewBox="-26 -26 452 576" aria-hidden="true">
+    <defs>
+      <linearGradient id="chrome" x1="0" y1="0" x2="0.35" y2="1">
+        <stop offset="0" stop-color="#F4F8FC" />
+        <stop offset="0.34" stop-color="#93A6BE" />
+        <stop offset="0.52" stop-color="#E6EDF5" />
+        <stop offset="0.78" stop-color="#7C8DA6" />
+        <stop offset="1" stop-color="#D8E2ED" />
+      </linearGradient>
+      <radialGradient id="well" cx="0.38" cy="0.3" r="0.86">
+        <stop offset="0" stop-color="#26436B" />
+        <stop offset="1" stop-color="#0A1830" />
+      </radialGradient>
+      <linearGradient id="acrylic" x1="0.18" y1="0" x2="0.7" y2="1">
+        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42" />
+        <stop offset="0.36" stop-color="#FFFFFF" stop-opacity="0.06" />
+        <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.16" />
+      </linearGradient>
+      <radialGradient id="core-glass" cx="0.42" cy="0.34" r="0.78">
+        <stop offset="0" stop-color="#12294a" stop-opacity="0.18" />
+        <stop offset="0.62" stop-color="#08152c" stop-opacity="0.52" />
+        <stop offset="1" stop-color="#040d1e" stop-opacity="0.82" />
+      </radialGradient>
+      <linearGradient id="inner-edge" x1="0.12" y1="0.04" x2="0.78" y2="0.94">
+        <stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
+        <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.04" />
+        <stop offset="1" stop-color="#ffffff" stop-opacity="0.24" />
+      </linearGradient>
+      <clipPath id="globe-clip"><circle cx="200" cy="200" r="170" /></clipPath>
+      <!-- As cápsulas soltas vivem no interior, não no anel das cunhas. -->
+      <clipPath id="core-clip"><circle cx="200" cy="200" r="96" /></clipPath>
+    </defs>
 
-          <!-- Machine body -->
-          <rect class="body-plate" x="14" y="352" width="372" height="164" rx="16" />
-          <rect class="body-seam" x="14" y="386" width="372" height="1.5" />
+    <!-- Machine body -->
+    <rect class="body-plate" x="14" y="352" width="372" height="164" rx="16" />
+    <rect class="body-seam" x="14" y="386" width="372" height="1.5" />
 
-          <!-- Acrylic globe -->
-          <circle class="globe-well" cx="200" cy="200" r="170" fill="url(#well)" />
-          <circle class="globe-core" cx="200" cy="200" r="96" fill="url(#core-glass)" />
-          <g class="loose" clip-path="url(#globe-clip)">
-            @for (loose of looseCapsules(); track $index) {
-              <g [attr.transform]="loose.transform">
-                <path class="loose-dome" [attr.d]="loose.dome" [attr.fill]="loose.color" />
-                <path class="loose-shell" [attr.d]="loose.shell" />
-                <path class="loose-seam" [attr.d]="loose.seam" />
-                <path class="loose-spot" [attr.d]="loose.spot" />
-              </g>
-            }
-          </g>
-          <g class="capsule-field" [style.transform]="'rotate(' + rotation() + 'deg)'">
-            @for (capsule of capsules(); track trackCapsule($index, capsule); let index = $index) {
-              <g class="capsule" [class.is-chosen]="revealed() && index === chosenIndex()">
-                <path class="capsule-dome" [attr.d]="capsule.dome" [attr.fill]="capsule.color" />
-                <path class="capsule-shell" [attr.d]="capsule.clear" />
-                <path class="capsule-seam" [attr.d]="capsule.seam" />
-                <path class="capsule-gloss" [attr.d]="capsule.gloss" />
-                <path [attr.id]="'rim-' + index" [attr.d]="capsule.labelPath" fill="none" />
-                <text class="capsule-name" [attr.font-size]="capsule.fontSize">
-                  <textPath [attr.href]="'#rim-' + index" startOffset="50%" text-anchor="middle">{{ capsule.label }}</textPath>
-                </text>
-              </g>
-            }
-          </g>
+    <!-- Machine decals: every annotated part carries a real value.
+         Ficam ANTES do globo de propósito. Em SVG não há z-index: quem vem depois
+         pinta por cima. Desenhados no fim, a linha-guia atravessava o aro cromado,
+         cortava a cunha e morria em cima do nome — lia como risco no acrílico. Aqui
+         ela some atrás do aro exatamente onde deve sumir, e o texto, que mora fora
+         do globo, continua visível. Os decalques da chapa seguem depois de
+         `body-plate`, então continuam legíveis sobre ela. -->
+    <g class="decals">
+      <path class="leader" d="M44 40 44 74 96 116" />
+      <text class="decal" x="8" y="30">{{ capsules().length }} CÁPSULAS</text>
+      <path class="leader leader-plate" d="M100 374 166 374" />
+      <text class="decal decal-plate" x="94" y="378" text-anchor="end">CALHA</text>
+      <path class="leader leader-plate" d="M280 410 280 418" />
+      <text class="decal decal-plate" x="280" y="404" text-anchor="middle">BANDEJA</text>
+    </g>
 
-          <!-- Glass, rim and hub -->
-          <circle class="globe-glass" cx="200" cy="200" r="170" fill="url(#acrylic)" clip-path="url(#globe-clip)" />
-          <path class="globe-sheen" d="M74 96a170 170 0 0 1 148-62c-58 22-94 62-108 118-13 52-2 96 30 132A170 170 0 0 1 74 96Z" clip-path="url(#globe-clip)" />
-          <circle class="globe-inner-edge" cx="200" cy="200" r="163" fill="none" stroke="url(#inner-edge)" stroke-width="9" />
-          <circle class="globe-rim" cx="200" cy="200" r="177" fill="none" stroke="url(#chrome)" stroke-width="15" />
-          <g class="knurl">
-            @for (flute of flutes(); track $index) {
-              <path [attr.d]="flute" />
-            }
-          </g>
-          <circle class="globe-rim-line" cx="200" cy="200" r="170" fill="none" />
-          <g class="hub">
-            <circle class="hub-ring" cx="200" cy="200" r="44" />
-            <circle class="hub-face" cx="200" cy="200" r="35" fill="url(#chrome)" />
-            <circle class="hub-pin" cx="200" cy="200" r="10" />
-          </g>
+    <!-- Acrylic globe -->
+    <circle class="globe-well" cx="200" cy="200" r="170" fill="url(#well)" />
+    <circle class="globe-core" cx="200" cy="200" r="96" fill="url(#core-glass)" />
+    <g class="loose" clip-path="url(#core-clip)">
+      @for (loose of looseCapsules(); track $index) {
+        <g [attr.transform]="loose.transform">
+          <path class="loose-dome" [attr.d]="loose.dome" [attr.fill]="loose.color" />
+          <path class="loose-shell" [attr.d]="loose.shell" />
+          <path class="loose-seam" [attr.d]="loose.seam" />
+          <path class="loose-spot" [attr.d]="loose.spot" />
+        </g>
+      }
+    </g>
+    <g class="capsule-field" [style.transform]="'rotate(' + rotation() + 'deg)'">
+      @for (capsule of capsules(); track trackCapsule($index, capsule); let index = $index) {
+        <g class="capsule" [class.is-chosen]="revealed() && index === chosenIndex()">
+          <path class="capsule-dome" [attr.d]="capsule.dome" [attr.fill]="capsule.color" />
+          <path class="capsule-shell" [attr.d]="capsule.clear" />
+          <path class="capsule-seam" [attr.d]="capsule.seam" />
+          <path class="capsule-gloss" [attr.d]="capsule.gloss" />
+          <path [attr.id]="'rim-' + index" [attr.d]="capsule.labelPath" fill="none" />
+          <text class="capsule-name" [attr.font-size]="capsule.fontSize">
+            <textPath [attr.href]="'#rim-' + index" startOffset="50%" text-anchor="middle">{{ capsule.label }}</textPath>
+          </text>
+        </g>
+      }
+    </g>
 
-          <!-- Chute: where the month's capsule leaves the globe -->
-          <g class="chute">
-            <path class="chute-mouth" d="M170 358h60l-9 30h-42Z" />
-            <path class="chute-lip" d="M168 356h64" />
-          </g>
+    <!-- Glass, rim and hub -->
+    <circle class="globe-glass" cx="200" cy="200" r="170" fill="url(#acrylic)" clip-path="url(#globe-clip)" />
+    <path class="globe-sheen" d="M74 96a170 170 0 0 1 148-62c-58 22-94 62-108 118-13 52-2 96 30 132A170 170 0 0 1 74 96Z" clip-path="url(#globe-clip)" />
+    <circle class="globe-inner-edge" cx="200" cy="200" r="163" fill="none" stroke="url(#inner-edge)" stroke-width="9" />
+    <circle class="globe-rim" cx="200" cy="200" r="177" fill="none" stroke="url(#chrome)" stroke-width="15" />
+    <g class="knurl">
+      @for (flute of flutes(); track $index) {
+        <path [attr.d]="flute" />
+      }
+    </g>
+    <circle class="globe-rim-line" cx="200" cy="200" r="170" fill="none" />
+    <g class="hub">
+      <circle class="hub-ring" cx="200" cy="200" r="44" />
+      <circle class="hub-face" cx="200" cy="200" r="35" fill="url(#chrome)" />
+      <circle class="hub-pin" cx="200" cy="200" r="10" />
+    </g>
 
-          <!-- Crank and delivery tray -->
-          <g class="crank">
-            <circle class="crank-plate" cx="106" cy="452" r="40" fill="url(#chrome)" />
-            <g class="crank-arm">
-              <path class="crank-bar" d="M106 452h30" />
-              <circle class="crank-knob" cx="140" cy="452" r="10" />
-            </g>
-            <circle class="crank-boss" cx="106" cy="452" r="8" />
-          </g>
-          <g class="tray">
-            <rect class="tray-window" x="196" y="418" width="168" height="76" rx="8" />
-            <rect class="tray-glass" x="196" y="418" width="168" height="76" rx="8" />
-            <path class="tray-flap" d="M196 418h168" />
-          </g>
+    <!-- Chute: where the month's capsule leaves the globe -->
+    <g class="chute">
+      <path class="chute-mouth" d="M170 358h60l-9 30h-42Z" />
+      <path class="chute-lip" d="M168 356h64" />
+    </g>
 
-          <!-- The delivered capsule -->
-          <g class="delivery" [attr.aria-hidden]="true">
-            <g class="delivery-body">
-              <path class="delivery-dome" d="M280 436a22 22 0 0 1 22 22h-44a22 22 0 0 1 22-22Z" [attr.fill]="winnerColor()" />
-              <path class="delivery-shell" d="M258 458h44a22 22 0 0 1-44 0Z" />
-              <path class="delivery-seam" d="M256 458h48" />
-            </g>
-          </g>
+    <!-- Crank and delivery tray -->
+    <g class="crank">
+      <circle class="crank-plate" cx="106" cy="452" r="40" fill="url(#chrome)" />
+      <g class="crank-arm">
+        <path class="crank-bar" d="M106 452h30" />
+        <circle class="crank-knob" cx="140" cy="452" r="10" />
+      </g>
+      <circle class="crank-boss" cx="106" cy="452" r="8" />
+    </g>
+    <g class="tray">
+      <rect class="tray-window" x="196" y="418" width="168" height="76" rx="8" />
+      <rect class="tray-glass" x="196" y="418" width="168" height="76" rx="8" />
+      <path class="tray-flap" d="M196 418h168" />
+    </g>
 
-          <!-- Machine decals: every annotated part carries a real value -->
-          <g class="decals" aria-hidden="true">
-            <path class="leader" d="M44 40 44 74 96 116" />
-            <text class="decal" x="8" y="30">{{ capsules().length }} CÁPSULAS</text>
-            <path class="leader leader-plate" d="M100 374 166 374" />
-            <text class="decal decal-plate" x="94" y="378" text-anchor="end">CALHA</text>
-            <path class="leader leader-plate" d="M280 410 280 418" />
-            <text class="decal decal-plate" x="280" y="404" text-anchor="middle">BANDEJA</text>
-          </g>
-        </svg>
+    <!-- The delivered capsule. O emoji da pessoa viaja dentro da metade transparente:
+         vê-se através do plástico, que é onde um brinde de cápsula de fato ficaria. -->
+    <g class="delivery">
+      <g class="delivery-body">
+        <path class="delivery-dome" d="M280 436a22 22 0 0 1 22 22h-44a22 22 0 0 1 22-22Z" [attr.fill]="winnerColor()" />
+        <path class="delivery-shell" d="M258 458h44a22 22 0 0 1-44 0Z" />
+        <path class="delivery-seam" d="M256 458h48" />
+        @if (winner()?.emoji; as emoji) {
+          <text class="delivery-emoji" x="280" y="470" text-anchor="middle">{{ emoji }}</text>
+        }
+      </g>
+    </g>
+  </svg>
+
+  <span class="visually-hidden">
+    Globo com {{ capsules().length }} cápsulas, uma por participante.
+  </span>
+</button>
 
 @if (caption()) {
   <p class="machine-caption">{{ caption() }}</p>

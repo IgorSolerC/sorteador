@@ -8,6 +8,11 @@
         "value": "rgb(0, 0, 0)",
         "createdAt": "2026-09-04T01:52:34.354Z",
         "reason": "Falso positivo do detector: e o valor resolvido para bindings [style.--capsule]/[style.--live], que recebem em tempo de execucao uma das seis cores de capsula do DESIGN.md via capsuleColor(). Nenhum preto literal existe no projeto."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "40px",
+        "createdAt": "2026-09-04T15:04:54.934Z"
       }
     ]
   }

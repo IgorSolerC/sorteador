@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
-import { GroupEvent, SpinRecord, memberId, replay } from './group-log';
+import { GroupEvent, GroupMember, SpinRecord, memberId, replay } from './group-log';
 import { GroupSnapshot } from './group-store';
+import { Identity } from './identity';
+import { capsuleColor } from './palette';
 import { SyncedGroup } from './synced-group';
 import { UsageGuard } from './usage-guard';
 
@@ -52,13 +54,34 @@ class FakeStore {
     this.events.push({ type: 'member_removed', at: (this.clock += 1000), memberId: id });
   }
 
-  async annotateSpin(_id: string, spinIndex: number, note: { title: string; description: string }) {
+  async styleMember(
+    _id: string,
+    alvo: string,
+    style: { colorIndex?: number; emoji?: string },
+  ) {
+    this.calls.push(`style:${alvo}:${style.colorIndex}:${style.emoji}`);
+    if (this.failWith) throw this.failWith;
+    this.events.push({
+      type: 'member_styled',
+      at: (this.clock += 1000),
+      memberId: alvo,
+      colorIndex: style.colorIndex ?? null,
+      emoji: style.emoji ?? null,
+    });
+  }
+
+  async annotateSpin(
+    _id: string,
+    spinIndex: number,
+    note: { title: string; subtitle: string; description: string },
+  ) {
     this.calls.push(`note:${spinIndex}:${note.title}`);
     if (this.failWith) throw this.failWith;
     this.events.push({
       type: 'spin_annotated',
       at: (this.clock += 1000),
       spinIndex,
+      subtitle: note.subtitle,
       title: note.title,
       description: note.description,
     });
@@ -76,7 +99,32 @@ function memoryGuard() {
   return new UsageGuard({ read: () => value, write: (v) => (value = v) });
 }
 
+/**
+ * A maquina abre encenando a entrega, e a cena dura 4,3s. Aqui ela roda em movimento
+ * reduzido, 120ms, que e o mesmo desligamento que o produto honra no navegador de quem
+ * pediu menos movimento. Sem isto todo teste de conteudo veria a tela de Entregando.
+ */
+function reduzirMovimento(): void {
+  window.matchMedia = ((query: string) => ({
+    matches: query.includes('prefers-reduced-motion'),
+    media: query,
+    onchange: null,
+    addListener() {}, removeListener() {},
+    addEventListener() {}, removeEventListener() {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
+const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Abre a gaveta da colecao, que e onde a administracao mora agora. */
+function abrirColecao(fixture: { componentInstance: unknown; detectChanges(): void }): void {
+  (fixture.componentInstance as { openRoster(): void }).openRoster();
+  fixture.detectChanges();
+}
+
 async function render(store: FakeStore, guard = memoryGuard()) {
+  reduzirMovimento();
   await TestBed.configureTestingModule({
     imports: [SyncedGroup],
     providers: [
@@ -89,6 +137,9 @@ async function render(store: FakeStore, guard = memoryGuard()) {
   fixture.componentRef.setInput('groupId', GRUPO);
   fixture.detectChanges();
   await fixture.whenStable();
+  fixture.detectChanges();
+  // A cena de abertura termina antes de qualquer asseracao sobre o que esta na tela.
+  await esperar(180);
   fixture.detectChanges();
   return fixture;
 }
@@ -151,12 +202,10 @@ describe('modo sincronizado', () => {
     const store = new FakeStore().seed(['Ana', 'Breno']);
     const fixture = await render(store);
     const app = fixture.componentInstance as unknown as {
-      draftName: { set(v: string): void };
-      addMember(): Promise<void>;
+      addFromBench(name: string): Promise<void>;
     };
 
-    app.draftName.set('Gabriela');
-    await app.addMember();
+    await app.addFromBench('Gabriela');
     fixture.detectChanges();
 
     expect(store.calls).toContain('add:Gabriela');
@@ -168,12 +217,11 @@ describe('modo sincronizado', () => {
     const store = new FakeStore().seed(['Ana', 'Breno']);
     const fixture = await render(store);
     const app = fixture.componentInstance as unknown as {
-      draftName: { set(v: string): void };
-      addMember(): Promise<void>;
+      addFromBench(name: string): Promise<void>;
+      rosterError: () => string;
     };
 
-    app.draftName.set('ana');
-    await app.addMember();
+    await app.addFromBench('ana');
 
     expect(store.calls.filter((c) => c.startsWith('add:'))).toHaveLength(0);
     fixture.destroy();
@@ -183,14 +231,16 @@ describe('modo sincronizado', () => {
     const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
     const fixture = await render(store);
     const app = fixture.componentInstance as unknown as {
-      removeMember(m: { id: string; name: string }): Promise<void>;
+      removeFromBench(m: GroupMember): Promise<void>;
+      members(): readonly GroupMember[];
     };
 
-    await app.removeMember({ id: memberId(GRUPO, 'Breno'), name: 'Breno' });
+    const breno = app.members().find((m) => m.name === 'Breno')!;
+    await app.removeFromBench(breno);
     fixture.detectChanges();
 
-    expect(store.calls.some((c) => c.startsWith('remove:'))).toBe(true);
-    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.roster-list li').length).toBe(2);
+    expect(store.calls).toContain(`remove:${memberId(GRUPO, 'Breno')}`);
+    expect(app.members()).toHaveLength(2);
     fixture.destroy();
   });
 
@@ -215,6 +265,7 @@ describe('modo sincronizado', () => {
 
   it('o link do grupo não carrega a lista', async () => {
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    abrirColecao(fixture);
     const campo = (fixture.nativeElement as HTMLElement)
       .querySelector('.share-field input') as HTMLInputElement;
 
@@ -269,12 +320,10 @@ describe('modo sincronizado', () => {
   it('assina quem operou, quando a pessoa se identifica', async () => {
     const store = new FakeStore().seed(['Ana', 'Breno']);
     const fixture = await render(store);
-    const app = fixture.componentInstance as unknown as {
-      updateAuthor(v: string): void;
-      author: () => string;
-    };
+    TestBed.inject(Identity).remember('  Igor  ');
+    fixture.detectChanges();
 
-    app.updateAuthor('  Igor  ');
+    const app = fixture.componentInstance as unknown as { author: () => string };
     expect(app.author()).toBe('Igor');
     fixture.destroy();
   });
@@ -296,17 +345,20 @@ describe('modo sincronizado', () => {
     fixture.destroy();
   });
 
-  it('o link interno não derruba a rota do grupo', async () => {
-    // Sem preventDefault o hash viraria #participantes, a rota #/g/<id> deixaria de casar
-    // e a pessoa cairia de volta no modo por link, fora do grupo.
+  it('a colecao e uma gaveta, nao uma secao da pagina', async () => {
+    // A administracao saia meia pagina abaixo do palco e ficava aberta o tempo todo.
+    // Agora ela so existe quando alguem pede, e a pagina fica com a maquina e o registro.
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
-    const link = (fixture.nativeElement as HTMLElement)
-      .querySelector('.text-link') as HTMLAnchorElement;
+    const raiz = fixture.nativeElement as HTMLElement;
 
-    const evento = new MouseEvent('click', { bubbles: true, cancelable: true });
-    link.dispatchEvent(evento);
+    expect(raiz.querySelector('.roster-card')).toBeNull();
+    (raiz.querySelector('#roster-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
 
-    expect(evento.defaultPrevented).toBe(true);
+    const gaveta = raiz.querySelector('.roster-card');
+    expect(gaveta).toBeTruthy();
+    expect(gaveta?.getAttribute('aria-modal')).toBe('true');
+    expect(raiz.querySelectorAll('.capsule-row').length).toBe(2);
     fixture.destroy();
   });
 
@@ -379,7 +431,7 @@ describe('etiqueta do giro', () => {
   type Bancada = {
     openNote(spin: SpinRecord, event?: Event): void;
     closeNote(): void;
-    commitNote(draft: { title: string; description: string }): Promise<void>;
+    commitNote(draft: { title: string; subtitle: string; description: string }): Promise<void>;
     removeNote(): Promise<void>;
     noteError: () => string;
     editingSpin: () => SpinRecord | null;
@@ -403,7 +455,7 @@ describe('etiqueta do giro', () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1);
     store.events.push({
       type: 'spin_annotated', at: Date.now(), spinIndex: 0,
-      title: 'Click The Button!', description: 'Nota final 8/10', actor: 'Igor',
+      subtitle: '', title: 'Click The Button!', description: 'Nota final 8/10', actor: 'Igor',
     });
     const fixture = await render(store);
     const texto = (fixture.nativeElement as HTMLElement).querySelector('.note-sticker')?.textContent ?? '';
@@ -420,7 +472,7 @@ describe('etiqueta do giro', () => {
     const app = bancada(fixture);
 
     app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ title: 'Overcooked', description: 'Nota 9/10' });
+    await app.commitNote({ subtitle: '', title: 'Overcooked', description: 'Nota 9/10' });
     fixture.detectChanges();
 
     expect(store.calls).toContain('note:0:Overcooked');
@@ -435,7 +487,7 @@ describe('etiqueta do giro', () => {
     const app = bancada(fixture);
 
     app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ title: 'O primeiro de todos', description: '' });
+    await app.commitNote({ subtitle: '', title: 'O primeiro de todos', description: '' });
 
     expect(store.calls).toContain('note:0:O primeiro de todos');
     expect(replay(GRUPO, store.events).spins[0].note?.title).toBe('O primeiro de todos');
@@ -449,7 +501,7 @@ describe('etiqueta do giro', () => {
     const app = bancada(fixture);
 
     app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ title: '', description: 'Só a descrição' });
+    await app.commitNote({ subtitle: '', title: '', description: 'Só a descrição' });
 
     expect(store.calls.some((c) => c.startsWith('note:'))).toBe(false);
     expect(app.noteError()).toContain('título');
@@ -460,7 +512,7 @@ describe('etiqueta do giro', () => {
   it('retirar grava a etiqueta em branco', async () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1);
     store.events.push({
-      type: 'spin_annotated', at: Date.now(), spinIndex: 0, title: 'Tetris', description: '',
+      type: 'spin_annotated', at: Date.now(), spinIndex: 0, subtitle: '', title: 'Tetris', description: '',
     });
     const fixture = await render(store);
     const app = bancada(fixture);
@@ -494,7 +546,7 @@ describe('etiqueta do giro', () => {
 
     app.openNote(spinsOf(store)[0]);
     store.failWith = { code: 'permission-denied' };
-    await app.commitNote({ title: 'Pico Park', description: '' });
+    await app.commitNote({ subtitle: '', title: 'Pico Park', description: '' });
     fixture.detectChanges();
 
     // A bancada não fecha: fechá-la levaria embora o texto digitado. Que o rascunho
@@ -504,6 +556,208 @@ describe('etiqueta do giro', () => {
     expect(app.noteError()).toContain('recusou');
     expect((fixture.nativeElement as HTMLElement).querySelector('.field-error')?.textContent)
       .toContain('recusou');
+    fixture.destroy();
+  });
+});
+
+/**
+ * Abre a máquina sem esperar a cena de abertura terminar — é o único jeito de observar a
+ * própria cena, que todo o resto do arquivo pula de propósito.
+ */
+async function renderNoAto(store: FakeStore) {
+  reduzirMovimento();
+  await TestBed.configureTestingModule({
+    imports: [SyncedGroup],
+    providers: [
+      { provide: GROUP_STORE, useValue: store },
+      { provide: USAGE_GUARD, useValue: memoryGuard() },
+    ],
+  }).compileComponents();
+
+  const fixture = TestBed.createComponent(SyncedGroup);
+  fixture.componentRef.setInput('groupId', GRUPO);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  return fixture;
+}
+
+describe('a cena de abertura', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('a máquina abre girando, e o nome só aparece no fim', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1);
+    const fixture = await renderNoAto(store);
+    const app = fixture.componentInstance as unknown as {
+      isSpinning(): boolean;
+      rotation(): number;
+      targetRotation(): number;
+    };
+
+    expect(app.isSpinning()).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Entregando');
+
+    await esperar(200);
+    fixture.detectChanges();
+
+    expect(app.isSpinning()).toBe(false);
+    expect(app.rotation()).toBe(app.targetRotation());
+    const vencedor = replay(GRUPO, store.events).lastSpin!.winnerName;
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(vencedor);
+    fixture.destroy();
+  });
+
+  it('sem giro nenhum não há cena: não se encena o que não aconteceu', async () => {
+    const fixture = await renderNoAto(new FakeStore().seed(['Ana', 'Breno']));
+    const app = fixture.componentInstance as unknown as { isSpinning(): boolean };
+
+    expect(app.isSpinning()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Pronta para');
+    fixture.destroy();
+  });
+
+  it('abrir a página não grava nada', async () => {
+    // A cena é reencenação. Se ela escrevesse, abrir o link duas vezes mudaria o resultado.
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1);
+    const fixture = await renderNoAto(store);
+    await esperar(200);
+
+    expect(store.calls.filter((c) => c !== 'load')).toEqual([]);
+    fixture.destroy();
+  });
+});
+
+describe('reencenar a entrega', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('clicar no globo gira de novo e para na mesma cápsula', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      isSpinning(): boolean;
+      rotation(): number;
+      targetRotation(): number;
+      displayed(): { chosenIndex: number };
+    };
+
+    const antes = app.displayed().chosenIndex;
+    const destino = app.targetRotation();
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.machine-replay')!.click();
+    fixture.detectChanges();
+    expect(app.isSpinning()).toBe(true);
+
+    await esperar(200);
+    fixture.detectChanges();
+
+    expect(app.isSpinning()).toBe(false);
+    expect(app.displayed().chosenIndex).toBe(antes);
+    expect(app.rotation()).toBe(destino);
+    expect(store.calls.filter((c) => c !== 'load')).toEqual([]);
+    fixture.destroy();
+  });
+
+  it('a máquina não é clicável enquanto entrega', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1);
+    const fixture = await renderNoAto(store);
+    const botao = (fixture.nativeElement as HTMLElement)
+      .querySelector('.machine-replay') as HTMLButtonElement;
+
+    expect(botao.disabled).toBe(true);
+    await esperar(200);
+    fixture.detectChanges();
+    expect(botao.disabled).toBe(false);
+    fixture.destroy();
+  });
+
+  it('sem cápsula entregue, o globo não encena nada', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    const app = fixture.componentInstance as unknown as {
+      replayScene(): void;
+      isSpinning(): boolean;
+    };
+
+    app.replayScene();
+    expect(app.isSpinning()).toBe(false);
+    fixture.destroy();
+  });
+});
+
+describe('a cápsula de cada pessoa na máquina', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('a cor no globo é a que a pessoa escolheu, não a posição dela no anel', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília']);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      restyle(s: { memberId: string; colorIndex: number; emoji: string }): Promise<void>;
+      displayed(): { people: readonly { name: string; color: string; emoji: string }[] };
+    };
+
+    await app.restyle({ memberId: memberId(GRUPO, 'Breno'), colorIndex: 13, emoji: '🦊' });
+    fixture.detectChanges();
+
+    const breno = app.displayed().people.find((p) => p.name === 'Breno')!;
+    expect(breno.color).toBe(capsuleColor(13));
+    expect(breno.emoji).toBe('🦊');
+    fixture.destroy();
+  });
+
+  it('pintar não muda quem já saiu do globo', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      restyle(s: { memberId: string; colorIndex: number; emoji: string }): Promise<void>;
+      displayed(): { winner: { name: string } | null };
+    };
+
+    const antes = app.displayed().winner!.name;
+    await app.restyle({ memberId: memberId(GRUPO, 'Ana'), colorIndex: 3, emoji: '🎲' });
+    fixture.detectChanges();
+
+    expect(app.displayed().winner!.name).toBe(antes);
+    fixture.destroy();
+  });
+
+  it('a cor de um giro no registro acompanha a pessoa, não o índice do giro', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = fixture.componentInstance as unknown as {
+      restyle(s: { memberId: string; colorIndex: number; emoji: string }): Promise<void>;
+      displayed(): { winner: { id: string } | null };
+      colorOf(spin: SpinRecord): string;
+      snapshot(): { state: { spins: readonly SpinRecord[] } } | null;
+    };
+
+    const vencedorId = app.displayed().winner!.id;
+    await app.restyle({ memberId: vencedorId, colorIndex: 17, emoji: '' });
+    fixture.detectChanges();
+
+    expect(app.colorOf(app.snapshot()!.state.spins[0])).toBe(capsuleColor(17));
+    fixture.destroy();
+  });
+});
+
+describe('o confete da entrega', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('abrir a página não solta confete: reencenar não entrega nada de novo', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1));
+    const app = fixture.componentInstance as unknown as { celebration(): number };
+
+    expect(app.celebration()).toBe(0);
+    fixture.destroy();
+  });
+
+  it('reencenar a pedido solta confete, porque foi a pessoa que pediu a cena', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1));
+    const app = fixture.componentInstance as unknown as { celebration(): number };
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.machine-replay')!.click();
+    await esperar(200);
+    fixture.detectChanges();
+
+    expect(app.celebration()).toBe(1);
     fixture.destroy();
   });
 });

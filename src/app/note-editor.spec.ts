@@ -59,7 +59,7 @@ describe('bancada da etiqueta', () => {
 
   it('parte do que já está gravado quando a etiqueta existe', async () => {
     const fixture = await render(spinRecord({
-      note: { title: 'Tetris', description: 'Nota 7/10', at: Date.now(), revision: 1 },
+      note: { subtitle: '', title: 'Tetris', description: 'Nota 7/10', at: Date.now(), revision: 1 },
     }));
 
     expect((el(fixture).querySelector('#note-title') as HTMLInputElement).value).toBe('Tetris');
@@ -72,14 +72,19 @@ describe('bancada da etiqueta', () => {
 
   it('entrega o que foi digitado a quem vai gravar', async () => {
     const fixture = await render(spinRecord());
-    let entregue: { title: string; description: string } | null = null;
+    let entregue: { title: string; subtitle: string; description: string } | null = null;
     fixture.componentInstance.commit.subscribe((v) => (entregue = v));
 
     await digitar(fixture, 'note-title', 'Click The Button!');
-    await digitar(fixture, 'note-description', 'Nota final 8/10');
+    await digitar(fixture, 'note-subtitle', 'Nota 8/10');
+    await digitar(fixture, 'note-description', 'Jogamos em cinco.');
     (el(fixture).querySelector('.note-actions button[type="submit"]') as HTMLButtonElement).click();
 
-    expect(entregue).toEqual({ title: 'Click The Button!', description: 'Nota final 8/10' });
+    expect(entregue).toEqual({
+      title: 'Click The Button!',
+      subtitle: 'Nota 8/10',
+      description: 'Jogamos em cinco.',
+    });
     fixture.destroy();
   });
 
@@ -155,7 +160,7 @@ describe('bancada da etiqueta', () => {
     fixture.componentRef.setInput('spin', spinRecord({
       index: 3,
       winnerName: 'Elisa',
-      note: { title: 'Do quarto', description: '', at: Date.now(), revision: 1 },
+      note: { subtitle: '', title: 'Do quarto', description: '', at: Date.now(), revision: 1 },
     }));
     fixture.detectChanges();
     await fixture.whenStable();

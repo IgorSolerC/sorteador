@@ -54,6 +54,11 @@ Thumbs.db
 # Firebase
 /firebase-debug.log
 /firestore-debug.log
+# Emulador e servidor de desenvolvimento rodando em segundo plano durante uma sessão
+/emu-out.log
+/emu-err.log
+/serve-out.log
+/serve-err.log
 /ui-debug.log
 /.firebase/
 /tmpjs/

@@ -1,0 +1,90 @@
+<header class="topbar">
+  <a class="brand" href="." aria-label="Mesa do Mês — início">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
+      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
+      <path class="brand-seam" d="M6 20h28" />
+    </svg>
+    <span>Mesa do Mês</span>
+  </a>
+
+  <nav class="topbar-actions" aria-label="Você">
+    <button type="button" class="who-chip" (click)="changeIdentity.emit()">
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="color()">{{ authorInitials() }}</span>
+      <span class="who-name">{{ author() }}</span>
+      <span class="visually-hidden">— trocar de pessoa</span>
+    </button>
+  </nav>
+</header>
+
+<section class="home-stage" aria-labelledby="home-title">
+  <div class="home-copy">
+    <h1 id="home-title">Oi, <strong>{{ greeting() }}</strong>.<br />Qual mesa hoje?</h1>
+    <p class="home-lede">
+      Uma máquina de cápsulas por clube. Ela tira uma pessoa por vez e não repete ninguém
+      até que todos tenham saído — e cada giro fica gravado com quem girou e o que foi jogado.
+    </p>
+    <div class="home-actions">
+      <a class="primary-action" href="#/novo">Montar uma máquina</a>
+    </div>
+    <p class="home-note">
+      Para entrar numa máquina que já existe, abra o link que o grupo mandou. O link é o
+      grupo: não há conta, senha nem convite.
+    </p>
+  </div>
+
+  <div class="home-shelf">
+    @if (groups().length) {
+      <h2 class="home-shelf-title">
+        Neste aparelho
+        <b>{{ groups().length }}</b>
+      </h2>
+      <ul class="home-list">
+        @for (group of groups(); track group.id) {
+          <li>
+            <a class="home-row" [href]="linkTo(group)">
+              <span class="capsule-mark" aria-hidden="true" [style.--capsule]="colorOf(group)">
+                {{ initials(group.name) }}
+              </span>
+              <span class="capsule-who">
+                <strong>{{ group.name || 'Máquina sem nome' }}</strong>
+                <small>aberta {{ group.at | date: 'dd/MM/yy' }}</small>
+              </span>
+              <span class="capsule-go" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+              </span>
+            </a>
+            <button
+              type="button"
+              class="home-forget"
+              (click)="forget(group, $event)"
+              [attr.aria-label]="'Tirar ' + (group.name || 'esta máquina') + ' desta lista'"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+            </button>
+          </li>
+        }
+      </ul>
+      <p class="home-shelf-note">
+        A lista fica só neste aparelho e não dá acesso a nada: quem abre uma máquina é o
+        link, não esta prateleira.
+      </p>
+    } @else {
+      <div class="home-empty">
+        <div class="empty-globe" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+        </div>
+        <h2>Nenhuma máquina<br /><strong>por aqui ainda</strong></h2>
+        <p>
+          As máquinas que você abrir aparecem nesta prateleira, para você voltar a elas sem
+          procurar o link.
+        </p>
+      </div>
+    }
+  </div>
+</section>
+
+<footer>
+  <span>Mesa do Mês</span>
+  <p>Sem conta, sem senha, e uma cápsula por vez para definir o jogo do clube.</p>
+</footer>

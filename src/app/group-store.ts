@@ -18,10 +18,13 @@ import {
   GroupEvent,
   GroupState,
   MAX_NOTE_DESCRIPTION,
+  MAX_NOTE_SUBTITLE,
   MAX_NOTE_TITLE,
+  emojiText,
   noteText,
   replay,
 } from './group-log';
+import { isColorIndex } from './palette';
 import { UsageGuard } from './usage-guard';
 
 /**
@@ -131,6 +134,39 @@ export class GroupStore {
     return this.append(groupId, { tipo: 'member_removed', memberId }, {}, actor);
   }
 
+  /**
+   * Pinta a cápsula de alguém e escolhe o emoji que ela solta ao cair. Como tudo aqui, é
+   * um evento novo e não uma edição: a cápsula anterior continua no log, e é por isso que
+   * repintar não pode reescrever histórico nenhum.
+   *
+   * Os dois campos são independentes. Omitir um significa "deixe como está", o que permite
+   * trocar só a cor sem apagar o emoji — e um evento por salvamento em vez de dois.
+   */
+  styleMember(
+    groupId: string,
+    memberId: string,
+    style: { colorIndex?: number; emoji?: string },
+    actor = '',
+  ): Promise<void> {
+    const cor = isColorIndex(style.colorIndex) ? style.colorIndex : undefined;
+    const emoji = style.emoji === undefined ? undefined : emojiText(style.emoji);
+    if (cor === undefined && emoji === undefined) {
+      return Promise.reject(new Error('Nada a mudar na cápsula: nem cor nem emoji.'));
+    }
+    return this.append(
+      groupId,
+      {
+        tipo: 'member_styled',
+        memberId,
+        ...(cor === undefined ? {} : { cor }),
+        // Emoji vazio é emoji retirado, então a string vazia precisa chegar ao servidor.
+        ...(emoji === undefined ? {} : { emoji }),
+      },
+      {},
+      actor,
+    );
+  }
+
   /** Marca o giro no doc do grupo junto com o evento, que é o que as rules exigem. */
   spin(groupId: string, actor = ''): Promise<void> {
     return this.append(groupId, { tipo: 'spin' }, { ultimoGiroEm: serverTimestamp() }, actor);
@@ -144,7 +180,7 @@ export class GroupStore {
   annotateSpin(
     groupId: string,
     spinIndex: number,
-    note: { title: string; description: string },
+    note: { title: string; subtitle: string; description: string },
     actor = '',
   ): Promise<void> {
     if (!Number.isInteger(spinIndex) || spinIndex < 0) {
@@ -156,6 +192,7 @@ export class GroupStore {
         tipo: 'spin_annotated',
         giro: spinIndex,
         titulo: noteText(note.title, MAX_NOTE_TITLE, { singleLine: true }),
+        subtitulo: noteText(note.subtitle, MAX_NOTE_SUBTITLE, { singleLine: true }),
         descricao: noteText(note.description, MAX_NOTE_DESCRIPTION),
       },
       {},
@@ -165,7 +202,7 @@ export class GroupStore {
 
   /** Retirar a etiqueta é escrevê-la em branco; a retirada também fica no registro. */
   clearSpinNote(groupId: string, spinIndex: number, actor = ''): Promise<void> {
-    return this.annotateSpin(groupId, spinIndex, { title: '', description: '' }, actor);
+    return this.annotateSpin(groupId, spinIndex, { title: '', subtitle: '', description: '' }, actor);
   }
 
   static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
@@ -301,6 +338,18 @@ function toEvent(data: Record<string, unknown>): GroupEvent | null {
       return typeof data['memberId'] === 'string'
         ? { type: 'member_removed', at, memberId: data['memberId'], actor }
         : null;
+    case 'member_styled':
+      return typeof data['memberId'] === 'string'
+        ? {
+            type: 'member_styled',
+            at,
+            memberId: data['memberId'],
+            // `null` diz "não veio no evento", que o replay lê como "deixe como está".
+            colorIndex: typeof data['cor'] === 'number' ? data['cor'] : null,
+            emoji: typeof data['emoji'] === 'string' ? data['emoji'] : null,
+            actor,
+          }
+        : null;
     case 'spin':
       return { type: 'spin', at, actor };
     case 'spin_annotated':
@@ -310,6 +359,7 @@ function toEvent(data: Record<string, unknown>): GroupEvent | null {
             at,
             spinIndex: data['giro'],
             title: typeof data['titulo'] === 'string' ? data['titulo'] : '',
+            subtitle: typeof data['subtitulo'] === 'string' ? data['subtitulo'] : '',
             description: typeof data['descricao'] === 'string' ? data['descricao'] : '',
             actor,
           }

@@ -1,6 +1,6 @@
 ---
 name: "Mesa do Mês"
-description: "Máquina de cápsulas em esmalte azul-noite que entrega a escolha determinística do mês."
+description: "Máquina de cápsulas em esmalte azul-noite onde cada pessoa é uma cápsula que ela mesma pinta."
 colors:
   enamel: "#10233f"
   enamel-deep: "#0a1830"
@@ -24,12 +24,30 @@ colors:
   ink-quiet: "#5b6779"
   white: "#ffffff"
   yellow: "#ffc53d"
-  capsule-amber: "#ffc53d"
-  capsule-mint: "#4fe0c8"
   capsule-coral: "#ff6b7d"
-  capsule-violet: "#a78bff"
-  capsule-tangerine: "#ff9a3c"
-  capsule-rose: "#ff8fc7"
+  capsule-salmao: "#ff9985"
+  capsule-pessego: "#ff9c70"
+  capsule-tangerina: "#ff9a3c"
+  capsule-areia: "#ffc277"
+  capsule-ambar: "#ffc53d"
+  capsule-ouro: "#f1d100"
+  capsule-limao: "#d5dc04"
+  capsule-lima: "#b1e546"
+  capsule-broto: "#83ea6c"
+  capsule-trevo: "#42ec8e"
+  capsule-jade: "#00e7ae"
+  capsule-menta: "#4fe0c8"
+  capsule-turquesa: "#00d7d6"
+  capsule-piscina: "#00cfe4"
+  capsule-ceu: "#00c6f4"
+  capsule-anil: "#38bcff"
+  capsule-azulejo: "#65b2ff"
+  capsule-pervinca: "#80a9ff"
+  capsule-lavanda: "#97a0ff"
+  capsule-violeta: "#a78bff"
+  capsule-orquidea: "#cf89ff"
+  capsule-magenta: "#f27fea"
+  capsule-rosa: "#ff8fc7"
   line: "rgba(200, 220, 255, .17)"
   line-strong: "rgba(200, 220, 255, .34)"
   line-paper: "rgba(22, 35, 58, .18)"
@@ -200,31 +218,35 @@ components:
 
 **Creative North Star: "A Máquina de Cápsulas do Clube"**
 
-O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula colorida encaixada no aro do globo de acrílico; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete é esmalte azul-noite com brilho especular, aro cromado canelado e acrílico translúcido, e ocupa a tela inteira em vez de flutuar dentro de um cartão. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão "Sortear" que todo sorteador web entrega.
+O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula encaixada no aro do globo de acrílico, com a cor e o símbolo que ela mesma escolheu; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete é esmalte azul-noite com brilho especular, aro cromado canelado e acrílico translúcido, e ocupa a tela inteira em vez de flutuar dentro de um cartão. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão "Sortear" que todo sorteador web entrega.
 
-A densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: a cartela e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.
+A densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: o registro e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.
 
 Há exatamente uma quebra no esmalte: a seção da coleção é papel quente impresso (`paper`), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.
 
 **Key Characteristics:**
 - Máquina de cápsulas em esmalte azul-noite sangrando na tela, nunca um cartão centralizado.
-- Seis cores fixas de cápsula, atribuídas por posição, que são a única fonte de cor viva.
+- Uma roda de vinte e quatro cores de cápsula, escolhidas pela própria pessoa, que são a única fonte de cor viva.
 - A cor da cápsula vencedora repinta o corpo da máquina e carrega o nome em escala gigante.
 - Monoespaçada apenas em valores de série e medição; nunca como fantasia técnica.
-- Papel quente como única quebra do esmalte, reservado à administração.
-- Um único momento animado: manivela, giro, encaixe, queda e abertura.
+- Papel quente como única quebra do esmalte, reservado à administração — que agora vive em gavetas, não em seções.
+- Um único momento animado: manivela, giro, encaixe, queda, abertura e o confete do que estava dentro.
 
 ## Colors
 
-Uma paleta de esmalte industrial — azul-noite profundo, cromo e céu frio — atravessada por seis cores de cápsula saturadas que são a única fonte de alegria cromática do sistema.
+Uma paleta de esmalte industrial — azul-noite profundo, cromo e céu frio — atravessada por uma roda de vinte e quatro cores de cápsula que são a única fonte de alegria cromática do sistema.
 
 ### Primary
 - **Esmalte Azul-Noite** (`enamel`): o corpo da máquina e o fundo padrão de todo o documento. É o chão do mundo; a página começa nele e volta para ele.
-- **Esmalte Profundo** (`enamel-deep`): a faixa do cabeçalho, o rodapé, a seção da cartela, o poço do globo, a boca da calha e a janela da bandeja. É o interior da máquina — tudo que está atrás de vidro ou dentro de uma cavidade.
-- **Amarelo de Cápsula** (`yellow`): a ação primária, o adesivo redondo do mês, o título da seção de método, o anel de foco e o marcador de estado. É também a primeira das seis cores de cápsula, e essa coincidência é intencional: a marca é uma cápsula.
+- **Esmalte Profundo** (`enamel-deep`): a faixa do cabeçalho, o rodapé, a seção do registro, a prateleira da raiz, o poço do globo, a boca da calha e a janela da bandeja. É o interior da máquina — tudo que está atrás de vidro ou dentro de uma cavidade.
+- **Amarelo de Cápsula** (`yellow`): a ação primária, o adesivo redondo da rodada, o anel de foco e o marcador de estado. É também o **Âmbar** da roda de cápsulas, e essa coincidência é intencional: a marca é uma cápsula.
 
-### Secondary — as seis cores de cápsula
-Atribuídas por posição no ciclo (`índice % 6`), fixas e nunca sorteadas: **Âmbar** (`capsule-amber`), **Menta** (`capsule-mint`), **Coral** (`capsule-coral`), **Violeta** (`capsule-violet`), **Tangerina** (`capsule-tangerine`) e **Rosa** (`capsule-rose`). A mesma cor identifica a pessoa em toda parte: a cunha no aro do globo, a bolinha da cartela, o disco de iniciais na coleção e a cápsula entregue na bandeja. É o vínculo que faz a coleção ler como coleção.
+### Secondary — a roda de vinte e quatro cápsulas
+Uma volta completa na roda de matizes em vinte e quatro passos, com a luminosidade acompanhando o formato do gamut sRGB: alta no amarelo-verde, onde há croma de sobra; mais baixa no azul-violeta, onde só existe cor se a tinta escurecer. É uma rampa, não um zigue-zague, e é isso que faz o conjunto ler como uma caixa de cápsulas de plástico em vez de um sortido aleatório.
+
+A fonte da verdade é `src/app/palette.ts`; o frontmatter deste arquivo é a cópia legível. As seis cores originais do produto continuam no conjunto, nas matizes onde sempre estiveram — quem já tinha uma cápsula não a perde por causa de uma paleta maior.
+
+A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua na gaveta da coleção, e essa cor a identifica em toda parte — a cunha no aro do globo, a bolinha do registro, o disco de iniciais, a cápsula na bandeja, o cartão no álbum, e o confete quando ela sai. É o vínculo que faz a coleção ler como coleção. Antes a cor vinha da posição, e a mesma pessoa mudava de cor quando o bolo mudava de tamanho.
 
 ### Tertiary
 - **Cromo** (`chrome`) e **Cromo Fosco** (`chrome-dim`): o aro canelado, a placa da manivela, o cubo central, os links de texto e os estados desabilitados. Cromo é metal, não texto de ênfase.
@@ -238,7 +260,11 @@ Atribuídas por posição no ciclo (`índice % 6`), fixas e nunca sorteadas: **�
 
 ### Named Rules
 
-**A Regra da Cápsula Portante.** Toda cor de cápsula passa de 4.5:1 sobre `enamel`, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados.
+**A Regra da Cápsula Portante.** Toda cor de cápsula passa de 4.5:1 sobre `enamel`, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados — e isso não é promessa: `palette.spec.ts` mede as vinte e quatro nos dois sentidos, e a pior delas (o coral) fica em 5.73 e 6.45.
+
+**A Regra do Passo, Não da Ordem.** Vinte e quatro matizes em volta da roda são vinte e quatro vizinhas parecidas: duas cores separadas por 15° são parecidas mesmo, e nenhuma escolha de paleta conserta isso. Quem conserta é a ordem em que elas são distribuídas — o passo 11 é primo com 24, percorre as vinte e quatro sem repetir e coloca cada nova cápsula quase do outro lado da roda. Um passo que não seja primo com o tamanho da paleta fecha um ciclo curto e repete; a paleta cresce, o passo acompanha.
+
+**A Regra da Cor Escolhida.** A cor guardada é a **posição na paleta**, nunca um hexadecimal livre — nem no log, nem nas rules. É o que garante que toda cápsula continue passando no contraste sem que o servidor precise saber calcular contraste, e o que permite reafinar a paleta inteira sem reescrever um evento sequer.
 
 **A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.
 
@@ -256,17 +282,19 @@ Atribuídas por posição no ciclo (`índice % 6`), fixas e nunca sorteadas: **�
 
 ### Hierarchy
 - **Display** (600, `clamp(3rem, 7.4vw, 6rem)`, 0.93, `-0.03em`): o nome vencedor e os títulos de estado de espera. Limitado a 12ch para que a quebra aconteça em nome próprio.
-- **Headline** (600, `clamp(2.4rem, 4.6vw, 4rem)`, 0.95): títulos de seção — a cartela, a coleção, o método.
+- **Headline** (600, `clamp(2.4rem, 4.6vw, 4rem)`, 0.95): títulos de seção — o registro, o álbum — e a saudação da prateleira.
 - **Title** (600, `1.42rem`): subtítulos dentro da coleção (configuração, compartilhar).
 - **Action** (600, `1rem`): rótulos de botão e iniciais no disco da pessoa.
 - **Body** (400, `1rem`, 1.62): parágrafos, campos e instruções. Medida de 40–52ch conforme a coluna.
 - **Label** (700, `0.82rem`): links de texto, dica de trilho e mensagens de estado curtas.
 - **Serial** (700 mono, `0.74rem`, tabular): valores da grade de série, contadores e o link compartilhável.
-- **Serial-label** (700 mono, `0.58rem`, `0.1em`, caixa alta): os rótulos acima desses valores, os meses da cartela e a placa da máquina.
+- **Serial-label** (700 mono, `0.62rem`, `0.1em`, caixa alta): os rótulos acima desses valores, a data de cada giro no registro, a plaqueta e os comprimidos de navegação.
 
 ### Named Rules
 
-**A Regra da Mono de Série.** Martian Mono só aparece em valores de série e medição: grade de série, mês da cartela, índice da pessoa, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia "técnica" em texto corrido, botão ou título.
+**A Regra da Tipografia de Desenho.** Dentro de um SVG, `font-size` é coordenada, não passo tipográfico: as iniciais da cápsula da porta são 40 unidades num `viewBox` de 220, e escalam com o desenho junto com o resto da peça. A escala de tipos governa o texto do documento; a geometria de uma peça governa a si mesma.
+
+**A Regra da Mono de Série.** Martian Mono só aparece em valores de série e medição: grade de série, data de cada giro, subtítulo da etiqueta, nome da cor na gaveta, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia "técnica" em texto corrido, botão ou título.
 
 **A Regra da Escala Sozinha.** A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.
 
@@ -276,15 +304,19 @@ Atribuídas por posição no ciclo (`índice % 6`), fixas e nunca sorteadas: **�
 
 O produto é uma única página empilhada em faixas de largura total, com goteira lateral de `5vw` (`1.1rem` abaixo de 620px) e respiro vertical de seção em `clamp(4.5rem, 9vw, 8rem)`.
 
-A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr) / minmax(0, 1.08fr)`) com altura mínima de `min(760px, 100svh - 64px)`: a máquina à esquerda, separada por uma hairline vertical; o resultado à direita. O adesivo do mês fica posicionado em absoluto no canto superior direito do palco, rotacionado `-13deg`. A cartela é uma grade de células que se empacota borda a borda (`auto-fit, minmax(124px, 1fr)`) sob uma régua superior de 2px, com um tique por célula. A coleção divide-se em intro e lista (`minmax(300px, .8fr) / minmax(380px, 1.2fr)`). O método é duas colunas iguais. A grade de série sob o resultado é `auto-fit, minmax(140px, 1fr)` com bordas que se costuram sem gap.
+A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr) / minmax(0, 1.08fr)`) com altura mínima de `min(760px, 100svh - 64px)`: a máquina à esquerda, separada por uma hairline vertical; o resultado à direita. O adesivo da rodada fica posicionado em absoluto no canto superior direito do palco, rotacionado `-13deg`. O registro é uma grade de células que se empacota borda a borda (`auto-fit, minmax(124px, 1fr)`) sob uma régua superior de 2px, com um tique por célula. A porta e a prateleira repetem a mesma assimetria do palco. A grade de série sob o resultado é `auto-fit, minmax(140px, 1fr)` com bordas que se costuram sem gap.
 
-**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a grade de série vira duas colunas, a cartela vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total e o rodapé empilha.
+A página tem duas faixas e um rodapé, e mais nada: o palco e o registro. **A administração não é uma seção — é uma gaveta.** A coleção ocupava a metade de baixo de toda visita para uma tarefa que se faz uma vez por mês; agora ela abre pelo cabeçalho e some quando acaba.
+
+**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a barra do topo quebra em duas linhas, a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, e o rodapé empilha.
 
 ### Named Rules
 
-**A Regra do Alvo de 44px.** Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho da cartela e na lista da coleção.
+**A Regra do Alvo de 44px.** Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho do registro, nas linhas da gaveta e nos comprimidos de cor e emoji, que têm 44px de altura mesmo quando a coluna é mais estreita. O alvo de uma caixa de seleção é o rótulo que a envolve, e é ele que precisa cumprir a medida.
 
 **A Regra do Decalque de Bancada.** Os decalques com linha-guia na máquina são desktop-only: ocultos abaixo de 980px, porque a linha-guia precisa de espaço lateral para apontar sem cruzar a peça. A placa da máquina no cabeçalho some abaixo de 620px por ser plaqueta de identificação, não conteúdo.
+
+**A Regra da Grade que Fecha.** Uma grade de escolhas se divide em fileiras cheias. Vinte e quatro cores em onze colunas deixam duas sobrando numa terceira fileira, e a sobra lê como engano; doze colunas fecham em duas, oito em três. `auto-fit` é para conteúdo de tamanho livre, não para um conjunto de tamanho conhecido.
 
 ## Elevation & Depth
 
@@ -308,7 +340,7 @@ O sistema é material, não empilhado: a profundidade vem de gradientes de acrí
 
 A forma dominante é o círculo: o globo, o cubo, a placa da manivela, o adesivo do mês, o disco de iniciais, os botões em pílula. Contra ele, retângulos de canto grande são carcaça — a chapa do corpo com `16px`, a janela da bandeja com `8px`, o toast com `12px`, os campos com `8px` e a plaqueta com `4px`.
 
-A silhueta assinatura é a cápsula: cúpula colorida sobre casca translúcida, dividida por uma costura. Ela reaparece em três escalas — cunha em anel no aro do globo, semicírculo completo solto no interior, e a marca do produto no cabeçalho — e em duas versões planas: a bolinha da cartela (`999px 999px 4px 4px`, com a casca desenhada por sombra interna) e o disco de iniciais da coleção (círculo com sombra interna inferior clara). A cunha ocupa o anel entre o equador (118) e o raio externo (168) em espaço de usuário do SVG; a casca transparente ocupa o anel interno (96–118).
+A silhueta assinatura é a cápsula: cúpula colorida sobre casca translúcida, dividida por uma costura. Ela reaparece em três escalas — cunha em anel no aro do globo, semicírculo completo solto no interior, e a marca do produto no cabeçalho — e em três versões planas: a bolinha do registro (`999px 999px 4px 4px`, com a casca desenhada por sombra interna), o comprimido de cor da gaveta (o mesmo desenho em 44px de altura) e o disco de iniciais (círculo com sombra interna inferior clara, que carrega o emoji da pessoa quando ela escolheu um). A cunha ocupa o anel entre o equador (118) e o raio externo (168) em espaço de usuário do SVG; a casca transparente ocupa o anel interno (96–118).
 
 Bordas são sempre hairline de 1px (1.5–2px quando é traço de peça). Nenhum contorno decorativo, nenhuma moldura dupla.
 
@@ -324,7 +356,7 @@ Bordas são sempre hairline de 1px (1.5–2px quando é traço de peça). Nenhum
 - **Ghost / link de texto:** cromo, peso 700, sublinhado com `0.24em` de deslocamento e traço de 1.5px, altura 44px.
 
 ### Cards / Containers
-Não há cards. As agrupações são feitas por costura de bordas: a grade de série e a cartela desenham suas próprias hairlines e se encaixam sem gap nem raio. A única caixa com fundo próprio é a nota de demonstração na coleção (papel silencioso, borda de tinta a 22%, raio `8px`).
+Quase não há cards. As agrupações são feitas por costura de bordas: a grade de série e o registro desenham suas próprias hairlines e se encaixam sem gap nem raio. As exceções são a prateleira da raiz (esmalte profundo, hairline, raio `16px`) e a faixa do ensaio do resumo na bancada da etiqueta (papel silencioso, raio `8px`) — as duas com fundo próprio porque são recipientes, não agrupamentos.
 
 ### Inputs / Fields
 - **Style:** fundo branco, tinta escura, borda de 1.5px em `#a9b1bf`, raio `8px`, `0.78rem 0.95rem`, altura mínima 48px. Sempre precedidos por rótulo em mono `0.64rem` caixa alta.
@@ -333,7 +365,11 @@ Não há cards. As agrupações são feitas por costura de bordas: a grade de s�
 - **Share field:** o campo de link compartilhável usa mono `0.72rem` — é um valor a conferir, não um texto a ler.
 
 ### Navigation
-A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 64px, hairline inferior. À esquerda a marca (cápsula desenhada em SVG mais o nome em Fredoka 600); à direita a plaqueta de identificação em mono caixa alta, oculta abaixo de 620px. Não há menu — a página tem uma âncora só, o link "Ver a coleção".
+A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 64px, hairline inferior. À esquerda a marca (cápsula desenhada em SVG mais o nome em Fredoka 600); à direita os comprimidos de navegação em mono caixa alta — **A coleção** com a contagem em tabular, **O álbum** — e, por último, o crachá.
+
+**O crachá** é quem está mexendo, sempre à vista: um disco de cápsula com as iniciais, na cor tirada do próprio nome, mais o nome truncado em `12ch`. Ele é um botão, e o que ele faz é reabrir a porta para passar a vez. Não é um menu de conta e não tem submenu: o produto não tem contas.
+
+Abaixo de 620px a barra quebra em duas linhas e o nome do crachá encolhe para `8ch`, mas nada some — a navegação é a única saída de cada página.
 
 ### Toast
 Aviso fixo no canto inferior direito sobre esmalte elevado, borda de linha forte, raio `12px`, com botão amarelo de desfazer e fechar em cromo. Entra com `translateY(1rem)` → 0 em `.2s`. É `role="status"` e `aria-live="polite"`.
@@ -345,13 +381,45 @@ A máquina é um único SVG (`viewBox="-26 -26 452 576"`) desenhado em espaço p
 - **Calha às seis horas:** a rotação de destino é calculada para que a cápsula vencedora pare exatamente na calha, na base do globo.
 - **Estado ao vivo:** revelada a rodada, a chapa recebe a cor da cápsula, os elementos montados nela viram tinta escura, e um brilho radial suave da mesma cor aparece atrás do palco.
 
+### A Porta
+
+Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a única que não pode ser pulada, porque tudo que se faz aqui fica gravado num registro que o clube vai reler meses depois — e um registro de giros anônimos não conta história nenhuma.
+
+- **Palco:** a mesma assimetria do palco da máquina, em esmalte, com a plaqueta da marca no canto superior esquerdo. À esquerda a cápsula; à direita o título em display, um parágrafo em céu, um campo e o botão amarelo.
+- **A cápsula que se monta:** um SVG de 220×220 com o poço em gradiente radial, a cúpula na cor da pessoa, o brilho especular na curva de cima, a casca translúcida, o lábio interno e a costura em cromo chapado. As iniciais aparecem dentro da cúpula conforme se digita, e a cor sai de um hash do próprio nome — quem digita o mesmo nome vê a mesma cápsula toda vez. Vazia, a cúpula é âmbar: a primeira tela do produto não devia ser cinza.
+- **Duas faces:** quem nunca entrou vê "Quem é **você?**" e um só botão. Quem está trocando vê "Quem está **na mesa?**" e ganha um "Continuar como estou" — só quem já está dentro tem para onde voltar.
+- **A costura é cromo chapado**, e não o degradê do aro da máquina: um `linearGradient` em caixa delimitadora de altura zero não pinta nada, e a linha simplesmente sumia.
+
+### A Prateleira
+
+A raiz do produto. Antes ela era uma máquina de demonstração com seis nomes inventados; agora é a porta de casa: a saudação pelo primeiro nome, o convite para montar uma máquina, e as máquinas que este aparelho já abriu.
+
+- **Duas colunas:** a saudação e o convite à esquerda; a prateleira à direita, numa caixa de esmalte profundo com hairline e raio `16px`.
+- **A escala é de manchete, não de display.** Uma saudação é uma frase, não um nome vencedor: a escala de display a quebra em três linhas e engole a página.
+- **A lista é local e não dá acesso a nada.** Quem abre uma máquina é o link, não a prateleira — e listar grupos é proibido nas rules justamente para o link continuar sendo o segredo. Cada linha carrega um disco na cor derivada do id do grupo, o nome, a data da última visita e um X para esquecer.
+- **Vazia, ela se explica** com o globo fechado e uma frase, em vez de ficar em branco.
+
+### A Gaveta da Coleção
+
+Administrar é uma tarefa de uma vez por mês, e ela ocupava metade de toda visita. Agora abre pelo cabeçalho, faz o que tem de fazer, e some.
+
+- **Papel, pela Regra da Única Quebra:** sobreposição de `min(38rem, 100vw - 2.4rem)` com raio `12px` sobre o mesmo véu de esmalte com `blur(2px)` da bancada da etiqueta, e a marca de registro do impressor no canto.
+- **Duas faces e nunca duas camadas.** A lista e a bancada de uma cápsula trocam de lugar dentro da mesma gaveta. Um segundo modal por cima do primeiro deixaria dois véus e dois `aria-modal` disputando a mesma tecla Esc; aqui o Esc volta uma face por vez.
+- **Saída no alto.** Uma gaveta que passa da altura da tela precisa de um X no canto: o "Fechar" do rodapé fica abaixo da dobra justamente quando a lista é longa.
+- **A linha de uma pessoa** é o disco de cápsula (o emoji dela, ou as iniciais), o nome, a cor por extenso em mono, e a seta que anda 3px no hover.
+- **A bancada de uma cápsula:** a prévia grande no cabeçalho ao lado do nome, a grade de cores, a grade de emoji, um campo para colar outro, e as três ações — salvar em botão de esmalte, voltar em texto, e **Tirar do globo** separado à direita em `remove-ink`.
+- **Escolher uma cor é escolher uma cápsula:** os comprimidos da grade têm o mesmo semicírculo achatado da bolinha do registro (`999px 999px 6px 6px`), com a casca desenhada por sombra interna. O selecionado ganha um anel duplo papel-sobre-tinta, que não briga com o anel de foco amarelo.
+- **Salvar só volta para a lista quando o servidor confirma.** Voltar ao emitir levaria embora a cor que a pessoa acabou de escolher se a gravação falhasse, e ela teria de escolher tudo de novo sem saber por quê.
+
 ### A Etiqueta
 
-A etiqueta é o papel colado na cápsula depois que ela caiu: o que o clube jogou e como foi. Ela nunca é um "card de metadados" — é um objeto do mesmo mundo do adesivo do mês.
+A etiqueta é o papel colado na cápsula depois que ela caiu: o que o clube jogou e como foi. Ela nunca é um "card de metadados" — é um objeto do mesmo mundo do adesivo da rodada.
 
 - **Etiqueta escrita:** retângulo de papel quente (`paper`), raio `4px`, largura `min(100%, 33rem)`, rotacionado `-0.9deg` (`-0.5deg` abaixo de 620px), com sombra de colagem `0 12px 26px rgba(6, 14, 28, .45)`. Rótulo de série em mono no topo, título em Fredoka `1.42rem`, descrição em corpo `0.92rem` preservando quebras de linha, e um rodapé em mono separado por hairline de papel com a assinatura e o botão **Editar**. Uma cápsula plana na cor da pessoa fica ancorada no canto superior direito, pela Regra da Cápsula Portante.
 - **Etiqueta em branco:** o mesmo objeto em `paper-quiet`, com uma segunda borda tracejada 6px para dentro — papel ainda não escrito, não um botão de "adicionar". É o `<button>` inteiro, e levanta 2px no hover.
 - **Bancada:** a etiqueta é escrita numa sobreposição de papel (`12px`, `min(34rem, 100vw - 2.4rem)`) sobre um véu de esmalte com `blur(2px)`, carregando a mesma marca de registro do impressor da seção da coleção. Cabeçalho com a série do giro, o disco de iniciais na cor da cápsula e o nome em `2.4rem`. Cada campo tem contador tabular no cabeçalho do rótulo, que vira `field-error-ink` no limite. A ação é o botão de esmalte, nunca o amarelo — é papel, pela Regra do Amarelo de Ação. **Retirar** vive separado à direita, em `remove-ink`.
+- **Título e subtítulo:** na etiqueta inteira eles se separam — o título em Fredoka `1.42rem`, o subtítulo logo abaixo em mono `0.74rem`, porque ele é a legenda do título (o placar, a nota), não a continuação dele. Onde só cabe uma linha, os dois viram um resumo só: `TÍTULO ● SUBTÍTULO`.
+- **O ensaio do resumo:** a bancada monta esse resumo enquanto se escreve, numa faixa de papel silencioso rotulada `NO REGISTRO`. É como o campo se explica sem uma frase de ajuda.
 - **No registro:** a célula inteira vira o controle que abre a bancada. Uma célula sem etiqueta diz `SEM ETIQUETA` em mono de série, e é assim que o retroativo se anuncia sem precisar de um botão por célula.
 
 ### O Álbum
@@ -359,18 +427,26 @@ A etiqueta é o papel colado na cápsula depois que ela caiu: o que o clube jogo
 O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colada no esmalte. A superfície continua sendo o esmalte — o papel são os objetos, não o fundo, e é isso que mantém a Regra da Única Quebra de pé com dezenas de cartões na tela.
 
 - **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
-- **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor de uma pessoa no álbum é a da primeira cápsula dela, para que ela seja sempre a mesma em toda a parede.
+- **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Régua de rodada:** filete de 2px com o número da rodada à esquerda e a contagem à direita, em mono de série. A ordem é da rodada mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer.
 - **Cartão:** a etiqueta de papel, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, descrição cortada em quatro linhas e o rodapé de assinatura preso na base para que os cartões de uma fileira terminem alinhados. O cartão inteiro é o controle que abre a bancada.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
 - **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM ETIQUETA` em mono. É como o retroativo se anuncia, sem precisar de um botão por cartão.
 
 ### Motion
-Existe um único momento autoral por visita, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s` e a cúpula se abre em `1.5s`. Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
+Existe um único momento autoral, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s`, a cúpula se abre em `1.5s` — e o que estava dentro sai.
+
+**O confete** é a última batida desse momento, não um segundo: sessenta e quatro partículas em canvas, num leque para cima e para os lados, com gravidade de `1500px/s²` e vida de `2.6s`. Sai da bandeja quando a máquina está na tela, e do alto do centro quando não está. Com emoji, saem emoji; sem emoji, saem cápsulas na cor da pessoa. Canvas e não elementos: sessenta e quatro nós no DOM custariam sessenta e quatro reflows por quadro, e nada aqui precisa ser lido nem clicado.
+
+**A cena é reencenável, e reencenar não é decidir.** A máquina abre girando, e o globo inteiro é um botão que a roda de novo — sempre parando na mesma cápsula, porque a rotação de destino sai do mesmo registro. É a diferença entre assistir e decidir, que é a promessa do produto. O confete acompanha a reencenação pedida, mas **não** a de abertura: quem abre a página não entregou nada de novo.
+
+Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 
 ### Named Rules
 
-**A Regra do Momento Único.** Nada mais na página anima sozinho. Sem carrossel, sem contador que sobe, sem entrada por scroll, sem pulso de atenção. A animação da entrega é o único movimento autoral, e ela nunca altera o resultado — só o revela.
+**A Regra do Momento Único.** Nada mais na página anima sozinho. Sem carrossel, sem contador que sobe, sem entrada por scroll, sem pulso de atenção. A animação da entrega é o único movimento autoral — o confete é a última batida dela, não um segundo momento — e ela nunca altera o resultado, só o revela.
+
+**A Regra do Alvo do Tamanho da Peça.** Quando uma peça inteira é o controle, o controle é uma caixa de verdade em volta dela, e não um alvo invisível por cima. `display: contents` num botão o tira da árvore de layout e leva o anel de foco junto; a máquina é um `<button>` com largura própria, e o anel contorna a máquina.
 
 **A Regra do Movimento Reduzido nos Dois Lugares.** `prefers-reduced-motion` é honrado em CSS (todas as durações caem para `.01ms`) **e** em JS (a entrega roda em 120ms em vez de 4300ms). Qualquer sequência nova precisa dos dois desligamentos; desligar só o CSS deixa a página parada esperando um timer longo.
 
@@ -378,21 +454,24 @@ Existe um único momento autoral por visita, e ele é sempre o mesmo: a manivela
 
 ### Do:
 - **Do** deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.
-- **Do** usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, cartela, coleção, bandeja — para que a coleção leia como coleção.
+- **Do** usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, registro, gaveta, bandeja, álbum e confete — para que a coleção leia como coleção.
+- **Do** guardar a cor como posição na paleta, nunca como hexadecimal livre, para que o contraste continue garantido sem o servidor precisar calculá-lo.
 - **Do** pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para tinta escura.
 - **Do** reservar Martian Mono para valores de série e medição, com números tabulares.
 - **Do** construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.
 - **Do** manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.
-- **Do** acompanhar toda cor de estado com texto — a cartela marca "Nesta rodada" e risca os meses já saídos, e os erros de campo trazem mensagem.
+- **Do** acompanhar toda cor de estado com texto — o registro marca "Último", a gaveta nomeia a cor por extenso, e os erros de campo trazem mensagem.
 - **Do** honrar `prefers-reduced-motion` em CSS e em JS ao mesmo tempo.
 
 ### Don't:
 - **Don't** centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.
 - **Don't** misturar a cor da cápsula difusamente no azul como tintura de fundo — o resultado é oliva.
 - **Don't** introduzir uma cor de cápsula que não passe de 4.5:1 sobre o esmalte e não aceite tinta escura por cima.
-- **Don't** trazer papel para fora da seção da coleção.
+- **Don't** trazer papel para fora de onde se administra: a gaveta da coleção, a bancada da etiqueta e a própria etiqueta.
+- **Don't** empilhar um modal sobre outro: duas faces na mesma gaveta, e o Esc volta uma de cada vez.
+- **Don't** deixar uma grade de escolhas com uma fileira órfã; o número de colunas divide o número de itens.
 - **Don't** usar sombra dura de bloco com deslocamento diagonal e zero desfoque; a parede lateral do botão é vertical, sólida, e vem com sombra ambiente.
 - **Don't** colocar kicker, sobrancelha ou rótulo acima de um título.
 - **Don't** usar monoespaçada como sinal genérico de "técnico" em texto corrido, botão ou título.
 - **Don't** adicionar um segundo movimento autônomo à página; a entrega é o único momento.
-- **Don't** falar em sorte, azar ou aleatoriedade na interface: a cartela e a coleção completa são a prova.
+- **Don't** falar em sorte, azar ou aleatoriedade na interface: o registro e a coleção completa são a prova.

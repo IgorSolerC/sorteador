@@ -70,6 +70,33 @@ const go = async (path, wait = 8000) => {
 await send('Page.enable');
 await send('Runtime.enable');
 
+// --- 0. a porta: ninguém entra sem dizer quem é ---
+await go('/', 5000);
+const naPorta = await evaluate(`(() => ({
+  porta: !!document.querySelector('.gate'),
+  prateleira: !!document.querySelector('.home-stage'),
+}))()`);
+check('sem crachá, a porta é a única coisa na tela', naPorta.porta && !naPorta.prateleira,
+  JSON.stringify(naPorta));
+
+await evaluate(`(() => {
+  const campo = document.querySelector('#gate-name');
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+  setter.call(campo, 'Teste de Fluxos');
+  campo.dispatchEvent(new Event('input', { bubbles: true }));
+})()`);
+await sleep(500);
+await evaluate(`document.querySelector('.gate-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); true`);
+await sleep(1500);
+const depoisDaPorta = await evaluate(`(() => ({
+  porta: !!document.querySelector('.gate'),
+  prateleira: !!document.querySelector('.home-stage'),
+  cracha: document.querySelector('.who-name')?.textContent?.trim(),
+}))()`);
+check('entrar na mesa abre a prateleira e põe o crachá no topo',
+  !depoisDaPorta.porta && depoisDaPorta.prateleira && depoisDaPorta.cracha === 'Teste de Fluxos',
+  JSON.stringify(depoisDaPorta));
+
 // --- 1. criar um grupo do zero, clicando ---
 await go('/#/novo', 5000);
 const telaCriar = await evaluate(`(() => ({
@@ -78,7 +105,7 @@ const telaCriar = await evaluate(`(() => ({
   botao: document.querySelector('.create-form .primary-action')?.textContent?.trim(),
 }))()`);
 check('a tela de criação abre', /máquina/i.test(telaCriar.titulo ?? ''), telaCriar.titulo);
-check('oferece importar a lista atual', telaCriar.temImportar);
+check('oferece entrar já como a primeira cápsula', telaCriar.temImportar);
 
 await evaluate(`(() => {
   const campo = document.querySelector('.create-field input');
@@ -97,16 +124,28 @@ const depoisCriar = await evaluate(`(() => ({
   nome: [...document.querySelectorAll('.serial-grid dd')].pop()?.textContent?.trim(),
 }))()`);
 check('criar leva para o grupo novo', /^#\/g\/[A-Za-z0-9_-]+$/.test(depoisCriar.hash), depoisCriar.hash);
-check('o grupo novo já vem com as cápsulas importadas', depoisCriar.capsulas > 0, `${depoisCriar.capsulas}`);
+check('quem monta a máquina já entra como a primeira cápsula', depoisCriar.capsulas === 1,
+  `${depoisCriar.capsulas}`);
 check('o nome do grupo é o que foi digitado', depoisCriar.nome === 'Grupo E2E', depoisCriar.nome);
 
 const criado = depoisCriar.hash.replace('#/g/', '');
 
-// --- 2. o link interno não derruba a rota ---
-await evaluate(`document.querySelector('.text-link').click(); true`);
-await sleep(1500);
-const depoisLink = await evaluate(`location.hash`);
-check('clicar em "Ver a coleção" mantém a pessoa no grupo', depoisLink === `#/g/${criado}`, depoisLink);
+// --- 2. a gaveta da coleção abre e fecha sem sair da rota ---
+await evaluate(`document.querySelector('#roster-button').click(); true`);
+await sleep(1200);
+const naGaveta = await evaluate(`(() => ({
+  aberta: !!document.querySelector('.roster-card'),
+  linhas: document.querySelectorAll('.capsule-row').length,
+  hash: location.hash,
+}))()`);
+check('a coleção abre numa gaveta, sem trocar de rota',
+  naGaveta.aberta && naGaveta.hash === `#/g/${criado}`, JSON.stringify(naGaveta));
+check('a gaveta já lista quem montou a máquina', naGaveta.linhas === 1, `${naGaveta.linhas}`);
+
+await evaluate(`document.querySelector('.roster-close').click(); true`);
+await sleep(900);
+check('fechar a gaveta devolve a máquina',
+  (await evaluate(`!document.querySelector('.roster-card') && location.hash`)) === `#/g/${criado}`);
 
 // --- 3. grupo inexistente ---
 await go('/#/g/naoexisteesse123', 8000);
@@ -130,21 +169,18 @@ const reduzido = await evaluate(`(() => ({
 check('com movimento reduzido o giro resolve rápido e não fica preso',
   !reduzido.girandoAinda, `giros ${antesGiro} → ${reduzido.giros}`);
 
-// --- 5. o modo por link continua intacto ---
+// --- 5. um link do formato antigo não abre uma máquina de mentira ---
+// O modo por link estático saiu. Um link em circulação daquele formato tem que cair na
+// prateleira, que explica o que fazer, e nunca montar um grupo a partir do próprio endereço.
 await send('Emulation.setEmulatedMedia', { features: [] });
 await go('/#grupo=WyJaaWxkYSIsIll1cmkiLCJYYXZpZXIiLCJXYW5kYSJd&inicio=2026-05', 6000);
 const legado = await evaluate(`(() => ({
-  vencedor: document.querySelector('#result-title')?.textContent?.trim(),
-  edicao: [...document.querySelectorAll('.serial-grid dd')].map(d => d.textContent.trim()).join('|'),
+  prateleira: !!document.querySelector('.home-stage'),
+  capsulas: document.querySelectorAll('.capsule').length,
+  temZilda: document.body.innerText.includes('Zilda'),
 }))()`);
-// Cravar o vencedor aqui quebraria na virada do mês: no modo por link ele é o do mês
-// corrente. O que é congelado é a edição, que depende da lista e do início, não do mês.
-const QUARTETO = ['Zilda', 'Yuri', 'Xavier', 'Wanda'];
-check('o modo por link segue com a edição congelada e um vencedor da lista',
-  legado.edicao.includes('1B454935')
-    && legado.edicao.includes('maio de 2026')
-    && QUARTETO.includes(legado.vencedor ?? ''),
-  `${legado.vencedor} | ${legado.edicao}`);
+check('um link do formato antigo cai na prateleira, sem inventar um grupo',
+  legado.prateleira && legado.capsulas === 0 && !legado.temZilda, JSON.stringify(legado));
 
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} fluxos verificados`);

@@ -1,3 +1,40 @@
+<header class="topbar">
+  <a class="brand" href="." aria-label="Mesa do Mês — início">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
+      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
+      <path class="brand-seam" d="M6 20h28" />
+    </svg>
+    <span>Mesa do Mês</span>
+  </a>
+
+  <nav class="topbar-actions" aria-label="A máquina">
+    <button id="roster-button" type="button" class="plate-action" (click)="openRoster()">
+      A coleção
+      <b>{{ members().length }}</b>
+    </button>
+    <a class="plate-action" [href]="albumUrl()">O álbum</a>
+    <button type="button" class="who-chip" (click)="askIdentityChange()">
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()">{{ authorInitials() }}</span>
+      <span class="who-name">{{ author() }}</span>
+      <span class="visually-hidden">— trocar de pessoa</span>
+    </button>
+  </nav>
+</header>
+
+@if (usage().state !== 'ok') {
+  <p class="usage-note" [class.is-stopped]="usage().state === 'stopped'" role="status">
+    @if (usage().state === 'stopped') {
+      <strong>Parada de segurança.</strong> O uso deste aparelho bateu no limite que protege
+      a cota gratuita, então a máquina parou de falar com o servidor. Ela volta sozinha em
+      {{ usage().stoppedUntil }}.
+    } @else {
+      <strong>Uso alto hoje.</strong> {{ usage().reads }} leituras e {{ usage().writes }}
+      escritas neste aparelho. Perto do limite, a máquina para sozinha para não gerar custo.
+    }
+  </p>
+}
+
 @if (loading() && !snapshot()) {
   <section class="empty-stage" aria-busy="true">
     <div class="empty-globe" aria-hidden="true">
@@ -13,7 +50,7 @@
     class="draw-stage"
     aria-labelledby="synced-title"
     [class.is-live]="revealed() && displayed().chosenIndex >= 0"
-    [style.--live]="winnerColor()"
+    [style.--live]="winnerHex()"
   >
     <p class="month-sticker" aria-label="Rodada atual">
       <span>R{{ snap.state.round }}</span>
@@ -22,40 +59,64 @@
 
     <div class="machine" [class.is-spinning]="isSpinning()" [class.is-delivered]="revealed() && displayed().chosenIndex >= 0">
       <app-machine
-        [names]="displayed().names"
+        [people]="displayed().people"
         [chosenIndex]="displayed().chosenIndex"
         [revealed]="revealed()"
         [rotation]="rotation()"
         [restRotation]="targetRotation()"
-        caption="O giro é gravado com a hora do servidor. Quem abrir o link vê o mesmo registro."
+        [busy]="isSpinning()"
+        (replay)="replayScene()"
+        caption="O giro fica gravado com a hora do servidor. Toque no globo para ver a entrega de novo — a cápsula é sempre a mesma."
       />
     </div>
 
-    <div class="result" aria-live="polite">
-      @if (isSpinning()) {
-        <h1 id="synced-title">Entregando</h1>
-        <p class="result-copy">A cápsula já saiu do globo. A manivela está só trazendo ela até a bandeja.</p>
-      } @else if (snap.state.lastSpin; as last) {
-        <h1 id="synced-title" class="winner-name">{{ last.winnerName }}</h1>
-        <p class="result-copy">
-          {{ last.winnerName }} escolhe o jogo. Foi a cápsula {{ last.index + 1 }} do grupo,
-          na rodada {{ last.round }}. Restam {{ pool().length }} no globo antes de todos terem saído.
-        </p>
-      } @else if (members().length >= MIN_MEMBERS) {
-        <h1 id="synced-title">Pronta para<br /><strong>girar</strong></h1>
-        <p class="result-copy">{{ members().length }} cápsulas no globo e nenhum giro ainda. Gire para tirar a primeira.</p>
-      } @else {
-        <h1 id="synced-title">O globo está<br /><strong>quase vazio</strong></h1>
-        <p class="result-copy">Carregue pelo menos {{ MIN_MEMBERS }} cápsulas para a máquina ter o que entregar.</p>
-      }
+    <div class="result">
+      <!-- A região viva é só o anúncio. Envolvendo a coluna inteira ela reanunciava a
+           etiqueta, os botões, a grade de série e até o diálogo de confirmação a cada
+           recarga — e um diálogo dentro de uma região viva é anunciado duas vezes. -->
+      <div class="result-announce" aria-live="polite">
+        @if (isSpinning()) {
+          <h1 id="synced-title">Entregando</h1>
+          <p class="result-copy">A cápsula já saiu do globo. A manivela está só trazendo ela até a bandeja.</p>
+        } @else if (snap.state.lastSpin; as last) {
+          <h1 id="synced-title" class="winner-name">
+            <span>{{ last.winnerName }}</span>
+            @if (winnerEmoji()) {
+              <span class="winner-emoji" aria-hidden="true">{{ winnerEmoji() }}</span>
+            }
+          </h1>
+          <p class="result-copy">
+            {{ last.winnerName }} escolhe o jogo. Foi a cápsula {{ last.index + 1 }} do grupo,
+            na rodada {{ last.round }}.
+            @if (pool().length === 1) {
+              Resta 1 cápsula no globo antes de todos terem saído.
+            } @else if (pool().length) {
+              Restam {{ pool().length }} no globo antes de todos terem saído.
+            } @else {
+              Todos já saíram: a próxima rodada abre com o globo cheio.
+            }
+          </p>
+        } @else if (members().length >= MIN_MEMBERS) {
+          <h1 id="synced-title">Pronta para<br /><strong>girar</strong></h1>
+          <p class="result-copy">{{ members().length }} cápsulas no globo e nenhum giro ainda. Gire para tirar a primeira.</p>
+        } @else {
+          <h1 id="synced-title">O globo está<br /><strong>quase vazio</strong></h1>
+          <p class="result-copy">
+            Carregue pelo menos {{ MIN_MEMBERS }} cápsulas para a máquina ter o que entregar.
+          </p>
+        }
+      </div>
 
       @if (!isSpinning() && snap.state.lastSpin) {
         @let last = snap.state.lastSpin;
         @if (last.note; as note) {
           <article class="note-sticker">
-            <span class="note-chip" aria-hidden="true" [style.--capsule]="colorFor(last.index)"></span>
+            <span class="note-chip" aria-hidden="true" [style.--capsule]="colorOf(last)"></span>
             <p class="note-serial">Etiqueta · cápsula {{ last.index + 1 }}</p>
             <h2 class="note-title">{{ note.title }}</h2>
+            @if (note.subtitle) {
+              <p class="note-subtitle">{{ note.subtitle }}</p>
+            }
             @if (note.description) {
               <p class="note-description">{{ note.description }}</p>
             }
@@ -95,21 +156,22 @@
             Girar a roleta
           }
         </button>
-        <a class="text-link" href="#participantes" (click)="jumpToRoster($event)">Ver a coleção</a>
+        <button class="text-link" type="button" (click)="openRoster()">Abrir a coleção</button>
       </div>
 
       @if (confirming()) {
         <div class="confirm-scrim" (click)="cancelSpin()"></div>
-        <div class="confirm-card" role="alertdialog" aria-modal="true"
-             aria-labelledby="confirm-title" (keydown.escape)="cancelSpin()">
+        <div class="confirm-card" id="confirm-card" role="alertdialog" aria-modal="true"
+             aria-labelledby="confirm-title" aria-describedby="confirm-body"
+             (keydown.escape)="cancelSpin()" (keydown.tab)="trapConfirmFocus($event)">
           <h2 id="confirm-title">Tem certeza que deseja girar a roleta?</h2>
-          <p>
+          <p id="confirm-body">
             Isso irá afetar a roleta de todos os integrantes do grupo permanentemente.
             O giro fica gravado no registro e não pode ser desfeito, e consome uma das
             {{ pool().length }} cápsulas que ainda estão no globo nesta rodada.
           </p>
           <div class="confirm-actions">
-            <button class="primary-action" type="button" (click)="confirmSpin()" autofocus>
+            <button class="primary-action" id="confirm-spin" type="button" (click)="confirmSpin()">
               Girar mesmo assim
             </button>
             <button class="text-link confirm-cancel" type="button" (click)="cancelSpin()">
@@ -140,7 +202,7 @@
     </div>
   </section>
 
-  <section class="chart-section" aria-labelledby="log-title">
+  <section class="chart-section" id="registro" aria-labelledby="log-title">
     <div class="section-heading">
       <h2 id="log-title">O registro</h2>
       <p>
@@ -173,11 +235,16 @@
                 (spin.index + 1) + ', ' + spin.winnerName
               "
             >
-              <span class="cell-capsule" aria-hidden="true" [style.background]="colorFor(spin.index)"></span>
+              <span class="cell-capsule" aria-hidden="true" [style.background]="colorOf(spin)"></span>
               <span class="cell-month">Rodada {{ spin.round }} · {{ spin.at | date: 'dd/MM/yy HH:mm' }}</span>
-              <strong>{{ spin.winnerName }}</strong>
-              @if (spin.note; as note) {
-                <span class="cell-note">{{ note.title }}</span>
+              <strong>
+                @if (emojiOf(spin); as emoji) {
+                  <span aria-hidden="true">{{ emoji }}</span>
+                }
+                {{ spin.winnerName }}
+              </strong>
+              @if (spin.note) {
+                <span class="cell-note">{{ summaryOf(spin) }}</span>
               } @else {
                 <span class="cell-note is-blank">Sem etiqueta</span>
               }
@@ -200,99 +267,13 @@
     }
   </section>
 
-  <section class="roster-section" id="participantes" aria-labelledby="synced-roster">
-    <div class="roster-intro">
-      <h2 id="synced-roster">A coleção</h2>
-      <p>
-        Mudar a lista aqui não gera link novo: o grupo é o mesmo, e quem já tem o link
-        enxerga a mudança. Quem entra no meio de uma rodada já entra elegível.
-      </p>
-
-      @if (usage().state !== 'ok') {
-        <p class="usage-note" [class.is-stopped]="usage().state === 'stopped'" role="status">
-          @if (usage().state === 'stopped') {
-            <strong>Parada de segurança.</strong> O uso deste aparelho bateu no limite que
-            protege a cota gratuita, então a máquina parou de falar com o servidor. Ela volta
-            sozinha em {{ usage().stoppedUntil }}.
-          } @else {
-            <strong>Uso alto hoje.</strong> {{ usage().reads }} leituras e {{ usage().writes }}
-            escritas neste aparelho. Perto do limite, a máquina para sozinha para não gerar custo.
-          }
-        </p>
-      }
-
-      <label class="seed-field author-field">
-        <span>Quem está mexendo</span>
-        <input
-          name="author"
-          type="text"
-          maxlength="60"
-          autocomplete="off"
-          placeholder="Opcional, fica no registro"
-          [ngModel]="author()"
-          (ngModelChange)="updateAuthor($event)"
-        />
-      </label>
-
-      <form class="add-form" (ngSubmit)="addMember()" novalidate>
-        <label for="synced-name">Nome da pessoa</label>
-        <div class="field-row">
-          <input
-            id="synced-name"
-            name="syncedName"
-            type="text"
-            maxlength="60"
-            autocomplete="off"
-            placeholder="Ex.: Mariana Souza"
-            [ngModel]="draftName()"
-            (ngModelChange)="draftName.set($event); formError.set('')"
-            [attr.aria-invalid]="formError() ? 'true' : null"
-          />
-          <button type="submit" [disabled]="busy()">Carregar</button>
-        </div>
-        @if (formError()) {
-          <p class="field-error" role="alert">{{ formError() }}</p>
-        }
-      </form>
-
-      <div class="share-block">
-        <h3>Compartilhar</h3>
-        <p>O link é o grupo. Ele não carrega a lista — ela vive no registro e muda sem gerar link novo.</p>
-        <button class="secondary-action" type="button" (click)="copyLink()">Copiar link do grupo</button>
-        <label class="share-field">
-          Link do grupo
-          <input readonly [value]="shareUrl()" />
-        </label>
-      </div>
-    </div>
-
-    <div class="roster-list-wrap">
-      <div class="roster-count">
-        <strong>{{ members().length }}</strong>
-        <span>{{ members().length === 1 ? 'cápsula no globo' : 'cápsulas no globo' }}</span>
-      </div>
-      @if (members().length) {
-        <ul class="roster-list">
-          @for (member of members(); track member.id; let position = $index) {
-            <li>
-              <span class="person-index">{{ (position + 1).toString().padStart(2, '0') }}</span>
-              <span class="person-capsule" aria-hidden="true" [style.--capsule]="colorFor(position)">
-                {{ member.name.slice(0, 1).toUpperCase() }}
-              </span>
-              <strong>{{ member.name }}</strong>
-              <button type="button" (click)="removeMember(member)" [disabled]="busy()"
-                [attr.aria-label]="'Remover ' + member.name">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg>
-                <span>Remover</span>
-              </button>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="roster-empty">O globo está vazio. Use o campo ao lado para carregar a primeira cápsula.</p>
-      }
-    </div>
-  </section>
+  <footer>
+    <span>{{ snap.name }}</span>
+    <p>
+      O link é o grupo. Cada giro e cada etiqueta ficam num registro que ninguém pode
+      reescrever nem apagar.
+    </p>
+  </footer>
 } @else {
   <section class="empty-stage">
     <div class="empty-globe" aria-hidden="true">
@@ -306,9 +287,27 @@
   </section>
 }
 
+@if (rosterOpen()) {
+  <app-roster-bench
+    [members]="members()"
+    [busy]="busy()"
+    [error]="rosterError()"
+    [shareUrl]="shareUrl()"
+    [maxMembers]="MAX_MEMBERS"
+    [restyled]="restyled()"
+    (add)="addFromBench($event)"
+    (remove)="removeFromBench($event)"
+    (restyle)="restyle($event)"
+    (copyLink)="copyLink()"
+    (dismiss)="closeRoster()"
+  />
+}
+
 @if (editingSpin(); as spin) {
   <app-note-editor
     [spin]="spin"
+    [capsule]="editingColor()"
+    [capsuleEmoji]="editingEmoji()"
     [saving]="savingNote()"
     [error]="noteError()"
     (commit)="commitNote($event)"
@@ -316,6 +315,8 @@
     (dismiss)="closeNote()"
   />
 }
+
+<app-confetti [burst]="celebration()" [emoji]="winnerEmoji()" [color]="winnerHex()" />
 
 <div class="toast" [class.is-visible]="notice()" role="status" aria-live="polite">
   <span>{{ notice() }}</span>

@@ -1,45 +1,81 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, WritableSignal, computed, effect, inject, input, signal, untracked } from '@angular/core';
 
-import { GroupMember, MAX_MEMBERS, MIN_MEMBERS, SpinRecord, activeMembers, poolMembers } from './group-log';
+import {
+  GroupMember,
+  MAX_MEMBERS,
+  MIN_MEMBERS,
+  SpinRecord,
+  activeMembers,
+  membersById,
+  noteSummary,
+  poolMembers,
+} from './group-log';
 import { GroupSnapshot, GroupStore, SPIN_COOLDOWN_MS, UsageBlockedError } from './group-store';
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
-import { Machine, capsuleColor } from './machine';
+import { rememberGroup } from './recent-groups';
+import { Machine, MachinePerson } from './machine';
+import { capsuleColor, capsuleColorName } from './palette';
+import { Confetti } from './confetti';
+import { Identity } from './identity';
+import { trapFocusWithin } from './focus-trap';
 import { NoteBench } from './note-bench';
 import { NoteEditor } from './note-editor';
-import { normalizeName, participantKey } from './draw-engine';
+import { CapsuleStyle, RosterBench } from './roster-bench';
+import { normalizeName, participantKey } from './naming';
 
 /**
- * O modo sincronizado. A mesma máquina, mas o globo mostra o bolo da rodada em vez de um
- * cálculo por mês, e o giro é um evento gravado — não uma reencenação.
+ * O grupo sincronizado, que agora é o produto inteiro: o globo mostra o bolo da rodada e
+ * o giro é um evento gravado com a hora do servidor.
+ *
+ * A cena, porém, é reencenável de propósito. Ela abre girando e volta a girar a um clique
+ * no globo, sempre parando na mesma cápsula — o resultado está no registro desde que a
+ * manivela virou, e nada aqui pode mudá-lo. É a diferença entre assistir e decidir, que é
+ * a promessa do produto.
  */
 @Component({
   selector: 'app-synced-group',
-  imports: [CommonModule, FormsModule, Machine, NoteEditor],
+  imports: [CommonModule, Machine, NoteEditor, RosterBench, Confetti],
   templateUrl: './synced-group.html',
 })
 export class SyncedGroup {
   readonly groupId = input.required<string>();
 
+  /** Pedido de trocar de pessoa, que a casca resolve reabrindo a porta. */
+  readonly changeIdentity = input<() => void>(() => {});
+
   private readonly document = inject(DOCUMENT);
   private readonly store = inject(GROUP_STORE);
   private readonly guard = inject(USAGE_GUARD);
+  private readonly identity = inject(Identity);
 
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
   protected readonly notice = signal('');
-  protected readonly draftName = signal('');
-  protected readonly formError = signal('');
   protected readonly busy = signal(false);
   protected readonly isSpinning = signal(false);
   protected readonly revealed = signal(true);
   protected readonly rotation = signal(0);
   protected readonly now = signal(Date.now());
   protected readonly lastLoadedAt = signal(0);
-  protected readonly author = signal(readAuthor());
   protected readonly confirming = signal(false);
+
+  /** A gaveta da coleção, com a lista e a bancada de cada cápsula. */
+  protected readonly rosterOpen = signal(false);
+  protected readonly rosterError = signal('');
+  protected readonly restyled = signal(0);
+
+  /** Um contador: cada passo é uma cápsula que abriu e soltou o que tinha dentro. */
+  protected readonly celebration = signal(0);
+
+  protected readonly author = this.identity.name;
+  protected readonly authorInitials = this.identity.initials;
+  protected readonly authorColor = this.identity.color;
+
+  /** Uma cena por vez. Um token velho que volta de um `setTimeout` não encerra a atual. */
+  private sceneToken = 0;
+  private greeted = false;
 
   /** A bancada de etiquetas, a mesma que o álbum abre sobre os mesmos giros. */
   private readonly bench = new NoteBench(
@@ -56,6 +92,7 @@ export class SyncedGroup {
   protected readonly savingNote = this.bench.saving;
 
   protected readonly MIN_MEMBERS = MIN_MEMBERS;
+  protected readonly MAX_MEMBERS = MAX_MEMBERS;
 
   constructor() {
     effect(() => {
@@ -80,24 +117,40 @@ export class SyncedGroup {
   /**
    * Depois de um giro, o globo mostra o bolo como ele estava naquele instante, com a
    * cápsula vencedora na calha. É a foto do que aconteceu, não do que sobrou.
+   *
+   * As cores vêm de cada pessoa, não da posição dela no anel: quem escolheu menta é menta
+   * no globo, no registro e no álbum, e continua menta quando o bolo muda de tamanho.
    */
-  protected readonly displayed = computed(() => {
+  protected readonly displayed = computed<{
+    people: readonly MachinePerson[];
+    chosenIndex: number;
+    winner: GroupMember | null;
+  }>(() => {
     const snap = this.snapshot();
-    if (!snap) return { names: [] as string[], chosenIndex: -1 };
+    if (!snap) return { people: [], chosenIndex: -1, winner: null };
 
-    const byId = new Map(snap.state.members.map((m) => [m.id, m]));
+    const byId = membersById(snap.state);
     const last = snap.state.lastSpin;
     if (last) {
-      const names = last.eligible.map((id) => byId.get(id)?.name ?? '—');
-      return { names, chosenIndex: last.eligible.indexOf(last.winnerId) };
+      return {
+        people: last.eligible.map((id) => toPerson(byId.get(id))),
+        chosenIndex: last.eligible.indexOf(last.winnerId),
+        winner: byId.get(last.winnerId) ?? null,
+      };
     }
-    return { names: poolMembers(snap.state).map((m) => m.name), chosenIndex: -1 };
+    return {
+      people: poolMembers(snap.state).map((member) => toPerson(member)),
+      chosenIndex: -1,
+      winner: null,
+    };
   });
 
-  protected readonly winnerColor = computed(() => {
-    const index = this.displayed().chosenIndex;
-    return index < 0 ? capsuleColor(0) : capsuleColor(index);
+  protected readonly winnerHex = computed(() => {
+    const winner = this.displayed().winner;
+    return capsuleColor(winner?.colorIndex ?? 0);
   });
+
+  protected readonly winnerEmoji = computed(() => this.displayed().winner?.emoji ?? '');
 
   protected readonly members = computed<readonly GroupMember[]>(() => {
     const snap = this.snapshot();
@@ -147,32 +200,77 @@ export class SyncedGroup {
     return snap.state.spins[index] ?? null;
   });
 
-  // --- ações ---
+  protected readonly editingColor = computed(() => {
+    const spin = this.editingSpin();
+    return spin ? this.colorOf(spin) : capsuleColor(0);
+  });
 
-  protected async addMember(): Promise<void> {
-    const name = normalizeName(this.draftName());
-    const snap = this.snapshot();
-    if (!snap) return;
+  protected readonly editingEmoji = computed(() => {
+    const spin = this.editingSpin();
+    return spin ? this.emojiOf(spin) : '';
+  });
 
-    if (!name) return this.formError.set('Digite um nome antes de adicionar.');
-    if (name.length > 60) return this.formError.set('Use um nome com no máximo 60 caracteres.');
+  // --- a coleção ---
+
+  protected async addFromBench(raw: string): Promise<void> {
+    const name = normalizeName(raw);
+    if (!this.snapshot()) return;
+
+    if (!name) return this.rosterError.set('Digite um nome antes de carregar a cápsula.');
+    if (name.length > 60) return this.rosterError.set('Use um nome com no máximo 60 caracteres.');
     if (this.members().some((m) => participantKey(m.name) === participantKey(name))) {
-      return this.formError.set(`${name} já está no globo.`);
+      return this.rosterError.set(`${name} já está no globo.`);
     }
     if (this.members().length >= MAX_MEMBERS) {
-      return this.formError.set(`O globo comporta até ${MAX_MEMBERS} cápsulas.`);
+      return this.rosterError.set(`O globo comporta até ${MAX_MEMBERS} cápsulas.`);
     }
 
-    this.formError.set('');
-    await this.act(() => this.store.addMember(this.groupId(), name, this.author()), `${name} entrou no globo.`);
-    this.draftName.set('');
+    this.rosterError.set('');
+    await this.act(
+      () => this.store.addMember(this.groupId(), name, this.author()),
+      `${name} entrou no globo.`,
+      this.rosterError,
+    );
   }
 
-  protected async removeMember(member: GroupMember): Promise<void> {
+  protected async removeFromBench(member: GroupMember): Promise<void> {
     await this.act(
       () => this.store.removeMember(this.groupId(), member.id, this.author()),
       `${member.name} saiu do globo, mas continua no histórico.`,
+      this.rosterError,
     );
+  }
+
+  /** Pinta a cápsula de alguém e escolhe o que ela solta ao cair. */
+  protected async restyle(style: CapsuleStyle): Promise<void> {
+    const member = this.members().find((person) => person.id === style.memberId);
+    if (!member) return;
+
+    const cor = capsuleColorName(style.colorIndex).toLowerCase();
+    const ok = await this.act(
+      () =>
+        this.store.styleMember(
+          this.groupId(),
+          style.memberId,
+          { colorIndex: style.colorIndex, emoji: style.emoji },
+          this.author(),
+        ),
+      `A cápsula de ${member.name} agora é ${cor}${style.emoji ? `, com ${style.emoji}` : ''}.`,
+      this.rosterError,
+    );
+    // A gaveta só volta para a lista quando o servidor confirmou: falhar e voltar levaria
+    // embora a cor que a pessoa acabou de escolher.
+    if (ok) this.restyled.update((tick) => tick + 1);
+  }
+
+  protected openRoster(): void {
+    this.rosterError.set('');
+    this.rosterOpen.set(true);
+  }
+
+  protected closeRoster(): void {
+    this.rosterOpen.set(false);
+    this.document.getElementById('roster-button')?.focus();
   }
 
   // --- a etiqueta: o que o clube jogou, colado na cápsula que saiu ---
@@ -186,7 +284,11 @@ export class SyncedGroup {
     this.bench.close();
   }
 
-  protected async commitNote(draft: { title: string; description: string }): Promise<void> {
+  protected async commitNote(draft: {
+    title: string;
+    subtitle: string;
+    description: string;
+  }): Promise<void> {
     const spin = this.editingSpin();
     if (!spin) return;
     const message = await this.bench.commit(spin, draft);
@@ -200,9 +302,22 @@ export class SyncedGroup {
     if (message) this.showNotice(message);
   }
 
+  protected summaryOf(spin: SpinRecord): string {
+    return noteSummary(spin.note);
+  }
+
+  // --- o giro ---
+
   protected askToSpin(): void {
     if (!this.canSpinNow()) return;
     this.confirming.set(true);
+    // Um diálogo que abre sem levar o foco junto deixa quem usa teclado atrás dele.
+    window.setTimeout(() => this.document.getElementById('confirm-spin')?.focus(), 0);
+  }
+
+  /** O diálogo diz `aria-modal="true"`; sem prender o Tab isso seria uma promessa falsa. */
+  protected trapConfirmFocus(event: Event): void {
+    trapFocusWithin(this.document, 'confirm-card', event);
   }
 
   protected cancelSpin(): void {
@@ -218,7 +333,6 @@ export class SyncedGroup {
   private async spin(): Promise<void> {
     if (!this.canSpinNow()) return;
 
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     this.isSpinning.set(true);
     this.revealed.set(false);
     this.rotation.set(0);
@@ -226,62 +340,80 @@ export class SyncedGroup {
     try {
       await this.store.spin(this.groupId(), this.author());
       await this.reload(this.groupId(), { keepSpinning: true });
-      const target = this.targetRotation();
-      window.requestAnimationFrame(() => this.rotation.set(target));
-      window.setTimeout(() => {
-        this.isSpinning.set(false);
-        this.revealed.set(true);
-      }, reducedMotion ? 120 : 4300);
+      this.playScene({ celebrate: true });
     } catch (error) {
+      this.sceneToken += 1;
       this.isSpinning.set(false);
       this.revealed.set(true);
       this.report(error);
     }
   }
 
+  /**
+   * Reencena a entrega. Não escreve nada e não pode mudar nada: a rotação de destino sai
+   * do mesmo registro, então a cápsula para exatamente onde parou da primeira vez.
+   */
+  protected replayScene(): void {
+    if (this.isSpinning() || this.displayed().chosenIndex < 0) return;
+    this.playScene({ celebrate: true });
+  }
+
+  private playScene({ celebrate = false } = {}): void {
+    if (this.displayed().chosenIndex < 0) return;
+    const target = this.targetRotation();
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const token = ++this.sceneToken;
+
+    this.isSpinning.set(true);
+    this.revealed.set(false);
+    this.rotation.set(0);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        // Uma aba em segundo plano estrangula o rAF, e o relógio abaixo pode já ter
+        // encerrado esta cena antes de o quadro chegar.
+        if (token !== this.sceneToken) return;
+        this.rotation.set(target);
+      });
+    });
+
+    window.setTimeout(() => {
+      if (token !== this.sceneToken) return;
+      this.rotation.set(target);
+      this.isSpinning.set(false);
+      this.revealed.set(true);
+      if (celebrate) this.celebration.update((tick) => tick + 1);
+    }, reducedMotion ? 120 : 4300);
+  }
+
   protected targetRotation(): number {
-    const { names, chosenIndex } = this.displayed();
-    if (chosenIndex < 0 || !names.length) return 0;
-    const sector = 360 / names.length;
+    const { people, chosenIndex } = this.displayed();
+    if (chosenIndex < 0 || !people.length) return 0;
+    const sector = 360 / people.length;
     // A calha fica às seis horas, então é lá que a cápsula escolhida tem que parar.
     return 360 * 7 + 180 - (chosenIndex * sector + sector / 2);
   }
+
+  // --- o resto ---
 
   protected async copyLink(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.shareUrl());
       this.showNotice('Link copiado. Quem abrir entra no mesmo grupo.');
     } catch {
-      this.showNotice('Copie o link exibido abaixo.');
+      this.showNotice('Copie o link do campo abaixo do botão.');
     }
   }
 
-  protected colorFor(index: number): string {
-    return capsuleColor(index);
+  protected colorOf(spin: SpinRecord): string {
+    const snap = this.snapshot();
+    if (!snap) return capsuleColor(0);
+    return capsuleColor(membersById(snap.state).get(spin.winnerId)?.colorIndex ?? 0);
   }
 
-  protected updateAuthor(value: string): void {
-    const name = value.trim().slice(0, 60);
-    this.author.set(name);
-    try {
-      window.localStorage.setItem(AUTHOR_KEY, name);
-    } catch {
-      // Sem armazenamento, a assinatura vale só nesta sessão.
-    }
-  }
-
-  /**
-   * Um `#participantes` cru trocaria o hash e derrubaria a rota `#/g/<id>`: a pessoa seria
-   * expulsa do grupo de volta para o modo por link. Rola em vez de navegar.
-   */
-  protected jumpToRoster(event: Event): void {
-    const target = this.document.getElementById('participantes');
-    if (!target) return;
-    event.preventDefault();
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
-    target.setAttribute('tabindex', '-1');
-    target.focus({ preventScroll: true });
+  protected emojiOf(spin: SpinRecord): string {
+    const snap = this.snapshot();
+    return snap ? membersById(snap.state).get(spin.winnerId)?.emoji ?? '' : '';
   }
 
   protected async refresh(): Promise<void> {
@@ -303,16 +435,28 @@ export class SyncedGroup {
     this.notice.set('');
   }
 
+  protected askIdentityChange(): void {
+    this.changeIdentity()();
+  }
+
   // --- infraestrutura ---
 
-  private async act(operation: () => Promise<void>, message: string): Promise<void> {
+  /** Devolve se a operação passou, para quem precisa reagir só ao sucesso. */
+  private async act(
+    operation: () => Promise<void>,
+    message: string,
+    into: WritableSignal<string> = this.error,
+  ): Promise<boolean> {
     this.busy.set(true);
     try {
       await operation();
       await this.reload(this.groupId());
       this.showNotice(message);
+      into.set('');
+      return true;
     } catch (error) {
-      this.report(error);
+      into.set(this.explain(error));
+      return false;
     } finally {
       this.busy.set(false);
     }
@@ -321,13 +465,25 @@ export class SyncedGroup {
   private async reload(id: string, { keepSpinning = false } = {}): Promise<void> {
     if (!keepSpinning) this.loading.set(true);
     try {
-      this.snapshot.set(await this.store.load(id));
+      const snapshot = await this.store.load(id);
+      this.snapshot.set(snapshot);
       this.lastLoadedAt.set(Date.now());
       this.error.set('');
+      // O título da aba nomeia o grupo: uma máquina aberta entre dez abas precisa se anunciar.
+      this.document.title = `${snapshot.name} · Mesa do Mês`;
+      rememberGroup(snapshot.groupId, snapshot.name);
+
       // Sem giro animado, ninguém posiciona a roda: ela ficaria em zero enquanto os
       // rótulos já foram calculados para o repouso, e os nomes de baixo apareceriam
       // invertidos com a cápsula vencedora fora da calha.
       if (!keepSpinning) this.rotation.set(this.targetRotation());
+
+      // A máquina abre girando. É a mesma cena de sempre, parando na mesma cápsula, e
+      // sem confete: o confete é da entrega, e reencenar não entrega nada de novo.
+      if (!this.greeted && snapshot.state.lastSpin) {
+        this.greeted = true;
+        this.playScene();
+      }
     } catch (error) {
       this.report(error);
     } finally {
@@ -359,13 +515,13 @@ export class SyncedGroup {
   protected readonly SPIN_COOLDOWN_S = SPIN_COOLDOWN_MS / 1000;
 }
 
-const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
 const REFRESH_MIN_INTERVAL_MS = 20_000;
 
-function readAuthor(): string {
-  try {
-    return window.localStorage.getItem(AUTHOR_KEY) ?? '';
-  } catch {
-    return '';
-  }
+/** Uma pessoa vira o que a máquina precisa: nome, cor e o símbolo que ela solta. */
+function toPerson(member: GroupMember | undefined): MachinePerson {
+  return {
+    name: member?.name ?? '—',
+    color: capsuleColor(member?.colorIndex ?? 0),
+    emoji: member?.emoji ?? '',
+  };
 }

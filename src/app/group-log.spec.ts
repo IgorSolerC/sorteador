@@ -1,13 +1,18 @@
 import {
   activeMembers,
   canSpin,
+  emojiText,
   emptyState,
   GroupEvent,
+  MAX_EMOJI,
+  MAX_NOTE_SUBTITLE,
   memberId,
+  noteSummary,
   poolMembers,
   replay,
   spinsOfRound,
 } from './group-log';
+import { isColorIndex } from './palette';
 
 const GRUPO = 'g7x2k9';
 let clock = 1_700_000_000_000;
@@ -312,8 +317,14 @@ describe('invariantes sob log aleatório', () => {
 });
 
 describe('etiqueta do giro', () => {
-  function note(spinIndex: number, title: string, description = '', actor?: string): GroupEvent {
-    return { type: 'spin_annotated', at: at(), spinIndex, title, description, actor };
+  function note(
+    spinIndex: number,
+    title: string,
+    description = '',
+    actor?: string,
+    subtitle = '',
+  ): GroupEvent {
+    return { type: 'spin_annotated', at: at(), spinIndex, title, subtitle, description, actor };
   }
 
   const dupla = () => seed(['Ana', 'Breno']);
@@ -323,6 +334,7 @@ describe('etiqueta do giro', () => {
 
     expect(state.lastSpin!.note).toEqual({
       title: 'Click The Button!',
+      subtitle: '',
       description: 'Nota final 8/10',
       at: expect.any(Number),
       actor: undefined,
@@ -420,5 +432,182 @@ describe('etiqueta do giro', () => {
   it('um evento de versão futura é contado e ignorado', () => {
     const state = replay(GRUPO, [...dupla(), { type: 'unknown', at: at() }, spin()]);
     expect(state.spins).toHaveLength(1);
+  });
+});
+
+describe('a cápsula de cada pessoa', () => {
+  function style(name: string, colorIndex: number | null, emoji: string | null): GroupEvent {
+    return {
+      type: 'member_styled',
+      at: at(),
+      memberId: memberId(GRUPO, name),
+      colorIndex,
+      emoji,
+    };
+  }
+
+  it('quem chega já vem com uma cápsula, sem ninguém escolher nada', () => {
+    const state = replay(GRUPO, seed(['Ana', 'Breno', 'Cecília']));
+    const cores = state.members.map((m) => m.colorIndex);
+
+    expect(cores.every((c) => isColorIndex(c))).toBe(true);
+    expect(state.members.every((m) => m.emoji === '')).toBe(true);
+  });
+
+  it('as cápsulas de um grupo pequeno saem todas diferentes', () => {
+    const nomes = ['Ana', 'Breno', 'Cecília', 'Davi', 'Elisa', 'Fátima'];
+    const state = replay(GRUPO, seed(nomes));
+    expect(new Set(state.members.map((m) => m.colorIndex)).size).toBe(nomes.length);
+  });
+
+  it('pintar troca a cor e o emoji de uma pessoa só', () => {
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), style('Ana', 5, '🎮')]);
+    const ana = state.members.find((m) => m.name === 'Ana')!;
+    const breno = state.members.find((m) => m.name === 'Breno')!;
+
+    expect(ana.colorIndex).toBe(5);
+    expect(ana.emoji).toBe('🎮');
+    expect(breno.emoji).toBe('');
+    expect(breno.colorIndex).not.toBe(5);
+  });
+
+  it('omitir um campo é deixá-lo como está, não apagá-lo', () => {
+    // É o que permite trocar só a cor sem perder o emoji, com um evento por salvamento.
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      style('Ana', 5, '🎮'),
+      style('Ana', 9, null),
+    ]);
+    const ana = state.members.find((m) => m.name === 'Ana')!;
+
+    expect(ana.colorIndex).toBe(9);
+    expect(ana.emoji).toBe('🎮');
+  });
+
+  it('emoji em branco é emoji retirado', () => {
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), style('Ana', null, '🎮'), style('Ana', null, '')]);
+    expect(state.members.find((m) => m.name === 'Ana')!.emoji).toBe('');
+  });
+
+  it('uma cor fora da paleta é ignorada em vez de gravada', () => {
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), style('Ana', 999, null)]);
+    const ana = state.members.find((m) => m.name === 'Ana')!;
+    expect(isColorIndex(ana.colorIndex)).toBe(true);
+    expect(ana.colorIndex).not.toBe(999);
+  });
+
+  it('pintar quem não existe não quebra o replay', () => {
+    const state = replay(GRUPO, [
+      { type: 'member_styled', at: at(), memberId: 'inexistente', colorIndex: 3, emoji: '🎲' },
+      ...seed(['Ana', 'Breno']),
+    ]);
+    expect(state.members).toHaveLength(2);
+  });
+
+  it('quem sai e volta volta com a própria cápsula', () => {
+    // A identidade da pessoa é o que faz a coleção ler como coleção; perder a cor ao
+    // voltar quebraria o álbum inteiro dela.
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      style('Ana', 11, '🦊'),
+      remove('Ana'),
+      add('Ana'),
+    ]);
+    const ana = state.members.find((m) => m.name === 'Ana')!;
+
+    expect(ana.active).toBe(true);
+    expect(ana.colorIndex).toBe(11);
+    expect(ana.emoji).toBe('🦊');
+  });
+
+  it('pintar não toca no bolo, na rodada nem no vencedor', () => {
+    const semPintura = replay(GRUPO, [...seed(['Ana', 'Breno', 'Cecília']), spin(), spin()]);
+    clock = 1_700_000_000_000;
+    const comPintura = replay(GRUPO, [
+      ...seed(['Ana', 'Breno', 'Cecília']),
+      spin(),
+      { type: 'member_styled', at: at() - 30_000, memberId: memberId(GRUPO, 'Ana'), colorIndex: 2, emoji: '🎯' },
+      spin(),
+    ]);
+
+    expect(comPintura.spins.map((s) => s.winnerName)).toEqual(semPintura.spins.map((s) => s.winnerName));
+    expect(comPintura.round).toBe(semPintura.round);
+    expect(comPintura.pool).toEqual(semPintura.pool);
+  });
+
+  it('um emoji é um símbolo só, e nunca meio símbolo', () => {
+    expect(emojiText('🎮🎲🃏')).toBe('🎮');
+    expect(emojiText('  🎮  ')).toBe('🎮');
+    expect(emojiText('')).toBe('');
+    expect(emojiText('ab')).toBe('a');
+    // Uma família é um grafema só: cortá-la por ponto de código gravaria os cacos.
+    const familia = emojiText('👨‍👩‍👧‍👦');
+    expect(familia.length).toBeLessThanOrEqual(MAX_EMOJI);
+    expect(familia.startsWith('👨')).toBe(true);
+  });
+});
+
+describe('o resumo de uma linha', () => {
+  it('junta título e subtítulo com o marcador', () => {
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      spin(),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: 'Nota 8/10', description: '' },
+    ]);
+    expect(noteSummary(state.spins[0].note)).toBe('Overcooked ● Nota 8/10');
+  });
+
+  it('sem subtítulo, o resumo é o título sozinho', () => {
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      spin(),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: '', description: '' },
+    ]);
+    expect(noteSummary(state.spins[0].note)).toBe('Overcooked');
+  });
+
+  it('sem etiqueta, não há resumo', () => {
+    expect(noteSummary(null)).toBe('');
+  });
+
+  it('só um subtítulo já é etiqueta, e o giro deixa de estar em branco', () => {
+    // Quem escreve só o placar não deve receber a etiqueta de volta em branco.
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      spin(),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', subtitle: 'Nota 8/10', description: '' },
+    ]);
+    expect(state.spins[0].note).not.toBeNull();
+    expect(state.spins[0].note!.subtitle).toBe('Nota 8/10');
+  });
+
+  it('título, subtítulo e descrição em branco retiram a etiqueta', () => {
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      spin(),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: 'Nota 8/10', description: '' },
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', subtitle: '', description: '' },
+    ]);
+    expect(state.spins[0].note).toBeNull();
+  });
+
+  it('o subtítulo é uma linha só, cortada na medida do servidor', () => {
+    const state = replay(GRUPO, [
+      ...seed(['Ana', 'Breno']),
+      spin(),
+      {
+        type: 'spin_annotated',
+        at: at(),
+        spinIndex: 0,
+        title: 'Overcooked',
+        subtitle: `  Nota\n8/10  ${'x'.repeat(200)}`,
+        description: '',
+      },
+    ]);
+    const subtitulo = state.spins[0].note!.subtitle;
+
+    expect(subtitulo.length).toBeLessThanOrEqual(MAX_NOTE_SUBTITLE);
+    expect(subtitulo).not.toContain('\n');
+    expect(subtitulo.startsWith('Nota 8/10')).toBe(true);
   });
 });

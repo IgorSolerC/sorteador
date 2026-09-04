@@ -1,17 +1,49 @@
 # Mesa do Mês
 
-Aplicação Angular para escolher de forma determinística quem define o jogo mensal de um clube. Pode ser hospedada gratuitamente no GitHub Pages e não usa API.
+Aplicação Angular para escolher quem define o jogo da vez de um clube — e para guardar o que
+o clube jogou. Hospedada de graça no GitHub Pages, com Firestore no plano gratuito.
 
-## Como o sorteio funciona
+## Como funciona
 
-1. Os nomes são normalizados, deduplicados e ordenados.
-2. A lista completa e o índice do ciclo alimentam uma função hash estável.
-3. Essa semente embaralha os participantes de forma determinística.
-4. O mês, o ano e a data de início definem a posição ocupada dentro do ciclo.
+Um **grupo é um link**. Quem tem o link entra, gira, mexe na lista e escreve as resenhas; não
+há conta, senha nem convite. Antes de qualquer coisa o app pergunta **quem é você** — o nome
+fica só no seu aparelho e acompanha tudo que você fizer no registro do grupo.
 
-Com a lista inalterada, cada participante vence exatamente uma vez por ciclo. A mesma lista, o mesmo mês e o mesmo ano sempre geram o mesmo vencedor, independentemente da ordem em que os nomes foram adicionados.
+Cada pessoa é uma **cápsula**, com uma cor escolhida numa roda de 24 e um emoji que sai como
+confete quando ela é sorteada. Uma rodada termina quando todos saíram; a próxima abre com o
+globo cheio de novo.
 
-Alterar a lista cria uma nova edição do sorteio. O algoritmo é reproduzível, mas não foi criado para loterias, premiações financeiras ou contextos que exijam aleatoriedade criptográfica auditada.
+O vencedor **não é lido de um campo**: ele é derivado de um log de eventos que ninguém pode
+reescrever nem apagar, e a única entrada imprevisível é o carimbo de hora do servidor, que o
+cliente não escolhe. Abrir a página encena a entrega de novo, e clicar no globo a encena
+outra vez — sempre parando na mesma cápsula, porque encenar não é decidir.
+
+Ver [FIREBASE.md](FIREBASE.md) para o modelo de dados, as rules e o custo por operação.
+
+> Não foi criado para loterias, premiações financeiras ou contextos que exijam aleatoriedade
+> criptográfica auditada.
+
+## Rotas
+
+| Rota | O que é |
+|---|---|
+| `/` | A prateleira: as máquinas que este aparelho já abriu |
+| `#/novo` | A oficina: montar uma máquina nova |
+| `#/g/<id>` | A máquina de um grupo, com o registro dos giros |
+| `#/g/<id>/album` | O álbum: a parede de todas as cápsulas que já saíram |
+
+O modo por link estático — o sorteio mensal que vivia dentro do próprio endereço
+(`#grupo=...&inicio=...`) — **foi removido em setembro de 2026**. Links daquele formato caem
+na prateleira inicial.
+
+## Etiquetas
+
+Qualquer giro — o de agora ou o de um ano atrás — recebe **título**, **subtítulo** e
+**descrição** do que o clube jogou. Onde só cabe uma linha, os dois primeiros viram
+`Click The Button! ● Nota 8/10`.
+
+Editar é gravar outra etiqueta: o replay faz a última valer, e as anteriores continuam no
+registro com quem escreveu cada uma. A etiqueta descreve o giro e nunca altera o vencedor.
 
 ## Executar localmente
 
@@ -24,39 +56,52 @@ npm start
 
 Acesse `http://localhost:4200`.
 
+Para trabalhar contra o emulador em vez da produção, suba o emulador, semeie um grupo e abra
+com `?emu=1`:
+
+```bash
+npx firebase emulators:start --only firestore,auth --project sorteador-ed1c9
+npm run build:testjs && node tests/seed-emulator.mjs
+# http://localhost:4200/?emu=1#/g/demo
+```
+
 ## Testar e compilar
 
 ```bash
-npm test -- --watch=false
+npm test -- --watch=false   # 232 unitários e de componente
+npm run test:rules          # 75 rules no emulador, sem projeto nem rede
+npm run test:store          # 28 de integração da camada de dados
+npm run test:a11y           # 8 telas x 3 larguras, contra o servidor local
+npm run test:etiqueta       # 35 verificações de ponta a ponta num navegador real
 npm run build -- --base-href=./
 ```
 
 O build estático fica em `dist/sorteador/browser`.
 
+As suítes que precisam de emulador (`test:rules`, `test:store`) sobem o seu próprio e liberam
+as portas antes; as que dirigem um navegador (`test:a11y`, `test:etiqueta`) esperam o
+`npm start` e o emulador já rodando.
+
 ## Publicar no GitHub Pages
 
-O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica automaticamente os commits enviados à branch `main`.
+O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica
+automaticamente os commits enviados à branch `main`.
 
-No GitHub, abra **Settings → Pages → Build and deployment** e selecione **GitHub Actions** como fonte. Depois envie o projeto para a branch `main`.
+No GitHub, abra **Settings → Pages → Build and deployment** e selecione **GitHub Actions**
+como fonte.
 
-## Grupo sincronizado, etiquetas e álbum
+**As rules vão antes do site.** Publicar o site primeiro entrega a todo mundo uma interface
+cujas escritas as rules antigas recusam:
 
-Além do modo por link, há o **grupo sincronizado** (`#/g/<id>`), que guarda os giros num log
-append-only no Firestore. Ver [FIREBASE.md](FIREBASE.md).
+```bash
+npx firebase deploy --only firestore:rules --project sorteador-ed1c9
+```
 
-- **Etiqueta.** Qualquer giro — o de agora ou o de um ano atrás — recebe um **título** e uma
-  **descrição** do que o clube jogou: `Click The Button!` / `Nota final 8/10`. A etiqueta
-  descreve o giro e nunca altera o vencedor.
-- **Reescrever, nunca apagar.** Editar é gravar outra etiqueta; o replay faz a última valer e
-  as anteriores continuam no registro, com quem escreveu cada uma.
-- **O álbum** (`#/g/<id>/album`) é a parede de todas as cápsulas que já saíram, agrupadas por
-  rodada e filtráveis por pessoa. Dá para etiquetar por lá também.
+## O que fica no seu aparelho
 
-## Persistência e compartilhamento
+- **Seu nome**, que assina o que você faz no registro. Não é uma conta e não tem senha.
+- **As máquinas que você abriu**, para voltar a elas sem procurar o link. A lista não dá
+  acesso a nada: quem abre uma máquina é o link.
+- **Uma cópia do log** de cada grupo, para que abrir custe 1 leitura em vez de N.
 
-- A lista editada e a data de início ficam no `localStorage` daquele navegador.
-- A roleta é encenada a cada abertura ou recarregamento, sempre revelando a mesma pessoa para a mesma lista, mês e ano.
-- O botão **Copiar link do grupo** inclui a lista de participantes e a data de início no fragmento do endereço (`#grupo=...&inicio=AAAA-MM`). O fragmento não é enviado ao servidor, e todos que abrirem o mesmo link calcularão a mesma edição e não verão meses anteriores à data configurada.
-- Depois de adicionar ou remover alguém, gere e compartilhe um novo link.
-
-Nenhum nome é enviado para uma API.
+Nada disso sai do aparelho por outro caminho, e o servidor não sabe que essas listas existem.

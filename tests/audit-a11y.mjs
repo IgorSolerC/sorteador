@@ -50,9 +50,20 @@ const SONDA = `(() => {
     return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
   };
 
+  // O alvo de toque de uma caixa de seleção é o rótulo que a envolve, e não o quadradinho:
+  // quem toca em "Entrar como a primeira cápsula" marca a caixa. Medir só o INPUT acusava
+  // um alvo de 20px onde a área clicável de verdade tem a linha inteira.
+  const alvoReal = (el) => {
+    if (el.tagName !== 'INPUT' || (el.type !== 'checkbox' && el.type !== 'radio')) return el;
+    // A sonda vive dentro de um template literal, então nada de crase aninhada aqui.
+    const rotulo = el.closest('label') ??
+      (el.id ? document.querySelector('label[for="' + el.id + '"]') : null);
+    return rotulo ?? el;
+  };
+
   const alvos = [];
   for (const el of document.querySelectorAll('button, a[href], input, textarea, [role="button"]')) {
-    const r = el.getBoundingClientRect();
+    const r = alvoReal(el).getBoundingClientRect();
     if (!r.width || !r.height) continue;
     if (r.height < 44 || r.width < 24) {
       alvos.push({ tag: el.tagName, cls: el.className.toString().slice(0, 46), w: Math.round(r.width), h: Math.round(r.height) });
@@ -95,23 +106,42 @@ const SONDA = `(() => {
     saltosDeTitulo: saltos,
     controlesSemNome: semNome,
     imagensSemAlt: [...document.querySelectorAll('img')].filter((i) => !i.alt).length,
-    svgSemRotulo: [...document.querySelectorAll('svg')].filter((s) => !s.getAttribute('aria-hidden') && !s.getAttribute('aria-label') && !s.querySelector('title')).length,
+    // Um aria-hidden num ancestral já esconde a subárvore inteira: exigir o atributo no
+    // próprio SVG acusava decoração que a árvore de acessibilidade nunca chega a ver.
+    svgSemRotulo: [...document.querySelectorAll('svg')].filter(
+      (s) => !s.closest('[aria-hidden="true"]') && !s.getAttribute('aria-label') && !s.querySelector('title'),
+    ).length,
   });
 })()`;
 
 const paginas = [
+  ['porta', 'http://localhost:4200/?emu=1', { anonimo: true }],
+  ['prateleira', 'http://localhost:4200/?emu=1'],
   ['máquina', 'http://localhost:4200/?emu=1#/g/demo'],
+  ['gaveta', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button' }],
+  ['bancada da cápsula', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button|.capsule-row' }],
+  ['bancada da etiqueta', 'http://localhost:4200/?emu=1#/g/demo', { clique: '.cell-open' }],
   ['álbum', 'http://localhost:4200/?emu=1#/g/demo/album'],
-  ['modo por link', 'http://localhost:4200/'],
+  ['oficina', 'http://localhost:4200/?emu=1#/novo'],
 ];
 const larguras = [[1440, 1200], [900, 1200], [390, 844]];
 
 let problemas = 0;
-for (const [nome, url] of paginas) {
+for (const [nome, url, opcoes = {}] of paginas) {
   for (const [w, h] of larguras) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
+    // A porta é a única tela que se quer ver sem crachá; todas as outras vivem atrás dela.
+    await send('Page.navigate', { url: new URL(url).origin });
+    await sleep(1200);
+    await ev(opcoes.anonimo
+      ? `localStorage.removeItem('mesa-do-mes:autor:v1')`
+      : `localStorage.setItem('mesa-do-mes:autor:v1', 'Igor Soler')`);
     await send('Page.navigate', { url });
-    await sleep(w === larguras[0][0] && nome !== 'modo por link' ? 11000 : 7000);
+    await sleep(url.includes('/g/') ? 11000 : 5000);
+    for (const seletor of (opcoes.clique ?? '').split('|').filter(Boolean)) {
+      await ev(`(document.querySelector(${JSON.stringify(seletor)}) ?? {}).click?.()`);
+      await sleep(900);
+    }
     const bruto = await ev(SONDA);
     const r = JSON.parse(bruto);
     const falhas = r.overflow > 0 || r.alvosPequenos.length || r.contrasteBaixo.length ||

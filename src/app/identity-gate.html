@@ -1,0 +1,75 @@
+<section class="gate" aria-labelledby="gate-title">
+  <p class="machine-plate gate-plate">Mesa do Mês <span>nº 01</span></p>
+
+  <div class="gate-badge" aria-hidden="true">
+    <svg viewBox="0 0 220 220">
+      <defs>
+        <radialGradient id="gate-well" cx="0.38" cy="0.3" r="0.86">
+          <stop offset="0" stop-color="#26436B" />
+          <stop offset="1" stop-color="#0A1830" />
+        </radialGradient>
+      </defs>
+
+      <!-- A cápsula que a pessoa vai ser, no mesmo material do resto: cúpula colorida,
+           casca translúcida, costura cromada e um brilho especular na curva de cima. -->
+      <circle class="gate-well" cx="110" cy="110" r="98" fill="url(#gate-well)" />
+      <path class="gate-dome" d="M110 34a58 58 0 0 1 58 58v18H52V92a58 58 0 0 1 58-58Z" [style.fill]="color()" />
+      <path class="gate-gloss" d="M72 88a38 38 0 0 1 30-32" />
+      <path class="gate-shell" d="M52 110h116v18a58 58 0 0 1-116 0v-18Z" />
+      <path class="gate-shell-lip" d="M60 132a50 50 0 0 0 100 0" />
+      <path class="gate-seam" d="M46 110h128" />
+      <text class="gate-initials" x="110" y="88" text-anchor="middle">{{ initials() }}</text>
+    </svg>
+  </div>
+
+  <div class="gate-copy">
+    <h1 id="gate-title">
+      @if (changing()) {
+        Quem está<br /><strong>na mesa?</strong>
+      } @else {
+        Quem é<br /><strong>você?</strong>
+      }
+    </h1>
+    <p class="gate-lede">
+      Antes de tudo, o crachá. Cada giro e cada etiqueta ficam gravados com o nome de
+      quem fez — meses depois, é ele que conta ao clube quem girou a manivela e quem
+      escreveu a resenha.
+    </p>
+
+    <form class="gate-form" (ngSubmit)="submit()" novalidate>
+      <label class="gate-field" for="gate-name">
+        <span>Seu nome</span>
+        <input
+          id="gate-name"
+          name="gateName"
+          type="text"
+          autocomplete="name"
+          enterkeyhint="go"
+          [attr.maxlength]="MAX_AUTHOR"
+          placeholder="Ex.: Mariana Souza"
+          [ngModel]="draft()"
+          (ngModelChange)="update($event)"
+          [attr.aria-invalid]="error() ? 'true' : null"
+          [attr.aria-describedby]="error() ? 'gate-error' : 'gate-note'"
+        />
+      </label>
+
+      @if (error()) {
+        <p class="field-error" id="gate-error" role="alert">{{ error() }}</p>
+      }
+
+      <div class="gate-actions">
+        <button class="primary-action" type="submit">
+          {{ changing() ? 'Passar a vez' : 'Entrar na mesa' }}
+        </button>
+        @if (changing()) {
+          <button class="text-link" type="button" (click)="cancel()">Continuar como estou</button>
+        }
+      </div>
+
+      <p class="gate-note" id="gate-note">
+        Não é uma conta e não tem senha: fica só neste aparelho, e você troca quando quiser.
+      </p>
+    </form>
+  </div>
+</section>

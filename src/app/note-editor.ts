@@ -2,8 +2,8 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { MAX_NOTE_DESCRIPTION, MAX_NOTE_TITLE, SpinRecord } from './group-log';
-import { capsuleColor } from './machine';
+import { MAX_NOTE_DESCRIPTION, MAX_NOTE_SUBTITLE, MAX_NOTE_TITLE, SpinRecord } from './group-log';
+import { trapFocusWithin } from './focus-trap';
 
 /**
  * A bancada onde a etiqueta é escrita. Ela não fala com o servidor: recebe o giro, devolve
@@ -20,25 +20,39 @@ export class NoteEditor {
   readonly saving = input<boolean>(false);
   readonly error = input<string>('');
 
-  readonly commit = output<{ title: string; description: string }>();
+  readonly commit = output<{ title: string; subtitle: string; description: string }>();
   readonly remove = output<void>();
   readonly dismiss = output<void>();
 
   private readonly document = inject(DOCUMENT);
 
   protected readonly title = signal('');
+  protected readonly subtitle = signal('');
   protected readonly description = signal('');
 
   protected readonly MAX_NOTE_TITLE = MAX_NOTE_TITLE;
+  protected readonly MAX_NOTE_SUBTITLE = MAX_NOTE_SUBTITLE;
   protected readonly MAX_NOTE_DESCRIPTION = MAX_NOTE_DESCRIPTION;
 
-  /** A cor da pessoa, a mesma do aro do globo e do disco da coleção. */
-  protected readonly capsule = computed(() => capsuleColor(this.spin().index));
+  /** A cor da pessoa, a mesma do aro do globo, do registro e do álbum. */
+  readonly capsule = input<string>('#FFC53D');
+  /** O símbolo da pessoa, quando ela escolheu um. */
+  readonly capsuleEmoji = input<string>('');
+
+  /** O resumo como ele vai aparecer no registro, montado enquanto se digita. */
+  protected readonly summary = computed(() => {
+    const title = this.title().trim();
+    const subtitle = this.subtitle().trim();
+    if (!title && !subtitle) return '';
+    if (!subtitle) return title;
+    return `${title || '…'} ● ${subtitle}`;
+  });
 
   constructor() {
     effect(() => {
       const spin = this.spin();
       this.title.set(spin.note?.title ?? '');
+      this.subtitle.set(spin.note?.subtitle ?? '');
       this.description.set(spin.note?.description ?? '');
       // O foco vai para o primeiro campo depois que o Angular desenha a bancada.
       window.setTimeout(() => this.document.getElementById('note-title')?.focus(), 0);
@@ -47,7 +61,11 @@ export class NoteEditor {
 
   protected submit(): void {
     if (this.saving()) return;
-    this.commit.emit({ title: this.title(), description: this.description() });
+    this.commit.emit({
+      title: this.title(),
+      subtitle: this.subtitle(),
+      description: this.description(),
+    });
   }
 
   protected askRemove(): void {
@@ -62,23 +80,6 @@ export class NoteEditor {
 
   /** A bancada é modal, então o Tab circula dentro dela em vez de sair por baixo. */
   protected trapFocus(event: Event): void {
-    const key = event as KeyboardEvent;
-    const card = this.document.getElementById('note-card');
-    if (!card) return;
-    const focusable = [
-      ...card.querySelectorAll<HTMLElement>('button:not([disabled]), input, textarea'),
-    ];
-    if (!focusable.length) return;
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const active = this.document.activeElement;
-    if (key.shiftKey && active === first) {
-      key.preventDefault();
-      last.focus();
-    } else if (!key.shiftKey && active === last) {
-      key.preventDefault();
-      first.focus();
-    }
+    trapFocusWithin(this.document, 'note-card', event);
   }
 }

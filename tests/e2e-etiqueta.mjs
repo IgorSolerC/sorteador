@@ -85,12 +85,21 @@ const conta = (selector) => ev(`document.querySelectorAll(${JSON.stringify(selec
 await send('Page.enable');
 await send('Runtime.enable');
 
+// A porta pergunta quem e a pessoa antes de qualquer rota. Sem o cracha, nada abaixo dela
+// chega a existir — e o teste veria a porta em vez da maquina.
+await send('Page.navigate', { url: new URL(base).origin + new URL(base).pathname });
+await sleep(2500);
+await ev(`localStorage.setItem('mesa-do-mes:autor:v1', 'Teste de Ponta a Ponta')`);
+
 const marca = 'E2E ' + Date.now();
 
 // --- a máquina ---
 
 await go(`#/g/${grupo}`);
 check('a máquina carrega o grupo', !!(await ev(`!!document.querySelector('#synced-title')`)));
+check('a cena de abertura terminou e o nome está na tela',
+  (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) !== 'Entregando',
+  String(await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)));
 const girosNoRegistro = await conta('.cell-open');
 check('o registro lista os giros', girosNoRegistro > 0, `${girosNoRegistro}`);
 
@@ -106,12 +115,18 @@ check('a bancada aparece', !!(await ev(`!!document.querySelector('[role="dialog"
 check('o foco cai no primeiro campo', (await ev(`document.activeElement?.id`)) === 'note-title');
 
 await digitar('note-title', marca);
+await digitar('note-subtitle', 'Nota 8/10');
 await digitar('note-description', 'Descrição escrita pelo teste de ponta a ponta.');
+check('o resumo se monta enquanto se escreve',
+  (await texto('.note-summary')).includes(marca + ' ● Nota 8/10'), await texto('.note-summary'));
 await salvar();
 await sleep(3200);
 
 check('a bancada fecha depois de gravar', !(await ev(`!!document.querySelector('[role="dialog"]')`)));
 check('a etiqueta aparece no palco', (await texto('.note-sticker')).includes(marca));
+check('o subtítulo aparece na etiqueta', (await texto('.note-sticker')).includes('Nota 8/10'));
+check('o registro mostra TÍTULO ● SUBTÍTULO numa linha',
+  (await ev(`[...document.querySelectorAll('.cell-note')].some((c) => c.textContent.includes(${JSON.stringify(marca)}) && c.textContent.includes('●'))`)) === true);
 check('o foco volta para um controle, não para o corpo da página',
   (await ev(`document.activeElement?.tagName`)) !== 'BODY',
   String(await ev(`document.activeElement?.className || document.activeElement?.tagName`)));
@@ -125,6 +140,60 @@ await salvar();
 await sleep(3200);
 check('reescrever mantém a etiqueta e marca a revisão',
   (await texto('.note-sticker')).includes(marca + ' II'), await texto('.note-sticker'));
+
+// --- a gaveta da coleção e a cápsula de cada pessoa ---
+
+await ev(`document.querySelector('#roster-button').click()`);
+await sleep(800);
+check('a coleção abre numa gaveta', !!(await ev(`!!document.querySelector('.roster-card')`)));
+check('a gaveta lista uma linha por cápsula', (await conta('.capsule-row')) > 1);
+
+const nomeNaGaveta = await ev(`document.querySelector('.capsule-row .capsule-who strong')?.textContent?.trim()`);
+await ev(`document.querySelector('.capsule-row').click()`);
+await sleep(700);
+check('a bancada da cápsula troca a face da gaveta, sem empilhar outra',
+  (await conta('[aria-modal="true"]')) === 1 && (await conta('.roster-scrim')) === 1);
+check('a paleta inteira está na bancada', (await conta('.color-chip')) === 24, `${await conta('.color-chip')}`);
+
+// Escolhe uma cor que não é a atual e um emoji, e grava contra o servidor de verdade.
+const escolheu = await ev(`(() => {
+  const chips = [...document.querySelectorAll('.color-chip')];
+  const atual = chips.findIndex((c) => c.classList.contains('is-on'));
+  const alvo = chips[(atual + 7) % chips.length];
+  alvo.click();
+  return alvo.getAttribute('aria-label');
+})()`);
+await ev(`document.querySelectorAll('.emoji-chip')[3].click()`);
+await sleep(300);
+await ev(`document.querySelector('.note-actions .secondary-action').click()`);
+await sleep(3500);
+
+check('pintar a cápsula volta para a lista da gaveta',
+  !!(await ev(`!!document.querySelector('.capsule-row')`)) && !(await ev(`!!document.querySelector('.color-grid')`)));
+check('a cor escolhida aparece na linha da pessoa',
+  (await ev(`document.body.innerText.includes(${JSON.stringify(String(escolheu).toUpperCase())})`)) === true,
+  String(escolheu));
+
+await ev(`document.querySelector('.roster-close').click()`);
+await sleep(600);
+check('fechar a gaveta devolve a página', !(await ev(`!!document.querySelector('.roster-card')`)));
+check('a cápsula pintada muda a cor no registro',
+  (await ev(`(() => {
+    const alvo = [...document.querySelectorAll('.cell-open')].find((c) => c.textContent.includes(${JSON.stringify(nomeNaGaveta)}));
+    return alvo ? getComputedStyle(alvo.querySelector('.cell-capsule')).backgroundColor : 'sem célula';
+  })()`)) !== 'sem célula');
+
+// --- reencenar a entrega: a cena roda de novo e não escreve nada ---
+
+const antesDaCena = await ev(`document.querySelector('#synced-title')?.textContent?.trim()`);
+await ev(`document.querySelector('.machine-replay').click()`);
+await sleep(600);
+check('clicar no globo recomeça a cena',
+  (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) === 'Entregando');
+await sleep(6000);
+check('a cena termina na mesma cápsula de antes',
+  (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) === antesDaCena,
+  `${antesDaCena} -> ${await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)}`);
 
 // --- o álbum ---
 

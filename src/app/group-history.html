@@ -7,7 +7,14 @@
     </svg>
     <span>Mesa do Mês</span>
   </a>
-  <a class="text-link album-back" [href]="machineUrl()">Voltar à máquina</a>
+  <nav class="topbar-actions" aria-label="O álbum">
+    <a class="plate-action" [href]="machineUrl()">A máquina</a>
+    <button type="button" class="who-chip" (click)="askIdentityChange()">
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()">{{ authorInitials() }}</span>
+      <span class="who-name">{{ author() }}</span>
+      <span class="visually-hidden">— trocar de pessoa</span>
+    </button>
+  </nav>
 </header>
 
 @if (loading() && !snapshot()) {
@@ -84,6 +91,9 @@
               (click)="focusOn(winner.id)"
             >
               <span class="chip-capsule" aria-hidden="true" [style.--capsule]="winner.color"></span>
+              @if (winner.emoji) {
+                <span aria-hidden="true">{{ winner.emoji }}</span>
+              }
               {{ winner.name }} <b>{{ winner.wins }}</b>
             </button>
           </li>
@@ -115,7 +125,7 @@
                 class="album-card"
                 [class.is-blank]="!spin.note"
                 [style.--tilt]="tiltFor(spin.index)"
-                [style.--capsule]="colorFor(spin.index)"
+                [style.--capsule]="colorOf(spin)"
                 (click)="openNote(spin, $event)"
                 [attr.aria-label]="
                   (spin.note ? 'Editar a etiqueta de ' : 'Etiquetar a cápsula de ') +
@@ -123,7 +133,7 @@
                 "
               >
                 <span class="album-card-head">
-                  <span class="album-capsule" aria-hidden="true"></span>
+                  <span class="album-capsule" aria-hidden="true">{{ emojiOf(spin) }}</span>
                   <span class="album-who">
                     <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
                     <span class="album-name">{{ spin.winnerName }}</span>
@@ -134,6 +144,9 @@
 
                 @if (spin.note; as note) {
                   <span class="album-title">{{ note.title }}</span>
+                  @if (note.subtitle) {
+                    <span class="album-subtitle">{{ note.subtitle }}</span>
+                  }
                   @if (note.description) {
                     <span class="album-description">{{ note.description }}</span>
                   }
@@ -201,6 +214,8 @@
 @if (editingSpin(); as spin) {
   <app-note-editor
     [spin]="spin"
+    [capsule]="editingColor()"
+    [capsuleEmoji]="editingEmoji()"
     [saving]="savingNote()"
     [error]="noteError()"
     (commit)="commitNote($event)"

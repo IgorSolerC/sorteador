@@ -1,3 +1,15 @@
+<header class="topbar">
+  <a class="brand" href="." aria-label="Mesa do Mês — início">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
+      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
+      <path class="brand-seam" d="M6 20h28" />
+    </svg>
+    <span>Mesa do Mês</span>
+  </a>
+  <p class="machine-plate">Oficina <span>nº 01</span></p>
+</header>
+
 <section class="empty-stage" aria-labelledby="create-title">
   <div class="empty-globe" aria-hidden="true">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
@@ -6,8 +18,8 @@
   <div>
     <h1 id="create-title">Uma máquina<br /><strong>para o clube</strong></h1>
     <p>
-      Um grupo sincronizado guarda a lista e cada giro num registro compartilhado. O link
-      passa a ser o grupo: mexer nos nomes não gera link novo, e girar não espera o mês virar.
+      A máquina guarda a lista e cada giro num registro compartilhado. O link passa a ser o
+      grupo: mexer nos nomes não gera link novo, e girar não espera o mês virar.
     </p>
 
     <form class="create-form" (ngSubmit)="create()" novalidate>
@@ -25,24 +37,24 @@
         />
       </label>
 
-      @if (importable().length) {
+      @if (author()) {
         <label class="create-check">
           <input
-            name="bringList"
+            name="joinAsFirst"
             type="checkbox"
-            [ngModel]="bringList()"
-            (ngModelChange)="bringList.set($event)"
+            [ngModel]="joinAsFirst()"
+            (ngModelChange)="joinAsFirst.set($event)"
             [disabled]="busy()"
           />
           <span>
-            Trazer as {{ importable().length }} cápsulas que já estão aqui
-            <small>{{ importable().join(', ') }}</small>
+            Entrar como a primeira cápsula
+            <small>{{ author() }} já fica no globo, com cor e emoji para escolher depois.</small>
           </span>
         </label>
       }
 
       <button class="primary-action" type="submit" [disabled]="busy() || usageStopped()">
-        {{ busy() ? 'Montando…' : 'Criar o grupo' }}
+        {{ busy() ? 'Montando…' : 'Montar a máquina' }}
       </button>
 
       @if (progress()) {
@@ -60,8 +72,8 @@
     </form>
 
     <p class="create-note">
-      O histórico antigo não vem junto: o grupo começa do zero, com a rodada 1 aberta.
-      Seu link atual continua funcionando e não muda em nada.
+      A rodada 1 abre vazia e o primeiro giro é o começo do registro. Depois de montada,
+      mande o link para o clube — ele é a única credencial que existe.
     </p>
   </div>
 </section>

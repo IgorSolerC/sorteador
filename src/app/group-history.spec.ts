@@ -23,9 +23,9 @@ class FakeStore {
     return this;
   }
 
-  label(spinIndex: number, title: string, description = '', actor = 'Bia') {
+  label(spinIndex: number, title: string, description = '', actor = 'Bia', subtitle = '') {
     this.events.push({
-      type: 'spin_annotated', at: (this.clock += 1000), spinIndex, title, description, actor,
+      type: 'spin_annotated', at: (this.clock += 1000), spinIndex, title, subtitle, description, actor,
     });
     return this;
   }
@@ -43,10 +43,14 @@ class FakeStore {
     };
   }
 
-  async annotateSpin(_id: string, spinIndex: number, note: { title: string; description: string }) {
+  async annotateSpin(
+    _id: string,
+    spinIndex: number,
+    note: { title: string; subtitle: string; description: string },
+  ) {
     this.calls.push(`note:${spinIndex}:${note.title}`);
     if (this.failWith) throw this.failWith;
-    this.label(spinIndex, note.title, note.description, '');
+    this.label(spinIndex, note.title, note.description, '', note.subtitle);
   }
 }
 
@@ -180,11 +184,11 @@ describe('o álbum', () => {
     const fixture = await render(store);
     const app = fixture.componentInstance as unknown as {
       openNote(spin: { index: number }): void;
-      commitNote(draft: { title: string; description: string }): Promise<void>;
+      commitNote(draft: { title: string; subtitle: string; description: string }): Promise<void>;
     };
 
     app.openNote({ index: 0 } as never);
-    await app.commitNote({ title: 'O primeiro de todos', description: '' });
+    await app.commitNote({ subtitle: '', title: 'O primeiro de todos', description: '' });
     fixture.detectChanges();
 
     expect(store.calls).toContain('note:0:O primeiro de todos');

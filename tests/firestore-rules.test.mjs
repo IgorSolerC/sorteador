@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import {
   assertFails,
   assertSucceeds,
@@ -248,6 +249,20 @@ await it('aceita um giro passada a espera', async () => {
   );
 });
 
+await it('BURACO FECHADO: um giro que não carimba o relógio é recusado', async () => {
+  // Sem esta regra a espera de 30s era conselho: bastava gravar o giro sem mexer na marca
+  // para o relógio ficar parado e o giro seguinte passar na hora, quantas vezes quisesse.
+  await comGrupo({ ultimoGiroEm: null });
+  await assertFails(gravaEvento(alice(), giro()));
+});
+
+await it('um giro não pode carimbar o relógio com hora escolhida pelo cliente', async () => {
+  await comGrupo({ ultimoGiroEm: null });
+  await assertFails(
+    gravaEvento(alice(), giro(), { grupoExtra: { ultimoGiroEm: new Date(2000, 0, 1) } }),
+  );
+});
+
 await it('a espera não bloqueia entrada e saída de gente', async () => {
   await comGrupo({ ultimoGiroEm: new Date() });
   await assertSucceeds(gravaEvento(alice(), entrada('Gabriela')));
@@ -414,6 +429,171 @@ await it('uma etiqueta gravada não pode ser reescrita nem apagada', async () =>
     updateDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id), { titulo: 'Outro jogo' }),
   );
   await assertFails(deleteDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id)));
+});
+
+// --- subtítulo da etiqueta ---
+
+await it('aceita etiqueta com subtítulo', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(
+    gravaEvento(alice(), etiqueta(0, { subtitulo: 'Nota 8/10' }), { versaoAtual: 2 }),
+  );
+});
+
+await it('recusa subtítulo longo demais', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), etiqueta(0, { subtitulo: 'x'.repeat(61) }), { versaoAtual: 2 }),
+  );
+});
+
+await it('aceita etiqueta só com subtítulo: o replay decide o resto', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(
+    gravaEvento(alice(), etiqueta(0, { titulo: '', subtitulo: 'Nota 8/10' }), { versaoAtual: 2 }),
+  );
+});
+
+await it('uma etiqueta sem o campo de subtítulo continua entrando', async () => {
+  // É o que uma aba aberta antes do deploy manda. Recusá-la quebraria quem está com o
+  // app na tela exatamente no minuto da publicação.
+  await comGrupo({ versaoLog: 2 });
+  const { subtitulo, ...semSubtitulo } = etiqueta(0, { subtitulo: 'x' });
+  await assertSucceeds(gravaEvento(alice(), semSubtitulo, { versaoAtual: 2 }));
+});
+
+await it('recusa subtítulo num evento que não é etiqueta', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), { ...entrada('Ana'), subtitulo: 'Contrabando' }, { versaoAtual: 2 }),
+  );
+});
+
+// --- a cápsula de cada pessoa: cor e emoji ---
+
+const pintura = (extra = {}) => ({
+  tipo: 'member_styled',
+  em: serverTimestamp(),
+  memberId: 'a1b2c3d4e5f60718',
+  cor: 5,
+  ...extra,
+});
+
+await it('pinta a cápsula de alguém, em lote com o contador', async () => {
+  await comGrupo();
+  await assertSucceeds(gravaEvento(alice(), pintura()));
+});
+
+await it('aceita cor e emoji na mesma pintura', async () => {
+  await comGrupo();
+  await assertSucceeds(gravaEvento(alice(), pintura({ emoji: '🎮' })));
+});
+
+await it('aceita pintura só de emoji: trocar o símbolo não muda a cor', async () => {
+  await comGrupo();
+  const { cor, ...semCor } = pintura();
+  await assertSucceeds(gravaEvento(alice(), { ...semCor, emoji: '🎲' }));
+});
+
+await it('aceita emoji em branco: é assim que se retira o símbolo', async () => {
+  await comGrupo();
+  const { cor, ...semCor } = pintura();
+  await assertSucceeds(gravaEvento(alice(), { ...semCor, emoji: '' }));
+});
+
+await it('recusa pintura sem cor e sem emoji: não mudaria nada e custaria uma escrita', async () => {
+  await comGrupo();
+  const { cor, ...semCor } = pintura();
+  await assertFails(gravaEvento(alice(), semCor));
+});
+
+await it('recusa cor fora da paleta', async () => {
+  // A cor é uma posição na paleta, nunca um hexadecimal livre: é o que garante que toda
+  // cápsula continue passando no contraste sem as regras precisarem calcular contraste.
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ cor: 24 })));
+});
+
+await it('recusa cor negativa', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ cor: -1 })));
+});
+
+await it('recusa cor fracionária', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ cor: 2.5 })));
+});
+
+await it('recusa cor que não é número', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ cor: '5' })));
+});
+
+await it('recusa emoji longo demais', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ emoji: 'x'.repeat(17) })));
+});
+
+await it('recusa pintura sem alvo', async () => {
+  await comGrupo();
+  const { memberId, ...semAlvo } = pintura();
+  await assertFails(gravaEvento(alice(), semAlvo));
+});
+
+await it('recusa pintura que também tenta entrar alguém no grupo', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), pintura({ nome: 'Impostor' })));
+});
+
+await it('recusa campo de pintura num evento que não é pintura', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), cor: 3 }));
+});
+
+await it('recusa emoji num evento que não é pintura', async () => {
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), emoji: '🎮' }));
+});
+
+await it('pintar não pode empurrar a espera do próximo giro', async () => {
+  await comGrupo({ ultimoGiroEm: null });
+  await assertFails(
+    gravaEvento(alice(), pintura(), { grupoExtra: { ultimoGiroEm: serverTimestamp() } }),
+  );
+});
+
+await it('a espera entre giros não bloqueia pintar', async () => {
+  await comGrupo({ ultimoGiroEm: new Date() });
+  await assertSucceeds(gravaEvento(alice(), pintura()));
+});
+
+await it('uma pintura gravada não pode ser reescrita', async () => {
+  // Repintar é outro evento; o log continua sendo a verdade.
+  await comGrupo();
+  let ref;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    ref = await addDoc(collection(ctx.firestore(), 'grupos', GRUPO, 'eventos'), {
+      tipo: 'member_styled', em: new Date(), memberId: 'a1b2c3d4e5f60718', cor: 5,
+    });
+  });
+  await assertFails(
+    setDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id), { cor: 9 }, { merge: true }),
+  );
+});
+
+// --- o teto da paleta nas regras acompanha a paleta do app ---
+
+await it('o limite de cor nas regras é o tamanho real da paleta', async () => {
+  const { CAPSULE_COLOR_COUNT } = await import('../tmpjs/src/app/palette.js');
+  const regras = await readFile(new URL('../firestore.rules', import.meta.url), 'utf8');
+  const teto = /d\.cor\s*<\s*(\d+)/.exec(regras);
+  if (!teto) throw new Error('não achei o teto de cor nas regras');
+  if (Number(teto[1]) !== CAPSULE_COLOR_COUNT) {
+    throw new Error(
+      `as regras aceitam cor < ${teto[1]} e a paleta tem ${CAPSULE_COLOR_COUNT} cores. ` +
+      'Crescer a paleta sem mexer nas regras deixa as cores novas sendo recusadas pelo servidor.',
+    );
+  }
 });
 
 await testEnv.cleanup();

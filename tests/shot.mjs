@@ -71,8 +71,32 @@ ws.addEventListener('message', (event) => {
 });
 
 await send('Page.enable');
+
+/**
+ * A porta pergunta quem é a pessoa antes de qualquer coisa, então uma captura da máquina
+ * precisa chegar já identificada. Carrega a origem, escreve o crachá, e só então navega.
+ */
+if (process.env['SHOT_AUTOR']) {
+  const origem = new URL(url);
+  await send('Page.navigate', { url: origem.origin + origem.pathname });
+  await sleep(1200);
+  await send('Runtime.evaluate', {
+    expression: `localStorage.setItem('mesa-do-mes:autor:v1', ${JSON.stringify(process.env['SHOT_AUTOR'])})`,
+  });
+}
+
 await send('Page.navigate', { url });
 await sleep(waitMs);
+
+// Uma tela que só existe depois de um clique — a gaveta, a bancada — precisa do clique.
+for (const seletor of (process.env['SHOT_CLICK'] ?? '').split('|').filter(Boolean)) {
+  const { result: clique } = await send('Runtime.evaluate', {
+    expression: `(() => { const alvo = document.querySelector(${JSON.stringify(seletor)}); if (!alvo) return 'não achei ' + ${JSON.stringify(seletor)}; alvo.click(); return 'cliquei em ' + ${JSON.stringify(seletor)}; })()`,
+    returnByValue: true,
+  });
+  console.log('---', clique.value);
+  await sleep(900);
+}
 
 const { result } = await send('Runtime.evaluate', {
   expression: 'document.body.innerText.slice(0, 400)',

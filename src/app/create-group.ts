@@ -1,15 +1,18 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
-import { MAX_MEMBERS } from './group-log';
+import { Identity } from './identity';
 import { UsageBlockedError } from './group-store';
-import { normalizeName } from './draw-engine';
+import { rememberGroup } from './recent-groups';
 
 /**
- * A porta de entrada do modo sincronizado. Também é onde a lista do modo por link vira um
- * grupo de verdade — o momento de criar é o único em que a importação faz sentido, porque
- * depois disso o grupo tem histórico próprio e trazer nomes de fora o reescreveria.
+ * A oficina: onde uma máquina nova é montada. É a única porta de entrada para um grupo que
+ * ainda não existe — depois disto, o link é o grupo.
+ *
+ * Quem monta entra como a primeira cápsula por padrão. Antes o passo seguinte à criação era
+ * um globo vazio com um formulário, e a primeira coisa que a pessoa fazia era digitar o
+ * próprio nome — que a porta já tinha perguntado.
  */
 @Component({
   selector: 'app-create-group',
@@ -17,21 +20,17 @@ import { normalizeName } from './draw-engine';
   templateUrl: './create-group.html',
 })
 export class CreateGroup {
-  /** A lista que o modo por link tem agora, oferecida como ponto de partida. */
-  readonly seedNames = input<readonly string[]>([]);
-
   private readonly store = inject(GROUP_STORE);
   private readonly guard = inject(USAGE_GUARD);
+  private readonly identity = inject(Identity);
+
+  protected readonly author = this.identity.name;
 
   protected readonly name = signal('');
-  protected readonly bringList = signal(true);
+  protected readonly joinAsFirst = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
   protected readonly progress = signal('');
-
-  protected readonly importable = computed(() =>
-    this.seedNames().map(normalizeName).filter(Boolean).slice(0, MAX_MEMBERS),
-  );
 
   protected readonly usageStopped = computed(() => this.guard.state() === 'stopped');
 
@@ -42,18 +41,16 @@ export class CreateGroup {
     this.busy.set(true);
     this.error.set('');
     try {
-      this.progress.set('Criando o grupo…');
+      this.progress.set('Montando a máquina…');
       const id = await this.store.createGroup(name);
+      rememberGroup(id, name);
 
-      if (this.bringList()) {
-        const names = this.importable();
-        for (const [index, person] of names.entries()) {
-          this.progress.set(`Carregando cápsulas… ${index + 1} de ${names.length}`);
-          await this.store.addMember(id, person);
-        }
+      if (this.joinAsFirst() && this.author()) {
+        this.progress.set('Carregando a sua cápsula…');
+        await this.store.addMember(id, this.author(), this.author());
       }
 
-      this.progress.set('Pronto. Abrindo o grupo…');
+      this.progress.set('Pronto. Abrindo a máquina…');
       location.hash = `#/g/${id}`;
     } catch (error) {
       this.progress.set('');

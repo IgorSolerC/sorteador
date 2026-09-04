@@ -18,7 +18,7 @@ export class NoteBench {
     /** Grava a etiqueta e recarrega o grupo. Lançar aqui é o jeito de recusar. */
     private readonly persist: (
       spinIndex: number,
-      note: { title: string; description: string },
+      note: { title: string; subtitle: string; description: string },
     ) => Promise<void>,
     private readonly explain: (error: unknown) => string,
   ) {}
@@ -50,36 +50,43 @@ export class NoteBench {
   /** Devolve o aviso a mostrar quando deu certo, ou `null` quando a bancada segue aberta. */
   async commit(
     spin: SpinRecord,
-    draft: { title: string; description: string },
+    draft: { title: string; subtitle: string; description: string },
   ): Promise<string | null> {
     if (this.saving()) return null;
 
     const title = draft.title.trim();
+    const subtitle = draft.subtitle.trim();
     const description = draft.description.trim();
-    if (!title && description) {
+    // O título é a âncora do resumo `TÍTULO ● SUBTÍTULO`: sem ele o registro mostraria
+    // uma linha que começa no marcador, e ninguém saberia o que foi jogado.
+    if (!title && (subtitle || description)) {
       this.error.set('Dê um título à etiqueta: é ele que aparece no registro.');
       return null;
     }
-    if (!title && !description) {
+    if (!title && !subtitle && !description) {
       if (spin.note) return this.remove(spin);
       this.error.set('Escreva ao menos um título para etiquetar este giro.');
       return null;
     }
 
-    return this.write(spin, { title, description }, `Etiqueta colada em ${spin.winnerName}.`);
+    return this.write(
+      spin,
+      { title, subtitle, description },
+      `Etiqueta colada em ${spin.winnerName}.`,
+    );
   }
 
   remove(spin: SpinRecord): Promise<string | null> {
     return this.write(
       spin,
-      { title: '', description: '' },
+      { title: '', subtitle: '', description: '' },
       `Etiqueta retirada de ${spin.winnerName}. A retirada fica no registro.`,
     );
   }
 
   private async write(
     spin: SpinRecord,
-    note: { title: string; description: string },
+    note: { title: string; subtitle: string; description: string },
     message: string,
   ): Promise<string | null> {
     this.saving.set(true);

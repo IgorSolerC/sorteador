@@ -1,10 +1,12 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 
-import { SpinRecord } from './group-log';
+import { GroupMember, SpinRecord, membersById, noteSummary } from './group-log';
 import { GroupSnapshot, UsageBlockedError } from './group-store';
 import { GROUP_STORE } from './firebase-app';
-import { capsuleColor } from './machine';
+import { Identity } from './identity';
+import { capsuleColor } from './palette';
+import { rememberGroup } from './recent-groups';
 import { NoteBench } from './note-bench';
 import { NoteEditor } from './note-editor';
 
@@ -19,6 +21,7 @@ export interface WinnerTally {
   readonly id: string;
   readonly name: string;
   readonly color: string;
+  readonly emoji: string;
   readonly wins: number;
   readonly labelled: number;
 }
@@ -38,9 +41,16 @@ const TILTS = [-1.7, 1.1, -0.7, 1.8, -1.3, 0.8] as const;
 })
 export class GroupHistory {
   readonly groupId = input.required<string>();
+  /** Pedido de trocar de pessoa, que a casca resolve reabrindo a porta. */
+  readonly changeIdentity = input<() => void>(() => {});
 
   private readonly document = inject(DOCUMENT);
   private readonly store = inject(GROUP_STORE);
+  private readonly identity = inject(Identity);
+
+  protected readonly author = this.identity.name;
+  protected readonly authorInitials = this.identity.initials;
+  protected readonly authorColor = this.identity.color;
 
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
@@ -53,7 +63,7 @@ export class GroupHistory {
     this.document,
     (spinIndex, note) =>
       this.store
-        .annotateSpin(this.groupId(), spinIndex, note, readAuthor())
+        .annotateSpin(this.groupId(), spinIndex, note, this.identity.name())
         .then(() => this.reload(this.groupId())),
     (error) => explain(error),
   );
@@ -79,9 +89,21 @@ export class GroupHistory {
 
   protected readonly labelled = computed(() => this.spins().filter((spin) => spin.note).length);
 
+  /**
+   * Quem está no grupo hoje e quem já saiu dele: o álbum precisa dos dois, porque uma
+   * pessoa que deixou o clube continua tendo cápsulas na parede.
+   */
+  private readonly people = computed<ReadonlyMap<string, GroupMember>>(() => {
+    const snap = this.snapshot();
+    return snap ? membersById(snap.state) : new Map();
+  });
+
   /** Uma pessoa por cápsula que já saiu, com quantas vezes saiu e quantas foi etiquetada. */
   protected readonly winners = computed<readonly WinnerTally[]>(() => {
-    const tally = new Map<string, { id: string; name: string; color: string; wins: number; labelled: number }>();
+    const tally = new Map<string, {
+      id: string; name: string; color: string; emoji: string; wins: number; labelled: number;
+    }>();
+    const people = this.people();
     for (const spin of this.spins()) {
       const found = tally.get(spin.winnerId);
       if (found) {
@@ -89,11 +111,14 @@ export class GroupHistory {
         if (spin.note) found.labelled += 1;
         continue;
       }
-      // A cor é a da primeira cápsula da pessoa: assim ela é sempre a mesma no álbum.
+      // A cor é a da pessoa, não a da posição da cápsula: quem escolheu menta é menta na
+      // parede inteira, e continua menta depois de sair do grupo.
+      const member = people.get(spin.winnerId);
       tally.set(spin.winnerId, {
         id: spin.winnerId,
         name: spin.winnerName,
-        color: capsuleColor(spin.index),
+        color: capsuleColor(member?.colorIndex ?? 0),
+        emoji: member?.emoji ?? '',
         wins: 1,
         labelled: spin.note ? 1 : 0,
       });
@@ -139,12 +164,34 @@ export class GroupHistory {
     return snap.state.spins[index] ?? null;
   });
 
+  protected readonly editingColor = computed(() => {
+    const spin = this.editingSpin();
+    return spin ? this.colorOf(spin) : capsuleColor(0);
+  });
+
+  protected readonly editingEmoji = computed(() => {
+    const spin = this.editingSpin();
+    return spin ? this.emojiOf(spin) : '';
+  });
+
   protected readonly machineUrl = computed(
     () => `${location.href.split('#')[0]}#/g/${this.groupId()}`,
   );
 
-  protected colorFor(index: number): string {
-    return capsuleColor(index);
+  protected colorOf(spin: SpinRecord): string {
+    return capsuleColor(this.people().get(spin.winnerId)?.colorIndex ?? 0);
+  }
+
+  protected emojiOf(spin: SpinRecord): string {
+    return this.people().get(spin.winnerId)?.emoji ?? '';
+  }
+
+  protected summaryOf(spin: SpinRecord): string {
+    return noteSummary(spin.note);
+  }
+
+  protected askIdentityChange(): void {
+    this.changeIdentity()();
   }
 
   protected tiltFor(index: number): string {
@@ -169,7 +216,11 @@ export class GroupHistory {
     this.bench.close();
   }
 
-  protected async commitNote(draft: { title: string; description: string }): Promise<void> {
+  protected async commitNote(draft: {
+    title: string;
+    subtitle: string;
+    description: string;
+  }): Promise<void> {
     const spin = this.editingSpin();
     if (!spin) return;
     const message = await this.bench.commit(spin, draft);
@@ -197,6 +248,7 @@ export class GroupHistory {
       this.error.set('');
       // O título da aba nomeia o grupo: um álbum aberto entre dez abas precisa se anunciar.
       this.document.title = `O álbum · ${snapshot.name} · Mesa do Mês`;
+      rememberGroup(snapshot.groupId, snapshot.name);
     } catch (error) {
       this.error.set(explain(error));
     } finally {
@@ -207,16 +259,6 @@ export class GroupHistory {
   private showNotice(message: string): void {
     this.notice.set(message);
     window.setTimeout(() => this.notice.set(''), 5500);
-  }
-}
-
-const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
-
-function readAuthor(): string {
-  try {
-    return window.localStorage.getItem(AUTHOR_KEY) ?? '';
-  } catch {
-    return '';
   }
 }
 

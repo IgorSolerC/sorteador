@@ -1,7 +1,15 @@
-@if (albumGroupId(); as album) {
+@if (!known() || changingIdentity()) {
+  <!-- A porta vem antes de tudo. Enquanto ninguém se identificou, não há rota nenhuma
+       por baixo dela: um giro anônimo já não pode acontecer nem por engano. -->
+  <app-identity-gate
+    [changing]="known()"
+    (done)="closeIdentity()"
+    (cancelled)="closeIdentity()"
+  />
+} @else if (albumGroupId(); as album) {
   <!-- O álbum lê o mesmo log da máquina, então também só desce para quem abre um grupo. -->
   @defer (on immediate) {
-    <app-group-history [groupId]="album" />
+    <app-group-history [groupId]="album" [changeIdentity]="askIdentityChange" />
   } @placeholder {
     <section class="empty-stage" aria-busy="true">
       <div class="empty-globe" aria-hidden="true">
@@ -15,7 +23,7 @@
   }
 } @else if (creatingGroup()) {
   @defer (on immediate) {
-    <app-create-group [seedNames]="participants()" />
+    <app-create-group />
   } @placeholder {
     <section class="empty-stage" aria-busy="true">
       <div class="empty-globe" aria-hidden="true">
@@ -25,10 +33,10 @@
     </section>
   }
 } @else if (syncedGroupId(); as grupo) {
-  <!-- O SDK do Firebase só desce para quem abre um grupo sincronizado. Quem usa o modo
-       por link continua com o pacote leve e sem rede. -->
+  <!-- O SDK do Firebase só desce para quem abre uma máquina. A porta e a prateleira
+       continuam sem tocar em rede. -->
   @defer (on immediate) {
-    <app-synced-group [groupId]="grupo" />
+    <app-synced-group [groupId]="grupo" [changeIdentity]="askIdentityChange" />
   } @placeholder {
     <section class="empty-stage" aria-busy="true">
       <div class="empty-globe" aria-hidden="true">
@@ -36,368 +44,10 @@
       </div>
       <div>
         <h1>Abrindo a<br /><strong>máquina</strong></h1>
-        <p>Carregando o modo sincronizado.</p>
+        <p>Carregando o registro do grupo.</p>
       </div>
     </section>
   }
 } @else {
-<header class="topbar">
-  <a class="brand" href="." aria-label="Mesa do Mês — início">
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
-      <path class="brand-shell" d="M7 20h26v3a13 13 0 0 1-26 0v-3Z" />
-      <path class="brand-seam" d="M6 20h28" />
-    </svg>
-    <span>Mesa do Mês</span>
-  </a>
-  <p class="machine-plate">Máquina do clube <span>nº 01</span></p>
-</header>
-
-<main>
-  @if (draw(); as currentDraw) {
-    <section
-      class="draw-stage"
-      aria-labelledby="result-title"
-      [class.is-live]="isRevealed()"
-      [style.--live]="winnerColor()"
-    >
-      <p class="month-sticker" [attr.aria-label]="'Sorteio de ' + monthLabel">
-        <span>{{ monthShort(month) }}</span>
-        <strong>{{ year }}</strong>
-      </p>
-
-      <div class="machine" [class.is-spinning]="isSpinning()" [class.is-delivered]="isRevealed()">
-        <app-machine
-          [names]="currentDraw.orderedParticipants"
-          [chosenIndex]="currentDraw.cyclePosition"
-          [revealed]="isRevealed()"
-          [rotation]="wheelRotation()"
-          [restRotation]="targetRotation()"
-          caption="O resultado sai de mês, ano, data de início e da lista. A manivela entrega, não decide."
-        />
-      </div>
-
-      <div class="result" aria-live="polite">
-        @if (isRevealed()) {
-          <h1 id="result-title" class="winner-name">{{ currentDraw.winner }}</h1>
-          <p class="result-copy">
-            {{ currentDraw.winner }} escolhe o jogo desta rodada. É a cápsula
-            {{ currentDraw.cyclePosition + 1 }} de {{ currentDraw.orderedParticipants.length }}: a coleção só recomeça
-            quando a última sair.
-          </p>
-        } @else {
-          <h1 id="result-title">Entregando</h1>
-          <p class="result-copy">A cápsula deste mês já está escolhida. A manivela só entrega o que o cálculo definiu.</p>
-        }
-
-        <div class="result-actions">
-          <button class="primary-action" type="button" (click)="replayDraw()" [disabled]="isSpinning()">
-            {{ isSpinning() ? 'Entregando…' : 'Entregar de novo' }}
-          </button>
-          <a class="text-link" href="#participantes" (click)="jumpToRoster($event)">Ver a coleção</a>
-        </div>
-
-        <dl class="serial-grid">
-          <div>
-            <dt>Cápsula</dt>
-            <dd>{{ currentDraw.cyclePosition + 1 }} / {{ currentDraw.orderedParticipants.length }}</dd>
-          </div>
-          <div>
-            <dt>Mês</dt>
-            <dd class="month-value">{{ monthLabel }}</dd>
-          </div>
-          <div>
-            <dt>Edição</dt>
-            <dd>{{ currentDraw.fingerprint.toUpperCase() }}</dd>
-          </div>
-          <div>
-            <dt>Início</dt>
-            <dd class="month-value">{{ startMonthLabel() }}</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="chart-section" aria-labelledby="chart-title">
-      <div class="section-heading">
-        <h2 id="chart-title">A cartela</h2>
-        <p>
-          Cada mês tira uma cápsula da coleção. Nenhum nome volta antes de todos terem saído.
-          @if (waitingCount()) {
-            <b>Ainda no globo: {{ waitingCount() }}.</b>
-          }
-        </p>
-      </div>
-
-      <ol class="chart-grid">
-        @for (entry of cycleEntries(); track entry.year + '-' + entry.month) {
-          <li [class]="'chart-cell ' + entry.status">
-            <span class="cell-tick" aria-hidden="true"></span>
-            @if (entry.status === 'waiting') {
-              <span class="cell-capsule is-empty" aria-hidden="true"></span>
-              <span class="cell-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
-              <span class="cell-sr">Cápsula ainda no globo</span>
-            } @else {
-              <span class="cell-capsule" aria-hidden="true" [style.background]="personColor(entry.participant)"></span>
-              <span class="cell-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
-              <strong>{{ entry.participant }}</strong>
-              @if (entry.status === 'current') {
-                <span class="cell-status">Nesta rodada</span>
-              }
-            }
-          </li>
-        }
-      </ol>
-      <p class="rail-hint">
-        Deslize para ver os próximos meses
-        <svg viewBox="0 0 28 14" aria-hidden="true"><path d="M1 7h24M19 1l6 6-6 6"></path></svg>
-      </p>
-    </section>
-  } @else if (startsInFuture()) {
-    <section class="empty-stage" aria-labelledby="pending-title">
-      <div class="empty-globe" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 7v5l3 3" /></svg>
-      </div>
-      <div>
-        <h1 id="pending-title">A máquina abre em<br /><strong>{{ startMonthLabel() }}</strong></h1>
-        <p>A cartela só começa na data configurada. Até lá, nenhuma cápsula sai e nenhum mês fica registrado.</p>
-        <a class="primary-action" href="#participantes" (click)="jumpToRoster($event)">Ver a coleção</a>
-      </div>
-    </section>
-  } @else {
-    <section class="empty-stage" aria-labelledby="empty-title">
-      <div class="empty-globe" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
-      </div>
-      <div>
-        <h1 id="empty-title">O globo está<br /><strong>quase vazio</strong></h1>
-        <p>Carregue pelo menos duas cápsulas para a máquina ter o que entregar neste mês.</p>
-        <a class="primary-action" href="#participantes" (click)="jumpToRoster($event)">Carregar o globo</a>
-      </div>
-    </section>
-  }
-
-  <section class="roster-section" id="participantes" aria-labelledby="roster-title">
-    <div class="roster-intro">
-      <h2 id="roster-title">A coleção</h2>
-      <p>A lista e a data de início definem a máquina inteira. Com a mesma configuração, qualquer navegador entrega a mesma cápsula.</p>
-      @if (!sharedList() && participants().join('|') === 'Ana|Breno|Cecília|Davi|Elisa|Fátima') {
-        <p class="demo-note">Esta é uma coleção de demonstração. Troque pelos nomes reais do clube.</p>
-      }
-
-      <form class="add-form" (ngSubmit)="addParticipant()" novalidate>
-        <label for="participant-name">Nome da pessoa</label>
-        <div class="field-row">
-          <input
-            id="participant-name"
-            name="participantName"
-            type="text"
-            maxlength="60"
-            autocomplete="off"
-            placeholder="Ex.: Mariana Souza"
-            [ngModel]="draftName()"
-            (ngModelChange)="draftName.set($event); formError.set('')"
-            [attr.aria-invalid]="formError() ? 'true' : null"
-            [attr.aria-describedby]="formError() ? 'name-error' : null"
-          />
-          <button type="submit">Carregar</button>
-        </div>
-        @if (formError()) {
-          <p class="field-error" id="name-error" role="alert">{{ formError() }}</p>
-        }
-      </form>
-
-      <div class="share-block">
-        <h3>Configuração da máquina</h3>
-        <p>Defina quando a cartela começa. Essa data entra no link e impede que meses anteriores apareçam como já saídos.</p>
-        <div class="start-field">
-          <span class="start-field-label" id="start-month-label">Data de início</span>
-          <div class="month-picker" (keydown.escape)="closePicker()">
-            <button
-              id="start-month"
-              class="month-trigger"
-              type="button"
-              (click)="togglePicker()"
-              [attr.aria-expanded]="pickerOpen()"
-              aria-haspopup="dialog"
-              aria-describedby="start-month-label"
-              [attr.aria-invalid]="startMonthError() ? 'true' : null"
-            >
-              <span>{{ startMonthLabel() }}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-            </button>
-
-            @if (pickerOpen()) {
-              <div class="month-panel" role="dialog" aria-label="Escolher mês de início">
-                <div class="month-panel-head">
-                  <button type="button" (click)="stepPickerYear(-1)" [attr.aria-label]="'Ano anterior, ' + (pickerYear() - 1)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-                  </button>
-                  <strong aria-live="polite">{{ pickerYear() }}</strong>
-                  <button type="button" (click)="stepPickerYear(1)" [attr.aria-label]="'Próximo ano, ' + (pickerYear() + 1)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-                  </button>
-                </div>
-                <div class="month-grid">
-                  @for (entry of pickerMonths(); track entry.month) {
-                    <button
-                      [id]="'start-month-' + entry.month"
-                      type="button"
-                      [class.is-selected]="entry.isSelected"
-                      [attr.aria-pressed]="entry.isSelected"
-                      [attr.aria-label]="entry.full + ' de ' + pickerYear()"
-                      (click)="chooseMonth(entry.month)"
-                      (keydown)="onPickerKeydown($event, entry.month)"
-                    >{{ entry.label }}</button>
-                  }
-                </div>
-              </div>
-              <button class="month-scrim" type="button" tabindex="-1" aria-hidden="true" (click)="closePicker(false)"></button>
-            }
-          </div>
-        </div>
-        @if (startMonthError()) {
-          <p class="field-error" id="start-month-error" role="alert">{{ startMonthError() }}</p>
-        }
-        <h3 class="share-title">Grupo sincronizado</h3>
-        <p>
-          Cansou de depender do mês? Um grupo sincronizado guarda a lista e os giros num
-          registro compartilhado: mexer nos nomes não gera link novo, e você gira quando quiser.
-        </p>
-        <a class="secondary-action" href="#/novo">Criar um grupo sincronizado</a>
-
-        <h3 class="share-title">Semente</h3>
-        <p>
-          Uma sequência livre de caracteres que entra no cálculo junto com a lista. Serve para
-          consertar o histórico quando alguém entra ou sai: sem ela, uma lista nova reescreve os
-          meses que você já anunciou.
-        </p>
-        <label class="seed-field">
-          <span>Semente</span>
-          <input
-            name="seed"
-            type="text"
-            maxlength="120"
-            autocomplete="off"
-            placeholder="Sem semente"
-            [ngModel]="seed()"
-            (ngModelChange)="updateSeed($event)"
-          />
-        </label>
-
-        @if (historyMonths().length) {
-          <details class="history-tool">
-            <summary>Preservar meses já anunciados</summary>
-            <p>
-              Confira quem realmente ganhou em cada mês. Onde estiver diferente, corrija e procure
-              uma semente: ela recoloca essas pessoas nos meses delas sem tocar no resto.
-            </p>
-            <ul class="history-list">
-              @for (entry of historyMonths(); track entry.key) {
-                <li [class.is-changed]="entry.chosen !== entry.current">
-                  <span class="history-month">{{ monthShort(entry.month) }} {{ entry.year }}</span>
-                  <label class="history-pick">
-                    <span class="visually-hidden">Quem ganhou em {{ monthShort(entry.month) }} {{ entry.year }}</span>
-                    <select
-                      [value]="entry.chosen"
-                      (change)="setHistoryWinner(entry.key, $any($event.target).value)"
-                    >
-                      @for (person of draw()?.orderedParticipants ?? []; track trackPerson($index, person)) {
-                        <option [value]="person" [selected]="person === entry.chosen">{{ person }}</option>
-                      }
-                    </select>
-                  </label>
-                </li>
-              }
-            </ul>
-            <button class="secondary-action" type="button" (click)="searchSeed()" [disabled]="seedSearchState() === 'searching'">
-              Procurar semente
-            </button>
-            @switch (seedSearchState()) {
-              @case ('found') {
-                <p class="seed-note is-good" role="status">
-                  Pronto: semente <b>{{ seed() }}</b>. Os meses acima voltaram para as pessoas certas.
-                  Copie o link de novo e mande para o grupo.
-                </p>
-              }
-              @case ('unchanged') {
-                <p class="seed-note" role="status">O histórico já bate com a configuração atual. Nada a mudar.</p>
-              }
-              @case ('failed') {
-                <p class="seed-note is-bad" role="status">
-                  Não achei semente para esse histórico. Cheque se alguém aparece duas vezes no mesmo
-                  ciclo ou se um dos nomes já saiu da lista.
-                </p>
-              }
-            }
-          </details>
-        }
-
-        <h3 class="share-title">Compartilhar</h3>
-        <p>O link carrega os nomes, a data de início e a semente. Quem abrir recebe a mesma máquina.</p>
-        <button class="secondary-action" type="button" (click)="copyGroupLink()" [disabled]="participants().length < 2">
-          Copiar link da máquina
-        </button>
-        @if (shareUrl()) {
-          <label class="share-field">
-            Link compartilhável
-            <input readonly [value]="shareUrl()" (focus)="selectShareUrl($event)" />
-          </label>
-        }
-      </div>
-    </div>
-
-    <div class="roster-list-wrap">
-      <div class="roster-count">
-        <strong>{{ participants().length }}</strong>
-        <span>{{ participants().length === 1 ? 'cápsula no globo' : 'cápsulas no globo' }}</span>
-      </div>
-      @if (participants().length) {
-        <ul class="roster-list">
-          @for (person of participants(); track trackPerson($index, person); let position = $index) {
-            <li>
-              <span class="person-index">{{ (position + 1).toString().padStart(2, '0') }}</span>
-              <span class="person-capsule" aria-hidden="true" [style.--capsule]="personColor(person)">
-                {{ initials(person) }}
-              </span>
-              <strong>{{ person }}</strong>
-              <button type="button" (click)="removeParticipant(person)" [attr.aria-label]="'Remover ' + person">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg>
-                <span>Remover</span>
-              </button>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="roster-empty">O globo está vazio. Use o campo ao lado para carregar a primeira cápsula.</p>
-      }
-    </div>
-  </section>
-
-  <section class="method-section" aria-labelledby="method-title">
-    <h2 id="method-title">Como a máquina<br />foi carregada</h2>
-    <div class="method-copy">
-      <p>O app normaliza e ordena os nomes, combina essa lista com o mês, o ano e a data de início e monta a mesma ordem de cápsulas em qualquer navegador. Dentro de uma coleção, cada pessoa sai uma única vez.</p>
-      <details>
-        <summary>O que acontece quando a coleção muda?</summary>
-        <p>Uma lista nova é outra edição da máquina e pode entregar outra cápsula. Como o GitHub Pages não tem banco de dados, compartilhe o link de novo depois de carregar ou remover alguém.</p>
-      </details>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <span>Mesa do Mês</span>
-  <p>Sem conta, sem API e uma cápsula por mês para definir o jogo.</p>
-</footer>
-
-<div class="toast" [class.is-visible]="notice()" role="status" aria-live="polite">
-  <span>{{ notice() }}</span>
-  @if (lastRemoval()) {
-    <button type="button" (click)="undoRemoval()">Desfazer</button>
-  }
-  <button class="toast-close" type="button" (click)="dismissNotice()" aria-label="Fechar aviso">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
-  </button>
-</div>
+  <app-home (changeIdentity)="openIdentity()" />
 }

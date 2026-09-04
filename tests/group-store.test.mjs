@@ -5,7 +5,7 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 
 import { GroupStore, UsageBlockedError, memoryLogCache } from '../tmpjs/src/app/group-store.js';
 import { UsageGuard } from '../tmpjs/src/app/usage-guard.js';
-import { activeMembers } from '../tmpjs/src/app/group-log.js';
+import { activeMembers, noteSummary } from '../tmpjs/src/app/group-log.js';
 
 /**
  * Integração de verdade: a camada de dados contra o Firestore com as rules publicadas,
@@ -201,7 +201,7 @@ await it('etiqueta um giro e a etiqueta volta do log', async () => {
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { title: 'Click The Button!', description: 'Nota final 8/10' }, 'Igor');
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Click The Button!', description: 'Nota final 8/10' }, 'Igor');
 
   const snap = await store.load(id);
   assert.equal(snap.state.lastSpin.note.title, 'Click The Button!');
@@ -222,7 +222,7 @@ await it('outro aparelho lê a etiqueta pelo delta, sem reler o log inteiro', as
   await outro.store.load(id);
   const antes = outro.guard.snapshot().reads;
 
-  await store.annotateSpin(id, 0, { title: 'Overcooked', description: '' });
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Overcooked', description: '' });
   const snap = await outro.store.load(id);
 
   assert.equal(snap.state.spins[0].note.title, 'Overcooked');
@@ -237,8 +237,8 @@ await it('reescrever a etiqueta é outro evento, e a última vale', async () => 
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { title: 'Tetris', description: 'Nota 7/10' }, 'Ana');
-  await store.annotateSpin(id, 0, { title: 'Tetris Effect', description: 'Nota 9/10' }, 'Breno');
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris', description: 'Nota 7/10' }, 'Ana');
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris Effect', description: 'Nota 9/10' }, 'Breno');
 
   const snap = await store.load(id);
   assert.equal(snap.state.spins[0].note.title, 'Tetris Effect');
@@ -254,7 +254,7 @@ await it('retirar a etiqueta é gravá-la em branco', async () => {
   await store.addMember(id, 'Ana');
   await store.addMember(id, 'Breno');
   await store.spin(id);
-  await store.annotateSpin(id, 0, { title: 'Tetris', description: '' });
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris', description: '' });
   await store.clearSpinNote(id, 0);
 
   const snap = await store.load(id);
@@ -268,7 +268,7 @@ await it('texto longo com emoji atravessa as rules em vez de ser recusado', asyn
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { title: '🎮'.repeat(200), description: '🕹️'.repeat(600) });
+  await store.annotateSpin(id, 0, { subtitle: '', title: '🎮'.repeat(200), description: '🕹️'.repeat(600) });
 
   const snap = await store.load(id);
   // As rules medem em unidades UTF-16; o cliente corta na mesma medida, sem partir emoji.
@@ -286,7 +286,7 @@ await it('etiquetar não gasta a espera do próximo giro', async () => {
   await store.spin(id);
   const antes = (await store.load(id)).lastSpinAt;
 
-  await store.annotateSpin(id, 0, { title: 'Pico Park', description: '' });
+  await store.annotateSpin(id, 0, { subtitle: '', title: 'Pico Park', description: '' });
 
   assert.equal((await store.load(id)).lastSpinAt, antes);
 });
@@ -296,7 +296,7 @@ await it('etiquetar um giro que não existe é recusado pelo servidor', async ()
   const id = await store.createGroup('Clube');
   await store.addMember(id, 'Ana');
 
-  await assert.rejects(() => store.annotateSpin(id, 99, { title: 'Fantasma', description: '' }));
+  await assert.rejects(() => store.annotateSpin(id, 99, { subtitle: '', title: 'Fantasma', description: '' }));
   await assert.rejects(() => store.annotateSpin(id, -1, { title: 'Fantasma', description: '' }));
 });
 
@@ -304,6 +304,117 @@ for (const r of results) {
   console.log(`${r.ok ? '  ok  ' : ' FAIL '} ${r.name}`);
   if (!r.ok) console.log(`        ${r.error?.message?.split('\n')[0] ?? r.error}`);
 }
+await it('o subtítulo atravessa as rules e volta no resumo', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.annotateSpin(
+    id, 0, { title: 'Overcooked', subtitle: 'Nota 8/10', description: 'Empatou' }, 'Igor',
+  );
+
+  const snap = await store.load(id);
+  assert.equal(snap.state.lastSpin.note.subtitle, 'Nota 8/10');
+  assert.equal(noteSummary(snap.state.lastSpin.note), 'Overcooked ● Nota 8/10');
+});
+
+await it('pinta uma cápsula e a cor volta do log', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { colorIndex: 13, emoji: '🦊' }, 'Igor');
+
+  const depois = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  assert.equal(depois.colorIndex, 13);
+  assert.equal(depois.emoji, '🦊');
+});
+
+await it('trocar só a cor não apaga o emoji', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { colorIndex: 4, emoji: '🎮' });
+  await store.styleMember(id, ana.id, { colorIndex: 9 });
+
+  const depois = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  assert.equal(depois.colorIndex, 9);
+  assert.equal(depois.emoji, '🎮');
+});
+
+await it('um emoji com juntores atravessa as rules inteiro', async () => {
+  // Uma família ocupa 11 unidades UTF-16, que é o que `size()` conta do outro lado.
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { emoji: '👨‍👩‍👧‍👦' });
+
+  const depois = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  assert.equal(depois.emoji, '👨‍👩‍👧‍👦');
+});
+
+await it('vários emoji colados viram um só antes de ir à rede', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { emoji: '🎮🎲🃏' });
+
+  const depois = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  assert.equal(depois.emoji, '🎮');
+});
+
+await it('uma cor fora da paleta não chega a sair do cliente', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await assert.rejects(() => store.styleMember(id, ana.id, { colorIndex: 999 }));
+});
+
+await it('pintar não gasta a espera do próximo giro', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  const antes = (await store.load(id)).lastSpinAt;
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { colorIndex: 6 });
+
+  assert.equal((await store.load(id)).lastSpinAt, antes);
+});
+
+await it('pintar não muda o vencedor de giro nenhum', async () => {
+  // A cápsula descreve a pessoa; o resultado sai do log e do relógio do servidor.
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  const antes = (await store.load(id)).state.spins.map((s) => s.winnerName);
+  const ana = activeMembers((await store.load(id)).state).find((m) => m.name === 'Ana');
+  await store.styleMember(id, ana.id, { colorIndex: 2, emoji: '🎯' });
+
+  assert.deepEqual((await store.load(id)).state.spins.map((s) => s.winnerName), antes);
+});
+
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} integrações verificadas`);
 process.exit(failed ? 1 : 0);

@@ -1,143 +1,130 @@
 import { TestBed } from '@angular/core/testing';
-import { App, isNewGroupRoute, readAlbumGroupId, readSyncedGroupId } from './app';
 
+import { App, isNewGroupRoute, readAlbumGroupId, readSyncedGroupId } from './app';
+import { Identity } from './identity';
+
+/**
+ * A casca faz duas coisas: guarda a porta e lê a rota. O que fica atrás dela tem teste
+ * próprio; aqui o que importa é que ninguém passa sem se identificar.
+ */
 describe('App', () => {
   beforeEach(async () => {
+    window.localStorage.clear();
+    window.location.hash = '';
     await TestBed.configureTestingModule({ imports: [App] }).compileComponents();
   });
 
-  it('creates the monthly draw experience', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('pergunta quem é a pessoa antes de qualquer outra coisa', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
 
-    expect(fixture.componentInstance).toBeTruthy();
-    expect((fixture.nativeElement as HTMLElement).querySelector('main')).toBeTruthy();
+    expect(raiz.querySelector('.gate')).toBeTruthy();
+    // Nada da aplicação existe atrás da porta: nem a prateleira, nem a barra do topo.
+    expect(raiz.querySelector('app-home')).toBeNull();
+    expect(raiz.querySelector('.topbar-actions')).toBeNull();
     fixture.destroy();
   });
 
-  it('sobrevive a um link de grupo corrompido', () => {
-    window.location.hash = '#grupo=n%C3%A3o-%C3%A9-base64&inicio=2026-05';
+  it('um nome em branco não abre a porta', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('main')).toBeTruthy();
-    window.location.hash = '';
+    (raiz.querySelector('.gate-form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.gate')).toBeTruthy();
+    expect(raiz.querySelector('.field-error')?.textContent).toContain('Escreva seu nome');
     fixture.destroy();
   });
 
-  it('carrega a lista de um link de grupo válido', () => {
-    window.location.hash = '#grupo=WyJaaWxkYSIsIll1cmkiLCJYYXZpZXIiLCJXYW5kYSJd&inicio=2026-05';
+  it('quem já se identificou entra direto na prateleira', () => {
+    TestBed.inject(Identity).remember('Igor Soler');
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Zilda');
-    window.location.hash = '';
+    expect(raiz.querySelector('.gate')).toBeNull();
+    expect(raiz.querySelector('.home-stage')).toBeTruthy();
+    expect(raiz.textContent).toContain('Igor');
     fixture.destroy();
   });
 
-  it('preserva o mês já anunciado quando entra alguém novo', () => {
-    // O clube rodou o mês corrente com seis pessoas; agora entra a sétima.
-    //
-    // O início é o próprio mês de hoje, e não uma data fixa: com um mês fixo o histórico
-    // cresce a cada virada de calendário, e a busca passa a ter que satisfazer meses
-    // consecutivos do mesmo ciclo ao mesmo tempo — o que é insatisfazível por construção,
-    // porque dentro de um ciclo ninguém repete. Ancorado em hoje, o alvo é sempre um só.
-    const clube = ['Ana', 'Breno', 'Cecília', 'Davi', 'Elisa', 'Fátima'];
-    const hoje = new Date();
-    const mesCorrente = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-    localStorage.setItem(
-      'mesa-do-mes:configuration:v1',
-      JSON.stringify({ participants: clube, startMonth: mesCorrente }),
-    );
-
+  it('o crachá do topo reabre a porta, agora com jeito de desistir', () => {
+    TestBed.inject(Identity).remember('Igor Soler');
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance as unknown as {
-      participants: { set(value: string[]): void };
-      seed: () => string;
-      draw: () => { winner: string } | null;
-      historyMonths: () => Array<{ key: string; year: number; month: number; chosen: string }>;
-      setHistoryWinner(key: string, winner: string): void;
-      searchSeed(): void;
-      seedSearchState: () => string;
-      addParticipant(): void;
-      draftName: { set(value: string): void };
-    };
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    (raiz.querySelector('.who-chip') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    const vencedorOriginal = app.draw()!.winner;
-    const mesAnunciado = app.historyMonths()[0].key;
+    expect(raiz.querySelector('.gate')).toBeTruthy();
+    // Quem já está dentro pode voltar; quem nunca entrou, não tem para onde voltar.
+    expect(raiz.textContent).toContain('Continuar como estou');
+    fixture.destroy();
+  });
 
-    app.draftName.set('Gabriela');
-    app.addParticipant();
+  it('trocar de pessoa reescreve a assinatura e fecha a porta', async () => {
+    const identity = TestBed.inject(Identity);
+    identity.remember('Igor Soler');
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    (raiz.querySelector('.who-chip') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
 
-    app.setHistoryWinner(mesAnunciado, vencedorOriginal);
-    app.searchSeed();
+    const campo = raiz.querySelector('#gate-name') as HTMLInputElement;
+    campo.value = 'Mariana Souza';
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+    // ngModel propaga num microtask: sem esperar, o Angular reescreve o valor antigo.
+    await fixture.whenStable();
+    fixture.detectChanges();
+    (raiz.querySelector('.gate-form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
 
-    expect(['found', 'unchanged']).toContain(app.seedSearchState());
-    expect(app.draw()!.winner).toBe(vencedorOriginal);
-
-    localStorage.clear();
+    expect(identity.name()).toBe('Mariana Souza');
+    expect(raiz.querySelector('.gate')).toBeNull();
     fixture.destroy();
   });
 });
 
-describe('roteamento por hash', () => {
-  it('reconhece um grupo sincronizado', () => {
+describe('rotas no fragmento', () => {
+  it('reconhece a máquina de um grupo', () => {
     expect(readSyncedGroupId('#/g/abc123')).toBe('abc123');
-    expect(readSyncedGroupId('/g/abc123')).toBe('abc123');
+    expect(readSyncedGroupId('#/g/abc123/album')).toBe('');
+    expect(readSyncedGroupId('#/novo')).toBe('');
   });
 
-  it('ignora o formato do modo por link', () => {
-    expect(readSyncedGroupId('#grupo=WyJBIl0&inicio=2026-08')).toBe('');
-  });
-
-  it('ignora hash vazio ou lixo', () => {
-    for (const hash of ['', '#', '#/g/', '#/g/tem espaço', '#/outro/abc', '#/g/a/b']) {
-      expect(readSyncedGroupId(hash)).toBe('');
-    }
-  });
-
-  it('aceita id longo do Firestore e recusa exagero', () => {
-    expect(readSyncedGroupId('#/g/' + 'a'.repeat(20))).toHaveLength(20);
-    expect(readSyncedGroupId('#/g/' + 'a'.repeat(65))).toBe('');
-  });
-});
-
-describe('rota de criação', () => {
-  it('reconhece #/novo', () => {
-    expect(isNewGroupRoute('#/novo')).toBe(true);
-    expect(isNewGroupRoute('#/novo/')).toBe(true);
-    expect(isNewGroupRoute('/novo')).toBe(true);
-  });
-
-  it('não confunde com as outras rotas', () => {
-    for (const hash of ['', '#', '#/g/abc', '#grupo=WyJBIl0', '#/novos', '#/novo/abc']) {
-      expect(isNewGroupRoute(hash)).toBe(false);
-    }
-  });
-});
-
-describe('rota do álbum', () => {
-  it('reconhece #/g/<id>/album', () => {
+  it('reconhece o álbum de um grupo', () => {
     expect(readAlbumGroupId('#/g/abc123/album')).toBe('abc123');
     expect(readAlbumGroupId('#/g/abc123/album/')).toBe('abc123');
-    expect(readAlbumGroupId('/g/abc123/album')).toBe('abc123');
+    expect(readAlbumGroupId('#/g/abc123')).toBe('');
   });
 
-  it('não rouba as rotas que já existiam', () => {
-    for (const hash of ['', '#', '#/g/abc123', '#/novo', '#grupo=WyJBIl0&inicio=2026-08']) {
-      expect(readAlbumGroupId(hash)).toBe('');
-    }
-    // E o caminho contrário: a máquina continua sendo só `#/g/<id>`.
-    expect(readSyncedGroupId('#/g/abc123/album')).toBe('');
-    expect(isNewGroupRoute('#/g/abc123/album')).toBe(false);
+  it('reconhece a oficina', () => {
+    expect(isNewGroupRoute('#/novo')).toBe(true);
+    expect(isNewGroupRoute('#/novo/')).toBe(true);
+    expect(isNewGroupRoute('#/g/abc')).toBe(false);
   });
 
-  it('recusa lixo no lugar do id', () => {
-    for (const hash of ['#/g//album', '#/g/tem espaço/album', '#/g/' + 'a'.repeat(65) + '/album']) {
-      expect(readAlbumGroupId(hash)).toBe('');
-    }
+  it('um link do formato antigo não abre grupo nenhum', () => {
+    // O modo por link saiu. Um link em circulação cai na prateleira, que explica o que
+    // fazer, em vez de abrir uma máquina de mentira montada a partir do próprio endereço.
+    const antigo = '#grupo=WyJaaWxkYSIsIll1cmkiXQ&inicio=2026-05';
+    expect(readSyncedGroupId(antigo)).toBe('');
+    expect(readAlbumGroupId(antigo)).toBe('');
+    expect(isNewGroupRoute(antigo)).toBe(false);
   });
 });

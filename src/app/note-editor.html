@@ -15,7 +15,7 @@
   </p>
   <h2 id="note-card-title">
     <span class="note-card-capsule" aria-hidden="true" [style.--capsule]="capsule()">
-      {{ spin().winnerName.slice(0, 1).toUpperCase() }}
+      {{ capsuleEmoji() || spin().winnerName.slice(0, 1).toUpperCase() }}
     </span>
     <span class="visually-hidden">Etiqueta de&nbsp;</span>{{ spin().winnerName }}
   </h2>
@@ -40,6 +40,34 @@
         [attr.aria-invalid]="error() ? 'true' : null"
       />
     </label>
+
+    <label class="note-field">
+      <span class="note-field-head">
+        Subtítulo
+        <b [class.is-full]="subtitle().length >= MAX_NOTE_SUBTITLE">
+          {{ subtitle().length }}/{{ MAX_NOTE_SUBTITLE }}
+        </b>
+      </span>
+      <input
+        id="note-subtitle"
+        name="noteSubtitle"
+        type="text"
+        autocomplete="off"
+        [attr.maxlength]="MAX_NOTE_SUBTITLE"
+        placeholder="Ex.: Nota 8/10"
+        [ngModel]="subtitle()"
+        (ngModelChange)="subtitle.set($event)"
+      />
+    </label>
+
+    <!-- O resumo montado enquanto se escreve: é assim que a etiqueta vai aparecer na
+         célula do registro e no cartão do álbum, onde só cabe uma linha. -->
+    @if (summary()) {
+      <p class="note-summary">
+        <span>No registro</span>
+        <b>{{ summary() }}</b>
+      </p>
+    }
 
     <label class="note-field">
       <span class="note-field-head">

@@ -66,19 +66,26 @@ grupos/{grupoId}
   versaoLog: number          ← quantos eventos existem; sobe junto com cada evento
 
 grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
-  tipo: 'member_added' | 'member_removed' | 'spin' | 'spin_annotated'
+  tipo: 'member_added' | 'member_removed' | 'member_styled' | 'spin' | 'spin_annotated'
   em: timestamp                          ← obrigatoriamente request.time
   nome?: string                          ← member_added
-  memberId?: string                      ← member_removed
+  memberId?: string                      ← member_removed, member_styled
+  cor?: number                           ← member_styled: posição na paleta, 0..23
+  emoji?: string                         ← member_styled: até 16 unidades UTF-16
   giro?: number                          ← spin_annotated: índice do giro etiquetado
   titulo?: string                        ← spin_annotated, até 80
+  subtitulo?: string                     ← spin_annotated, até 60 (opcional na regra)
   descricao?: string                     ← spin_annotated, até 280
   autor?: string                         ← quem operou, não verificado
 ```
 
-## Dois buracos encontrados e fechados
+**Nenhum campo novo no doc do grupo.** A cor e o emoji de uma pessoa são derivados do log
+como todo o resto: `replay()` os aplica ao membro, e o doc do grupo continua guardando só o
+que as rules sabem validar sozinhas.
 
-Sondas adversariais contra o emulador acharam duas falhas no desenho original:
+## Três buracos encontrados e fechados
+
+Sondas adversariais contra o emulador acharam três falhas no desenho:
 
 **1. Vencedor forjável.** O doc do grupo guardava um campo `estado` com a lista, a rodada e o
 último vencedor, para que abrir o app custasse 1 leitura em vez de N. Mas nenhuma rule
@@ -94,6 +101,17 @@ fica invisível para quem confia nele.
 
 Conserto: gravar evento agora exige, via `getAfter()`, que o contador suba **na mesma escrita
 em lote**. Um evento não entra sozinho.
+
+**3. Espera de giro que era só conselho.** As rules exigiam que um giro respeitasse os 30
+segundos desde `ultimoGiroEm`, e que só um giro pudesse mexer nessa marca — mas nada obrigava
+o giro a *carimbá-la*. Bastava gravar o evento de giro sem tocar no doc do grupo para o
+relógio ficar parado em `null`, e o giro seguinte passava na hora, quantas vezes quisesse.
+A espera existe para encarecer girar de novo até gostar do resultado; sem o carimbo, ela não
+encarecia nada.
+
+Conserto: `marcaDeGiroCarimbada()` — todo evento de tipo `spin` precisa que
+`getAfter().ultimoGiroEm == request.time`. A metade que faltava do par: uma regra dizia quem
+*pode* mexer na marca, e agora a outra diz quem *tem* que mexer.
 
 ## Custo de leitura, agora que o log é a verdade
 
@@ -112,11 +130,39 @@ saída é gravar snapshots periódicos **dentro do próprio log** e replicar só
 Atenção: cada `get()` e `getAfter()` dentro de uma rule **conta como leitura na cota**. Gravar
 um evento custa 2 leituras de regra além da escrita.
 
+## A cápsula de cada pessoa: cor e emoji
+
+Cada membro tem uma **cor** e um **emoji**, escolhidos por quem quiser na gaveta da coleção.
+Eles descrevem a pessoa; nunca participam do sorteio. `group-log.spec.ts` trava isso: com e
+sem pintura, o vencedor, o bolo e a rodada são idênticos.
+
+**A cor é uma posição na paleta, não um hexadecimal.** Guardar `cor: 13` em vez de
+`'#00D7D6'` faz três coisas ao mesmo tempo: as rules validam um inteiro entre 0 e 23 sem
+precisar saber calcular contraste; a paleta inteira pode ser reafinada sem reescrever um
+evento sequer; e nenhuma cápsula pode existir fora do conjunto que `palette.spec.ts` prova
+passar em 4.5:1 nos dois sentidos. O preço é que **reordenar `CAPSULE_COLORS` repinta todo
+mundo** — a paleta só cresce pelo fim.
+
+**Os dois campos são independentes.** Omitir um significa "deixe como está", o que permite
+trocar só a cor sem apagar o emoji, com um evento por salvamento em vez de dois. Emoji em
+branco é emoji retirado. Um evento sem cor e sem emoji é recusado pelas rules: ele não mudaria
+nada e ainda custaria uma escrita da cota.
+
+**Quem sai e volta volta com a própria cápsula.** `replay()` preserva `colorIndex` e `emoji`
+quando um `member_added` reencontra um membro que já existia. A identidade visual da pessoa é
+o que faz o álbum inteiro dela ler como coleção; perdê-la ao voltar quebraria a parede.
+
+**Um emoji é um símbolo, não um texto curto.** `emojiText()` corta por **grafema** — o que o
+navegador desenha como uma coisa só — e não por ponto de código: uma bandeira ou uma família
+com juntores seria partida ao meio e gravaria os cacos. O teto de 16 unidades UTF-16 existe
+porque uma família chega perto disso; um emoji simples ocupa 2.
+
 ## Etiquetas: o que foi jogado e como foi
 
-Um giro pode receber um **título** e uma **descrição** — `Click The Button!` / `Nota final
-8/10`. Elas descrevem o giro; nunca participam dele. `group-log.spec.ts` trava isso: com e
-sem etiquetas, o vencedor, o bolo e a rodada são idênticos.
+Um giro pode receber um **título**, um **subtítulo** e uma **descrição** — `Click The Button!`
+/ `Nota 8/10` / `Jogamos em cinco`. Onde só cabe uma linha, título e subtítulo viram
+`TÍTULO ● SUBTÍTULO`. Elas descrevem o giro; nunca participam dele. `group-log.spec.ts` trava
+isso: com e sem etiquetas, o vencedor, o bolo e a rodada são idênticos.
 
 **A etiqueta é um evento, não um campo.** O giro não ganhou colunas: quem etiqueta grava um
 `spin_annotated` apontando para o índice do giro. Editar é gravar outro; o replay faz a
@@ -136,13 +182,21 @@ segunda consulta em toda carga — o cache por `versaoLog` não a cobre — dobr
 caso comum, hoje 1 leitura. E reintroduziria exatamente a classe de bug do campo `estado`
 descrita acima: um documento mutável que nenhuma regra consegue conferir contra o log.
 
+**O subtítulo é opcional na regra, e não só no conteúdo.** `(!('subtitulo' in d) || ...)`:
+uma aba aberta antes de o campo existir não manda a chave, e recusá-la quebraria quem estava
+com o app na tela no minuto da publicação. O replay lê a ausência como vazio. Foi o teste de
+regras que pegou isso — três casos antigos passaram a falhar assim que a validação virou
+obrigatória.
+
 **O que as rules garantem.** O índice é inteiro, não-negativo e menor que `versaoLog` — o
-`get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título
-e descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem `memberId`,
-e nenhum outro tipo de evento pode carregar campos de etiqueta. A espera de 30s **não** se
-aplica a etiquetar — corrigir um título nunca bloqueia o próximo giro — e, em contrapartida,
-**só um giro pode mexer em `ultimoGiroEm`**, senão etiquetar em rajada empurraria a espera e
-travaria a máquina do grupo inteiro sem girar uma vez.
+`get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título,
+subtítulo e descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem
+`memberId`, e nenhum outro tipo de evento pode carregar campos de etiqueta ou de pintura.
+
+A espera de 30s **não** se aplica a etiquetar nem a pintar — corrigir um título nunca bloqueia
+o próximo giro. Em contrapartida, **só um giro pode mexer em `ultimoGiroEm`** (senão etiquetar
+em rajada empurraria a espera e travaria a máquina do grupo inteiro sem girar uma vez) **e
+todo giro tem que mexer** (senão a espera vira conselho — ver o terceiro buraco acima).
 
 **Medida de texto.** `size()` nas rules conta **unidades UTF-16**, o mesmo que `.length` em
 JavaScript — não bytes, não pontos de código. Isso foi medido por sonda no emulador depois
@@ -150,13 +204,26 @@ que o teste de integração recusou um título de emoji que parecia caber. É po
 `noteText()` corta caractere a caractere até o orçamento em unidades: um `slice` cru na
 mesma medida partiria um par substituto e gravaria meio emoji.
 
-**Custo.** Etiquetar é 1 leitura + 2 escritas, idêntico a adicionar alguém. Nenhum índice
-novo. Cada edição soma um evento ao log, o que entra na mesma conta de crescimento acima.
+**Custo.** Etiquetar é 1 leitura + 2 escritas, idêntico a adicionar alguém ou a pintar uma
+cápsula. Nenhum índice novo. Cada edição soma um evento ao log, o que entra na mesma conta de
+crescimento acima.
+
+## Quem está mexendo
+
+O nome de quem opera é perguntado na porta, antes de qualquer rota, e vai no campo `autor` de
+todo evento. **Ele não é verificado e não pretende ser**: as rules continuam sem saber quem é
+quem, e o link continua sendo a única credencial. É um crachá que a pessoa escreve para si
+mesma — o que ele resolve é um registro que o clube relê meses depois e no qual ninguém sabia
+quem tinha girado. Fica no `localStorage` do aparelho e nunca sai dele por outro caminho.
+
+A prateleira da página inicial guarda, também só no aparelho, os grupos que ele já abriu. Ela
+não dá acesso a nada: listar grupos é proibido nas rules justamente para o link continuar
+sendo o segredo, e essa lista é só um atalho para não caçar a mensagem no WhatsApp.
 
 ## Rules
 
 O arquivo real é `firestore.rules`, e ele é a fonte da verdade — não há esboço aqui para
-divergir dele. `tests/firestore-rules.test.mjs` prova 50 comportamentos contra o emulador:
+divergir dele. `tests/firestore-rules.test.mjs` prova 75 comportamentos contra o emulador:
 
 ```
 npm run test:rules
@@ -177,25 +244,26 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 | Fase | Situação |
 |---|---|
 | 0. Decisões de produto | ✅ |
-| 1. Não quebrar o modo atual | ✅ 16 vetores congelados verdes |
+| 1. Não quebrar o modo atual | ⬛ retirado: o modo por link estático foi removido em setembro de 2026 |
 | 2. Motor por log, puro | ✅ `group-log.ts` |
 | 2b. Guarda de uso, puro | ✅ `usage-guard.ts` |
-| 3. Firestore + rules | ✅ `sorteador-ed1c9`, 50 testes no emulador |
-| 4. Camada de dados | ✅ `group-store.ts`, 20 testes de integração |
+| 3. Firestore + rules | ✅ `sorteador-ed1c9`, 75 testes no emulador |
+| 4. Camada de dados | ✅ `group-store.ts`, 28 testes de integração |
 | 5. Interface | ✅ `#/g/<id>`, verificada em produção |
-| 6. Criar grupo e importar lista | ✅ `#/novo` |
+| 6. Criar grupo | ✅ `#/novo`, com quem monta já entrando como primeira cápsula |
 | 7. Fumaça em produção | ✅ 10/10 |
-| 8. Ponta a ponta no navegador | ✅ 13/13, mais 21/21 do ciclo da etiqueta e do álbum |
+| 8. Ponta a ponta no navegador | ✅ 35/35 do ciclo completo: etiqueta, cápsula, reencenação e álbum |
 | 9. Merge e deploy | ⛔ pendente de aprovação |
 
 ## Como rodar cada suíte
 
 ```
-npm test              # 214 unitários e de componente
-npm run test:rules    # 50 rules no emulador, sem projeto nem rede
-npm run test:store    # 20 de integração da camada de dados
-node tests/e2e-spin.mjs <grupoId>   # ponta a ponta num navegador real
-npm run test:etiqueta -- "http://localhost:4200/?emu=1" demo   # etiqueta e álbum, ponta a ponta
+npm test              # 232 unitários e de componente
+npm run test:rules    # 75 rules no emulador, sem projeto nem rede
+npm run test:store    # 28 de integração da camada de dados
+npm run test:a11y     # 8 telas x 3 larguras, contra o servidor local
+npm run test:etiqueta # 35 verificações de ponta a ponta num navegador real
+node tests/seed-emulator.mjs        # um grupo de mentira com cara de real, no emulador
 node tests/shot.mjs <url> <saida.png> <esperaMs> <larg> <alt>
 ```
 

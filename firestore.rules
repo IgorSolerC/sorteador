@@ -73,17 +73,23 @@ service cloud.firestore {
 
         function eventoValido() {
           let d = request.resource.data;
-          return d.keys().hasOnly(['tipo', 'em', 'nome', 'memberId', 'autor', 'giro', 'titulo', 'descricao'])
+          return d.keys().hasOnly([
+              'tipo', 'em', 'autor',
+              'nome', 'memberId', 'cor', 'emoji',
+              'giro', 'titulo', 'subtitulo', 'descricao',
+            ])
             // O carimbo é do servidor, sempre. É a única entrada que o cliente não
             // escolhe, e é dela que o sorteio tira o resultado.
             && d.em == request.time
-            && d.tipo in ['member_added', 'member_removed', 'spin', 'spin_annotated']
+            && d.tipo in ['member_added', 'member_removed', 'member_styled', 'spin', 'spin_annotated']
             && (!('autor' in d) || texto(d.autor, 60))
             && (d.tipo != 'member_added' || texto(d.nome, 60))
             && (d.tipo != 'member_removed' || texto(d.memberId, 32))
-            && (d.tipo != 'spin' || giroPermitido())
+            && (d.tipo != 'member_styled' || estiloValido())
+            && (d.tipo != 'spin' || (giroPermitido() && marcaDeGiroCarimbada()))
             && (d.tipo != 'spin_annotated' || anotacaoValida())
             && (d.tipo == 'spin_annotated' || semCamposDeEtiqueta())
+            && (d.tipo == 'member_styled' || semCamposDeEstilo())
             && (d.tipo == 'spin' || marcaDeGiroIntacta())
             && contadorAcompanha();
         }
@@ -97,20 +103,50 @@ service cloud.firestore {
             && d.giro >= 0
             && d.giro < grupoAntes().versaoLog
             && textoOpcional(d.titulo, 80)
+            // O subtítulo é opcional na regra, e não só no conteúdo: uma aba aberta antes
+            // de o campo existir não manda a chave, e recusá-la quebraria quem está com o
+            // app na tela no momento do deploy. O replay lê a ausência como vazio.
+            && (!('subtitulo' in d) || textoOpcional(d.subtitulo, 60))
             && textoOpcional(d.descricao, 280)
             && !('nome' in d)
             && !('memberId' in d);
         }
 
+        // A aparência de uma cápsula: a cor é uma posição na paleta, nunca um hexadecimal
+        // livre — é o que garante que toda cápsula continue passando no contraste sem que
+        // as regras precisem saber calcular contraste. Um evento sem cor nem emoji não
+        // muda nada e só gastaria uma escrita, então também não passa.
+        function estiloValido() {
+          let d = request.resource.data;
+          return texto(d.memberId, 32)
+            && (!('cor' in d) || (d.cor is int && d.cor >= 0 && d.cor < 24))
+            && (!('emoji' in d) || textoOpcional(d.emoji, 16))
+            && ('cor' in d || 'emoji' in d)
+            && !('nome' in d);
+        }
+
         function semCamposDeEtiqueta() {
           let d = request.resource.data;
-          return !('giro' in d) && !('titulo' in d) && !('descricao' in d);
+          return !('giro' in d) && !('titulo' in d) && !('subtitulo' in d) && !('descricao' in d);
+        }
+
+        function semCamposDeEstilo() {
+          let d = request.resource.data;
+          return !('cor' in d) && !('emoji' in d);
         }
 
         // Só um giro mexe no relógio do giro. Sem isto, anotar em rajada empurraria a
         // espera de 30s e travaria a máquina do grupo inteiro sem girar uma vez.
         function marcaDeGiroIntacta() {
           return grupoDepois().ultimoGiroEm == grupoAntes().ultimoGiroEm;
+        }
+
+        // E todo giro TEM que carimbar esse relógio. Sem esta metade, a espera de 30s era
+        // conselho: bastava gravar o giro sem mexer na marca para o relógio ficar parado e
+        // o giro seguinte passar na hora. A espera existe para encarecer girar de novo até
+        // gostar do resultado, e um cliente que escolhe não carimbar a anulava sozinho.
+        function marcaDeGiroCarimbada() {
+          return grupoDepois().ultimoGiroEm == request.time;
         }
 
         // Um evento não entra sozinho: o contador do grupo tem que subir na mesma escrita.
