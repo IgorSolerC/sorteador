@@ -67,6 +67,9 @@ export class Confetti {
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
     const origin = this.origin(width, height);
+    // Uma nova entrega interrompe a anterior. A limpeza precisa acontecer antes de criar
+    // as partículas novas; na ordem inversa ela esvaziava a chuva antes do primeiro quadro.
+    this.stop();
     this.particles = Array.from({ length: COUNT }, () => {
       // Um leque para cima e para os lados, como algo que arrebentou de dentro.
       const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.85;
@@ -83,7 +86,6 @@ export class Confetti {
       };
     });
 
-    this.stop();
     let previous = view.performance.now();
     const step = (now: number) => {
       // Uma aba em segundo plano devolve saltos enormes; travar o passo evita que as

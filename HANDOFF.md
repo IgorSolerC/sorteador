@@ -120,11 +120,11 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 233 unitários e de componente
+npm test -- --watch=false   # 235 unitários e de componente
 npm run test:rules          # 75 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 28 de integração da camada de dados
 npm run test:a11y           # 8 telas x 3 larguras — precisa de npm start + emulador
-npm run test:etiqueta       # 36 de ponta a ponta num navegador real — idem
+npm run test:etiqueta       # 37 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
@@ -187,6 +187,8 @@ Nada pendente no código em 2026-09-04. A rodada de acabamento seguinte fechou o
 4. **Paleta substituída por solicitação explícita:** os índices continuam na mesma ordem do
    log, mas os 24 valores agora são os do JASC-PAL fornecido. Como há tons profundos, texto e
    ferragens usam `capsuleInk()`; o caminho de ajuste continua sendo **A coleção → pessoa**.
+5. **Celebração unificada:** toda cena da roleta — abertura automática, replay ao clicar e giro
+   verdadeiro — termina com o confete do emoji vencedor, quando essa pessoa escolheu um.
 
 As propostas F1–F10 continuam irrecuperáveis: o artefato que continha o texto se perdeu antes
 deste handoff. Não são tratadas como backlog sem uma nova descrição do usuário.

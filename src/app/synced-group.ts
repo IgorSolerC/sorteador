@@ -351,7 +351,7 @@ export class SyncedGroup {
     try {
       await this.store.spin(this.groupId(), this.author());
       await this.reload(this.groupId(), { keepSpinning: true });
-      this.playScene({ celebrate: true });
+      this.playScene();
     } catch (error) {
       this.sceneToken += 1;
       this.isSpinning.set(false);
@@ -366,10 +366,11 @@ export class SyncedGroup {
    */
   protected replayScene(): void {
     if (this.isSpinning() || this.displayed().chosenIndex < 0) return;
-    this.playScene({ celebrate: true });
+    this.playScene();
   }
 
-  private playScene({ celebrate = false } = {}): void {
+  /** Toda encenação completa a entrega: se a cápsula tem emoji, ele cai como confete. */
+  private playScene(): void {
     if (this.displayed().chosenIndex < 0) return;
     const restingTarget = this.targetRotation();
     const current = this.rotation();
@@ -401,7 +402,7 @@ export class SyncedGroup {
       this.rotation.set(restingTarget);
       this.isSpinning.set(false);
       this.revealed.set(true);
-      if (celebrate) this.celebration.update((tick) => tick + 1);
+      this.celebration.update((tick) => tick + 1);
     }, reducedMotion ? 120 : 4300);
   }
 
@@ -497,9 +498,10 @@ export class SyncedGroup {
       // invertidos com a cápsula vencedora fora da calha.
       if (!keepSpinning) this.rotation.set(this.targetRotation());
 
-      // A máquina abre girando. É a mesma cena de sempre, parando na mesma cápsula, e
-      // sem confete: o confete é da entrega, e reencenar não entrega nada de novo.
-      if (!this.greeted && snapshot.state.lastSpin) {
+      // A máquina abre girando e celebra a cápsula que já estava entregue. Durante um
+      // giro verdadeiro, porém, `spin()` já é dono da cena; iniciar outra aqui faria as
+      // duas disputarem o mesmo token antes de o primeiro quadro chegar.
+      if (!keepSpinning && !this.greeted && snapshot.state.lastSpin) {
         this.greeted = true;
         this.playScene();
       }

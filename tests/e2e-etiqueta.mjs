@@ -148,8 +148,20 @@ await sleep(800);
 check('a coleção abre numa gaveta', !!(await ev(`!!document.querySelector('.roster-card')`)));
 check('a gaveta lista uma linha por cápsula', (await conta('.capsule-row')) > 1);
 
-const nomeNaGaveta = await ev(`document.querySelector('.capsule-row .capsule-who strong')?.textContent?.trim()`);
-await ev(`document.querySelector('.capsule-row').click()`);
+// A pessoa pintada precisa já ter saído para a conferência seguinte encontrá-la no registro.
+// Com cinco giros e seis pessoas, escolher sempre a primeira linha tornava o teste dependente
+// de qual foi a única cápsula ainda sem entrega.
+const nomeNaGaveta = await ev(`(() => {
+  const registro = [...document.querySelectorAll('.cell-open')].map((c) => c.textContent);
+  const linhas = [...document.querySelectorAll('.capsule-row')];
+  const alvo = linhas.find((linha) => {
+    const nome = linha.querySelector('.capsule-who strong')?.textContent?.trim();
+    return nome && registro.some((texto) => texto.includes(nome));
+  }) || linhas[0];
+  alvo.dataset.e2eTarget = 'true';
+  return alvo.querySelector('.capsule-who strong')?.textContent?.trim();
+})()`);
+await ev(`document.querySelector('[data-e2e-target="true"]').click()`);
 await sleep(700);
 check('a bancada da cápsula troca a face da gaveta, sem empilhar outra',
   (await conta('[aria-modal="true"]')) === 1 && (await conta('.roster-scrim')) === 1);
@@ -197,7 +209,18 @@ await ev(`document.querySelector('.machine-replay').click()`);
 await sleep(600);
 check('clicar no globo recomeça a cena',
   (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) === 'Entregando');
-await sleep(6000);
+await sleep(4000);
+check('o emoji vencedor vira uma chuva desenhada no canvas',
+  (await ev(`(() => {
+    const canvas = document.querySelector('.confetti');
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return 0;
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let pintados = 0;
+    for (let i = 3; i < pixels.length; i += 4) if (pixels[i]) pintados += 1;
+    return pintados;
+  })()`)) > 0);
+await sleep(2000);
 check('a cena termina na mesma cápsula de antes',
   (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) === antesDaCena,
   `${antesDaCena} -> ${await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)}`);

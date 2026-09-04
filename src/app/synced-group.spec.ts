@@ -27,9 +27,20 @@ class FakeStore {
   failWith: unknown = null;
   private clock = 1_700_000_000_000;
 
-  seed(names: string[], spins = 0) {
+  seed(names: string[], spins = 0, emoji = '') {
     for (const name of names) {
       this.events.push({ type: 'member_added', at: (this.clock += 1000), name });
+    }
+    if (emoji) {
+      for (const name of names) {
+        this.events.push({
+          type: 'member_styled',
+          at: (this.clock += 1000),
+          memberId: memberId(GRUPO, name),
+          colorIndex: null,
+          emoji,
+        });
+      }
     }
     for (let i = 0; i < spins; i += 1) {
       this.events.push({ type: 'spin', at: (this.clock += 1000) });
@@ -747,23 +758,50 @@ describe('a cápsula de cada pessoa na máquina', () => {
 describe('o confete da entrega', () => {
   afterEach(() => TestBed.resetTestingModule());
 
-  it('abrir a página não solta confete: reencenar não entrega nada de novo', async () => {
-    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1));
-    const app = fixture.componentInstance as unknown as { celebration(): number };
+  it('a cena automática ao abrir celebra com o emoji da pessoa sorteada', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1, '🎮'));
+    const app = fixture.componentInstance as unknown as {
+      celebration(): number;
+      winnerEmoji(): string;
+    };
 
-    expect(app.celebration()).toBe(0);
+    expect(app.celebration()).toBe(1);
+    expect(app.winnerEmoji()).toBe('🎮');
     fixture.destroy();
   });
 
-  it('reencenar a pedido solta confete, porque foi a pessoa que pediu a cena', async () => {
-    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1));
-    const app = fixture.componentInstance as unknown as { celebration(): number };
+  it('clicar na roleta solta outra chuva do emoji', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 1, '🦊'));
+    const app = fixture.componentInstance as unknown as {
+      celebration(): number;
+      winnerEmoji(): string;
+    };
 
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.machine-replay')!.click();
     await esperar(200);
     fixture.detectChanges();
 
+    expect(app.celebration()).toBe(2);
+    expect(app.winnerEmoji()).toBe('🦊');
+    fixture.destroy();
+  });
+
+  it('um giro verdadeiro também celebra com o emoji da nova vencedora', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília'], 0, '🎯'));
+    const app = fixture.componentInstance as unknown as {
+      askToSpin(): void;
+      confirmSpin(): Promise<void>;
+      celebration(): number;
+      winnerEmoji(): string;
+    };
+
+    app.askToSpin();
+    await app.confirmSpin();
+    await esperar(200);
+    fixture.detectChanges();
+
     expect(app.celebration()).toBe(1);
+    expect(app.winnerEmoji()).toBe('🎯');
     fixture.destroy();
   });
 });

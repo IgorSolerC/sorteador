@@ -438,7 +438,7 @@ Existe um único momento autoral, e ele é sempre o mesmo: a manivela gira duas 
 
 **O confete** é a última batida desse momento, não um segundo: sessenta e quatro partículas em canvas, num leque para cima e para os lados, com gravidade de `1500px/s²` e vida de `2.6s`. Sai da bandeja quando a máquina está na tela, e do alto do centro quando não está. Com emoji, saem emoji; sem emoji, saem cápsulas na cor da pessoa. Canvas e não elementos: sessenta e quatro nós no DOM custariam sessenta e quatro reflows por quadro, e nada aqui precisa ser lido nem clicado.
 
-**A cena é reencenável, e reencenar não é decidir.** A máquina abre girando, e o globo inteiro é um botão que a roda de novo — sempre parando na mesma cápsula, porque a rotação de destino sai do mesmo registro. É a diferença entre assistir e decidir, que é a promessa do produto. O confete acompanha a reencenação pedida, mas **não** a de abertura: quem abre a página não entregou nada de novo.
+**A cena é reencenável, e reencenar não é decidir.** A máquina abre girando, e o globo inteiro é um botão que a roda de novo — sempre parando na mesma cápsula, porque a rotação de destino sai do mesmo registro. É a diferença entre assistir e decidir, que é a promessa do produto. O confete fecha toda encenação completa — na abertura automática, no replay pedido ao clicar no globo e no giro verdadeiro — usando o emoji da pessoa quando ela escolheu um.
 
 Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 

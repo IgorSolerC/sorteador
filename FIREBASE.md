@@ -252,13 +252,13 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 | 5. Interface | ✅ `#/g/<id>`, verificada em produção |
 | 6. Criar grupo | ✅ `#/novo`, com quem monta já entrando como primeira cápsula |
 | 7. Fumaça em produção | ✅ 13/13 |
-| 8. Ponta a ponta no navegador | ✅ 36/36 do ciclo completo: etiqueta, cápsula, reencenação e álbum |
+| 8. Ponta a ponta no navegador | ✅ 37/37 do ciclo completo: etiqueta, cápsula, reencenação, confete e álbum |
 | 9. Merge e deploy | ✅ pela branch `main`, com publicação automática no GitHub Pages |
 
 ## Como rodar cada suíte
 
 ```
-npm test              # 233 unitários e de componente
+npm test              # 235 unitários e de componente
 npm run test:rules    # 75 rules no emulador, sem projeto nem rede
 npm run test:store    # 28 de integração da camada de dados
 npm run test:a11y     # 8 telas x 3 larguras, contra o servidor local
