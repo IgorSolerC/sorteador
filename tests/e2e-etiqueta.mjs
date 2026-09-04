@@ -174,6 +174,13 @@ check('a cor escolhida aparece na linha da pessoa',
   (await ev(`document.body.innerText.includes(${JSON.stringify(String(escolheu).toUpperCase())})`)) === true,
   String(escolheu));
 
+await ev(`document.querySelectorAll('.capsule-row')[1].click()`);
+await sleep(300);
+check('depois de salvar uma cápsula, a bancada de outra pessoa ainda abre',
+  !!(await ev(`!!document.querySelector('.color-grid')`)));
+await ev(`document.querySelector('#capsule-back').click()`);
+await sleep(300);
+
 await ev(`document.querySelector('.roster-close').click()`);
 await sleep(600);
 check('fechar a gaveta devolve a página', !(await ev(`!!document.querySelector('.roster-card')`)));

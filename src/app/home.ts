@@ -3,7 +3,7 @@ import { Component, computed, inject, output, signal } from '@angular/core';
 
 import { Identity } from './identity';
 import { RecentGroup, forgetGroup, listGroups } from './recent-groups';
-import { capsuleColor, CAPSULE_COLOR_COUNT } from './palette';
+import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 import { hashString } from './naming';
 
 /**
@@ -33,6 +33,7 @@ export class Home {
 
   /** A mesma cor que a porta mostrou no crachá: a pessoa é sempre a mesma cápsula. */
   protected readonly color = this.identity.color;
+  protected readonly ink = this.identity.ink;
 
   protected linkTo(group: RecentGroup): string {
     return `#/g/${group.id}`;
@@ -40,6 +41,10 @@ export class Home {
 
   protected colorOf(group: RecentGroup): string {
     return capsuleColor(hashString(`maquina:v1:${group.id}`) % CAPSULE_COLOR_COUNT);
+  }
+
+  protected inkOf(group: RecentGroup): string {
+    return capsuleInkForColor(this.colorOf(group));
   }
 
   protected initials(name: string): string {

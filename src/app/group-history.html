@@ -10,7 +10,8 @@
   <nav class="topbar-actions" aria-label="O álbum">
     <a class="plate-action" [href]="machineUrl()">A máquina</a>
     <button type="button" class="who-chip" (click)="askIdentityChange()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()">{{ authorInitials() }}</span>
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
+            [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
       <span class="who-name">{{ author() }}</span>
       <span class="visually-hidden">— trocar de pessoa</span>
     </button>
@@ -126,6 +127,7 @@
                 [class.is-blank]="!spin.note"
                 [style.--tilt]="tiltFor(spin.index)"
                 [style.--capsule]="colorOf(spin)"
+                [style.--capsule-ink]="inkOf(spin)"
                 (click)="openNote(spin, $event)"
                 [attr.aria-label]="
                   (spin.note ? 'Editar a etiqueta de ' : 'Etiquetar a cápsula de ') +

@@ -4,19 +4,15 @@ import {
   CAPSULE_COLOR_NAMES,
   capsuleColor,
   capsuleColorName,
+  capsuleInk,
+  capsuleTextOnEnamel,
   defaultColorIndex,
   isColorIndex,
 } from './palette';
 
-/**
- * A Regra da Cápsula Portante, medida em vez de prometida: toda cor de cápsula passa de
- * 4.5:1 sobre o esmalte E aceita tinta escura por cima com a mesma folga. É isso que
- * autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto
- * escuro. Uma cor nova que não cumpra os dois lados derruba este arquivo.
- */
+/** A legibilidade da paleta é medida nos dois lugares onde ela carrega texto. */
 
 const ESMALTE = '#10233f';
-const TINTA = '#0a1830';
 
 function luminancia(hex: string): number {
   const n = parseInt(hex.slice(1), 16);
@@ -43,29 +39,33 @@ describe('a paleta de cápsulas', () => {
     expect(CAPSULE_COLOR_NAMES.every((nome) => nome.length > 0)).toBe(true);
   });
 
-  it('toda cor passa de 4.5:1 sobre o esmalte', () => {
+  it('cada cor escolhe tinta clara ou escura com contraste AA', () => {
     const reprovadas = CAPSULE_COLORS
-      .map((cor, i) => ({ cor, nome: CAPSULE_COLOR_NAMES[i], razao: contraste(cor, ESMALTE) }))
+      .map((cor, i) => ({ cor, nome: CAPSULE_COLOR_NAMES[i], razao: contraste(capsuleInk(i), cor) }))
       .filter((c) => c.razao < 4.5);
     expect(reprovadas).toEqual([]);
   });
 
-  it('toda cor aceita tinta escura por cima com a mesma folga', () => {
+  it('o nome sobre esmalte usa a cor quando ela passa, e branco quando ela sumiria', () => {
     const reprovadas = CAPSULE_COLORS
-      .map((cor, i) => ({ cor, nome: CAPSULE_COLOR_NAMES[i], razao: contraste(TINTA, cor) }))
+      .map((_, i) => ({ nome: CAPSULE_COLOR_NAMES[i], razao: contraste(capsuleTextOnEnamel(i), ESMALTE) }))
       .filter((c) => c.razao < 4.5);
     expect(reprovadas).toEqual([]);
+    expect(capsuleTextOnEnamel(0)).toBe('#FFFFFF');
+    expect(capsuleTextOnEnamel(13)).toBe(CAPSULE_COLORS[13]);
   });
 
   it('não repete nenhuma cor', () => {
     expect(new Set(CAPSULE_COLORS).size).toBe(CAPSULE_COLOR_COUNT);
   });
 
-  it('as seis cores originais continuam no conjunto', () => {
-    // Quem já tem uma cápsula não a perde por causa de uma paleta maior.
-    for (const antiga of ['#FF6B7D', '#FF9A3C', '#FFC53D', '#4FE0C8', '#A78BFF', '#FF8FC7']) {
-      expect(CAPSULE_COLORS).toContain(antiga);
-    }
+  it('preserva exatamente a ordem da paleta JASC fornecida', () => {
+    expect(CAPSULE_COLORS).toEqual([
+      '#0F0F12', '#505359', '#B6BFBC', '#F2FBFF', '#5EE7FF', '#00A1DB',
+      '#1D5BB8', '#1F2C66', '#1B5245', '#2E8F46', '#58D92E', '#CBFF70',
+      '#FFFF8F', '#FFDF2B', '#F0771A', '#E32239', '#851540', '#401A24',
+      '#9C3B30', '#C95D3C', '#ED8A5F', '#FFBCA6', '#EB75BE', '#77388C',
+    ]);
   });
 });
 
@@ -78,9 +78,7 @@ describe('a distribuição padrão', () => {
     expect(vistas.size).toBe(CAPSULE_COLOR_COUNT);
   });
 
-  it('afasta cada nova cápsula da anterior na roda de matizes', () => {
-    // Vinte e quatro matizes em volta da roda são vinte e quatro vizinhas parecidas; quem
-    // conserta isso é o passo, não a paleta. Duas cápsulas seguidas nunca são vizinhas.
+  it('afasta cada nova cápsula da anterior na lista', () => {
     for (let posicao = 0; posicao + 1 < CAPSULE_COLOR_COUNT; posicao += 1) {
       const salto = Math.abs(defaultColorIndex(posicao + 1) - defaultColorIndex(posicao));
       const distanciaNaRoda = Math.min(salto, CAPSULE_COLOR_COUNT - salto);

@@ -15,7 +15,7 @@ import { GroupSnapshot, GroupStore, SPIN_COOLDOWN_MS, UsageBlockedError } from '
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
 import { rememberGroup } from './recent-groups';
 import { Machine, MachinePerson } from './machine';
-import { capsuleColor, capsuleColorName } from './palette';
+import { capsuleColor, capsuleColorName, capsuleInk, capsuleTextOnEnamel } from './palette';
 import { Confetti } from './confetti';
 import { Identity } from './identity';
 import { trapFocusWithin } from './focus-trap';
@@ -72,6 +72,7 @@ export class SyncedGroup {
   protected readonly author = this.identity.name;
   protected readonly authorInitials = this.identity.initials;
   protected readonly authorColor = this.identity.color;
+  protected readonly authorInk = this.identity.ink;
 
   /** Uma cena por vez. Um token velho que volta de um `setTimeout` não encerra a atual. */
   private sceneToken = 0;
@@ -148,6 +149,16 @@ export class SyncedGroup {
   protected readonly winnerHex = computed(() => {
     const winner = this.displayed().winner;
     return capsuleColor(winner?.colorIndex ?? 0);
+  });
+
+  protected readonly winnerInk = computed(() => {
+    const winner = this.displayed().winner;
+    return capsuleInk(winner?.colorIndex ?? 0);
+  });
+
+  protected readonly winnerText = computed(() => {
+    const winner = this.displayed().winner;
+    return capsuleTextOnEnamel(winner?.colorIndex ?? 0);
   });
 
   protected readonly winnerEmoji = computed(() => this.displayed().winner?.emoji ?? '');
@@ -360,26 +371,34 @@ export class SyncedGroup {
 
   private playScene({ celebrate = false } = {}): void {
     if (this.displayed().chosenIndex < 0) return;
-    const target = this.targetRotation();
+    const restingTarget = this.targetRotation();
+    const current = this.rotation();
+    const finalAngle = ((restingTarget % 360) + 360) % 360;
+    const firstEquivalentAhead = finalAngle + Math.ceil((current - finalAngle) / 360) * 360;
+    // Cada reencenação continua a partir do repouso atual. Voltar a zero e chegar no
+    // mesmo destino dentro do mesmo quadro fazia o navegador consolidar os dois estados,
+    // então a roleta parecia não girar.
+    const animatedTarget = firstEquivalentAhead + 360 * 7;
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const token = ++this.sceneToken;
 
     this.isSpinning.set(true);
     this.revealed.set(false);
-    this.rotation.set(0);
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         // Uma aba em segundo plano estrangula o rAF, e o relógio abaixo pode já ter
         // encerrado esta cena antes de o quadro chegar.
         if (token !== this.sceneToken) return;
-        this.rotation.set(target);
+        this.rotation.set(animatedTarget);
       });
     });
 
     window.setTimeout(() => {
       if (token !== this.sceneToken) return;
-      this.rotation.set(target);
+      // O ângulo equivalente sem as voltas acumuladas mantém os números pequenos e não
+      // produz salto visível: as duas posições diferem apenas por voltas completas.
+      this.rotation.set(restingTarget);
       this.isSpinning.set(false);
       this.revealed.set(true);
       if (celebrate) this.celebration.update((tick) => tick + 1);
@@ -522,6 +541,7 @@ function toPerson(member: GroupMember | undefined): MachinePerson {
   return {
     name: member?.name ?? '—',
     color: capsuleColor(member?.colorIndex ?? 0),
+    ink: capsuleInk(member?.colorIndex ?? 0),
     emoji: member?.emoji ?? '',
   };
 }

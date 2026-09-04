@@ -61,9 +61,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 app-machine { display: contents; }
 .machine-front { width: min(100%, 452px); height: auto; }
 .body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .6s ease, stroke .6s ease; }
-.is-live .body-plate { fill: var(--live); stroke: rgba(10, 24, 48, .32); }
+.is-live .body-plate { fill: var(--live); stroke: color-mix(in srgb, var(--live-ink) 34%, transparent); }
 .body-seam { fill: rgba(200, 220, 255, .2); }
-.is-live .body-seam { fill: rgba(10, 24, 48, .26); }
+.is-live .body-seam { fill: color-mix(in srgb, var(--live-ink) 30%, transparent); }
 .globe-well { filter: drop-shadow(0 22px 40px rgba(4, 10, 22, .55)); }
 .globe-core, .globe-inner-edge { pointer-events: none; }
 .loose-dome { filter: drop-shadow(0 2px 3px rgba(4, 10, 22, .45)); }
@@ -96,9 +96,9 @@ app-machine { display: contents; }
 .crank-bar { fill: none; stroke: var(--enamel-deep); stroke-width: 9; stroke-linecap: round; }
 .crank-knob { fill: var(--live); stroke: var(--enamel-deep); stroke-width: 2.5; transition: fill .5s ease; }
 .crank-boss { fill: var(--enamel-deep); }
-.is-live .tray-flap { stroke: rgba(10, 24, 48, .45); }
-.is-live .chute-lip { stroke: var(--enamel-deep); }
-.is-live .crank-knob { fill: var(--enamel-deep); stroke: rgba(10, 24, 48, .4); }
+.is-live .tray-flap { stroke: color-mix(in srgb, var(--live-ink) 55%, transparent); }
+.is-live .chute-lip { stroke: var(--live-ink); }
+.is-live .crank-knob { fill: var(--live-ink); stroke: color-mix(in srgb, var(--live-ink) 48%, transparent); }
 .machine.is-spinning .crank-arm { animation: crank var(--spin) both; }
 @keyframes crank { to { transform: rotate(720deg); } }
 .tray-window { fill: var(--enamel-deep); }
@@ -115,8 +115,8 @@ app-machine { display: contents; }
 @keyframes deliver { 0% { opacity: 0; transform: translate(-80px, -76px) scale(.7); } 16% { opacity: 1; } 64% { transform: translate(0, 7px) scale(1); } 80% { transform: translate(0, -7px) scale(1); } 100% { transform: translate(0, 0) scale(1); } }
 @keyframes crack { 0%, 68% { transform: translate(0, 0) rotate(0); } 88% { transform: translate(-2px, -7px) rotate(-8deg); } 100% { transform: translate(-2px, -6px) rotate(-7deg); } }
 .decals text { fill: var(--sky); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; }
-.is-live .decal-plate, .is-live .leader-plate { stroke: rgba(10, 24, 48, .55); }
-.is-live text.decal-plate { fill: var(--enamel-deep); stroke: none; }
+.is-live .decal-plate, .is-live .leader-plate { stroke: color-mix(in srgb, var(--live-ink) 68%, transparent); }
+.is-live text.decal-plate { fill: var(--live-ink); stroke: none; }
 .decals .leader { fill: none; stroke: var(--sky); stroke-width: 1.2; opacity: .68; }
 .machine-caption { max-width: 40ch; margin: 0; color: var(--sky); font-size: .82rem; line-height: 1.5; text-align: center; }
 
@@ -223,7 +223,7 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .note-card::after { content: ''; position: absolute; right: 1rem; bottom: 1rem; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
 .note-card-serial { margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .note-card h2 { display: flex; align-items: center; gap: .75rem; margin: .7rem 0 0; color: var(--ink); font-size: 2.4rem; line-height: 1; overflow-wrap: anywhere; }
-.note-card-capsule { width: 2.4rem; height: 2.4rem; flex: none; display: grid; place-items: center; padding-bottom: .7rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -.75rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); font-size: .82rem; }
+.note-card-capsule { width: 2.4rem; height: 2.4rem; flex: none; display: grid; place-items: center; padding-bottom: .7rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -.75rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); color: var(--capsule-ink); font-size: .82rem; }
 .note-form { display: grid; gap: 1.15rem; margin-top: 1.6rem; }
 .note-field { display: block; }
 .note-field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -436,7 +436,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 /* O crachá: quem está mexendo, sempre à vista, e um clique para passar a vez. */
 .who-chip { min-height: 44px; display: inline-flex; align-items: center; gap: .5rem; padding: .28rem .8rem .28rem .3rem; background: transparent; color: var(--white); border: 1px solid var(--line); border-radius: 999px; font-family: var(--display); font-size: .95rem; font-weight: 600; transition: background .16s ease, border-color .16s ease; }
 .who-chip:hover { background: rgba(200, 220, 255, .1); border-color: var(--line-strong); }
-.who-mark { width: 2rem; height: 2rem; flex: none; display: grid; place-items: center; padding-bottom: .55rem; background: var(--capsule, var(--yellow)); border-radius: 999px; box-shadow: inset 0 -.62rem 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(22, 35, 58, .16); color: var(--enamel-deep); font-size: .74rem; }
+.who-mark { width: 2rem; height: 2rem; flex: none; display: grid; place-items: center; padding-bottom: .55rem; background: var(--capsule, var(--yellow)); border-radius: 999px; box-shadow: inset 0 -.62rem 0 rgba(255, 255, 255, .36), inset 0 0 0 1px rgba(22, 35, 58, .28); color: var(--capsule-ink, var(--enamel-deep)); font-size: .74rem; }
 .who-name { max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- A prateleira: as máquinas que este aparelho conhece ---- */
@@ -479,8 +479,8 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .capsule-back svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
 .capsule-title { display: flex; align-items: center; gap: .75rem; overflow-wrap: anywhere; }
-.capsule-preview { width: 3.4rem; height: 3.4rem; flex: none; display: grid; place-items: center; padding-bottom: 1rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -1.05rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); transition: background .24s ease; }
-.capsule-preview-mark { color: var(--enamel-deep); font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1; }
+.capsule-preview { width: 3.4rem; height: 3.4rem; flex: none; display: grid; place-items: center; padding-bottom: 1rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -1.05rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); transition: background .24s ease; }
+.capsule-preview-mark { color: var(--capsule-ink); font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1; }
 
 .style-field { margin: 1.6rem 0 0; padding: 0; border: 0; }
 .style-field legend { display: flex; align-items: baseline; gap: .55rem; margin-bottom: .7rem; padding: 0; color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -505,7 +505,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .capsule-row { width: 100%; min-height: 64px; display: flex; align-items: center; gap: .85rem; padding: .6rem; background: transparent; border: 0; border-radius: 12px; color: var(--ink); text-align: left; transition: background .16s ease; }
 .capsule-row:hover { background: var(--paper-quiet); }
 .capsule-row:hover .capsule-go { transform: translateX(3px); }
-.capsule-mark { width: 2.7rem; height: 2.7rem; flex: none; display: grid; place-items: center; padding-bottom: .8rem; background: var(--capsule, var(--paper-quiet)); border-radius: 999px; box-shadow: inset 0 -.85rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); color: var(--enamel-deep); font-family: var(--display); font-size: .92rem; font-weight: 600; line-height: 1; }
+.capsule-mark { width: 2.7rem; height: 2.7rem; flex: none; display: grid; place-items: center; padding-bottom: .8rem; background: var(--capsule, var(--paper-quiet)); border-radius: 999px; box-shadow: inset 0 -.85rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); color: var(--capsule-ink, var(--enamel-deep)); font-family: var(--display); font-size: .92rem; font-weight: 600; line-height: 1; }
 .capsule-who { flex: 1; min-width: 0; display: grid; gap: .1rem; }
 .capsule-who strong { font-size: 1rem; overflow-wrap: anywhere; }
 .capsule-who small { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
@@ -572,7 +572,7 @@ app-confetti { display: contents; }
 .roster-card > :is(p, h2):first-of-type { padding-right: 3rem; }
 
 /* O emoji mora na metade de cima da cápsula, que é a cúpula; a de baixo é a casca clara. */
-.album-capsule { display: grid; align-items: start; justify-items: center; padding-top: .08rem; font-size: .72rem; line-height: 1; }
+.album-capsule { display: grid; align-items: start; justify-items: center; padding-top: .08rem; color: var(--capsule-ink); font-size: .72rem; line-height: 1; }
 .note-card-capsule { font-size: 1rem; }
 
 /* O comprimido da fileira de pessoas é pequeno demais para um emoji: ele vai ao lado. */

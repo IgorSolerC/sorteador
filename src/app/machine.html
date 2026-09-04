@@ -54,7 +54,9 @@
          `body-plate`, então continuam legíveis sobre ela. -->
     <g class="decals">
       <path class="leader" d="M44 40 44 74 96 116" />
-      <text class="decal" x="8" y="30">{{ capsules().length }} CÁPSULAS</text>
+      <text class="decal" x="8" y="30">
+        {{ capsules().length }} {{ chosenIndex() >= 0 ? 'NO GIRO' : 'CÁPSULAS' }}
+      </text>
       <path class="leader leader-plate" d="M100 374 166 374" />
       <text class="decal decal-plate" x="94" y="378" text-anchor="end">CALHA</text>
       <path class="leader leader-plate" d="M280 410 280 418" />
@@ -82,7 +84,7 @@
           <path class="capsule-seam" [attr.d]="capsule.seam" />
           <path class="capsule-gloss" [attr.d]="capsule.gloss" />
           <path [attr.id]="'rim-' + index" [attr.d]="capsule.labelPath" fill="none" />
-          <text class="capsule-name" [attr.font-size]="capsule.fontSize">
+          <text class="capsule-name" [attr.font-size]="capsule.fontSize" [style.fill]="capsule.ink">
             <textPath [attr.href]="'#rim-' + index" startOffset="50%" text-anchor="middle">{{ capsule.label }}</textPath>
           </text>
         </g>

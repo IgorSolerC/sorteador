@@ -5,7 +5,7 @@ import { GroupMember, SpinRecord, membersById, noteSummary } from './group-log';
 import { GroupSnapshot, UsageBlockedError } from './group-store';
 import { GROUP_STORE } from './firebase-app';
 import { Identity } from './identity';
-import { capsuleColor } from './palette';
+import { capsuleColor, capsuleInk } from './palette';
 import { rememberGroup } from './recent-groups';
 import { NoteBench } from './note-bench';
 import { NoteEditor } from './note-editor';
@@ -51,6 +51,7 @@ export class GroupHistory {
   protected readonly author = this.identity.name;
   protected readonly authorInitials = this.identity.initials;
   protected readonly authorColor = this.identity.color;
+  protected readonly authorInk = this.identity.ink;
 
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
@@ -180,6 +181,10 @@ export class GroupHistory {
 
   protected colorOf(spin: SpinRecord): string {
     return capsuleColor(this.people().get(spin.winnerId)?.colorIndex ?? 0);
+  }
+
+  protected inkOf(spin: SpinRecord): string {
+    return capsuleInk(this.people().get(spin.winnerId)?.colorIndex ?? 0);
   }
 
   protected emojiOf(spin: SpinRecord): string {

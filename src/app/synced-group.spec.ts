@@ -647,7 +647,13 @@ describe('reencenar a entrega', () => {
     fixture.detectChanges();
     expect(app.isSpinning()).toBe(true);
 
-    await esperar(200);
+    // O novo destino precisa estar voltas completas à frente. Repetir o mesmo valor fazia
+    // o navegador consolidar o estado e mostrar só a revelação, sem a roleta rodando.
+    await esperar(50);
+    fixture.detectChanges();
+    expect(app.rotation()).toBeGreaterThan(destino);
+
+    await esperar(150);
     fixture.detectChanges();
 
     expect(app.isSpinning()).toBe(false);

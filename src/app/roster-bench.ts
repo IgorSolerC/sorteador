@@ -1,9 +1,9 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { GroupMember, MAX_EMOJI, emojiText } from './group-log';
-import { CAPSULE_COLORS, capsuleColor, capsuleColorName } from './palette';
+import { CAPSULE_COLORS, capsuleColor, capsuleColorName, capsuleInk } from './palette';
 import { trapFocusWithin } from './focus-trap';
 
 /**
@@ -75,6 +75,7 @@ export class RosterBench {
   });
 
   protected readonly previewColor = computed(() => capsuleColor(this.draftColor()));
+  protected readonly previewInk = computed(() => capsuleInk(this.draftColor()));
 
   protected readonly dirty = computed(() => {
     const member = this.editing();
@@ -84,7 +85,10 @@ export class RosterBench {
 
   constructor() {
     effect(() => {
-      if (this.restyled() > 0) this.back();
+      // `back()` lê `editingId`. Sem `untracked`, essa leitura fazia o efeito observar a
+      // pessoa em edição; depois do primeiro salvamento, abrir qualquer outra disparava o
+      // efeito de novo e fechava a bancada no mesmo instante.
+      if (this.restyled() > 0) untracked(() => this.back());
     });
   }
 
@@ -94,6 +98,10 @@ export class RosterBench {
 
   protected colorName(index: number): string {
     return capsuleColorName(index);
+  }
+
+  protected inkFor(index: number): string {
+    return capsuleInk(index);
   }
 
   protected initials(name: string): string {

@@ -137,10 +137,10 @@ Eles descrevem a pessoa; nunca participam do sorteio. `group-log.spec.ts` trava 
 sem pintura, o vencedor, o bolo e a rodada são idênticos.
 
 **A cor é uma posição na paleta, não um hexadecimal.** Guardar `cor: 13` em vez de
-`'#00D7D6'` faz três coisas ao mesmo tempo: as rules validam um inteiro entre 0 e 23 sem
+`'#FFDF2B'` faz três coisas ao mesmo tempo: as rules validam um inteiro entre 0 e 23 sem
 precisar saber calcular contraste; a paleta inteira pode ser reafinada sem reescrever um
-evento sequer; e nenhuma cápsula pode existir fora do conjunto que `palette.spec.ts` prova
-passar em 4.5:1 nos dois sentidos. O preço é que **reordenar `CAPSULE_COLORS` repinta todo
+evento sequer; e nenhuma cápsula pode existir fora do conjunto cuja tinta clara ou escura
+`palette.spec.ts` prova passar em 4.5:1. O preço é que **reordenar `CAPSULE_COLORS` repinta todo
 mundo** — a paleta só cresce pelo fim.
 
 **Os dois campos são independentes.** Omitir um significa "deixe como está", o que permite
@@ -251,14 +251,14 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 | 4. Camada de dados | ✅ `group-store.ts`, 28 testes de integração |
 | 5. Interface | ✅ `#/g/<id>`, verificada em produção |
 | 6. Criar grupo | ✅ `#/novo`, com quem monta já entrando como primeira cápsula |
-| 7. Fumaça em produção | ✅ 10/10 |
-| 8. Ponta a ponta no navegador | ✅ 35/35 do ciclo completo: etiqueta, cápsula, reencenação e álbum |
-| 9. Merge e deploy | ⛔ pendente de aprovação |
+| 7. Fumaça em produção | ✅ 13/13 |
+| 8. Ponta a ponta no navegador | ✅ 36/36 do ciclo completo: etiqueta, cápsula, reencenação e álbum |
+| 9. Merge e deploy | ✅ pela branch `main`, com publicação automática no GitHub Pages |
 
 ## Como rodar cada suíte
 
 ```
-npm test              # 232 unitários e de componente
+npm test              # 233 unitários e de componente
 npm run test:rules    # 75 rules no emulador, sem projeto nem rede
 npm run test:store    # 28 de integração da camada de dados
 npm run test:a11y     # 8 telas x 3 larguras, contra o servidor local

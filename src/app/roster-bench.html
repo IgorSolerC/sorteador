@@ -25,7 +25,8 @@
     </p>
 
     <h2 id="roster-card-title" class="capsule-title">
-      <span class="capsule-preview" aria-hidden="true" [style.--capsule]="previewColor()">
+      <span class="capsule-preview" aria-hidden="true"
+            [style.--capsule]="previewColor()" [style.--capsule-ink]="previewInk()">
         <span class="capsule-preview-mark">{{ draftEmoji() || initials(member.name) }}</span>
       </span>
       <span class="visually-hidden">A cápsula de&nbsp;</span>{{ member.name }}
@@ -151,7 +152,9 @@
               (click)="open(member)"
               [attr.aria-label]="'Editar a cápsula de ' + member.name"
             >
-              <span class="capsule-mark" aria-hidden="true" [style.--capsule]="colorFor(member.colorIndex)">
+              <span class="capsule-mark" aria-hidden="true"
+                    [style.--capsule]="colorFor(member.colorIndex)"
+                    [style.--capsule-ink]="inkFor(member.colorIndex)">
                 {{ member.emoji || initials(member.name) }}
               </span>
               <span class="capsule-who">

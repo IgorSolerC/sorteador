@@ -2,7 +2,7 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 
 import { Identity, MAX_AUTHOR } from './identity';
-import { capsuleColor, CAPSULE_COLOR_COUNT } from './palette';
+import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 import { hashString, normalizeName } from './naming';
 
 /**
@@ -48,6 +48,8 @@ export class IdentityGate {
     // Vazia, a cápsula é a da marca: a primeira tela do produto não devia ser cinza.
     return name ? capsuleColor(hashString(`cracha:v1:${name}`) % CAPSULE_COLOR_COUNT) : 'var(--yellow)';
   });
+
+  protected readonly ink = computed(() => capsuleInkForColor(this.color()));
 
   protected submit(): void {
     const name = this.clean();

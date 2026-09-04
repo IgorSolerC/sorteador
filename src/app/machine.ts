@@ -14,6 +14,7 @@ import { capsuleColor } from './palette';
 export interface MachinePerson {
   readonly name: string;
   readonly color: string;
+  readonly ink: string;
   readonly emoji: string;
 }
 
@@ -43,6 +44,7 @@ const LOOSE_RADIUS = 15;
 export interface Capsule {
   readonly name: string;
   readonly color: string;
+  readonly ink: string;
   readonly dome: string;
   readonly clear: string;
   readonly seam: string;
@@ -100,6 +102,7 @@ export class Machine {
       return {
         name: person.name,
         color: person.color,
+        ink: person.ink,
         dome: annulus(from, to, GLOBE.equator, GLOBE.outer),
         clear: annulus(from, to, GLOBE.inner, GLOBE.equator),
         seam: arc(from, to, GLOBE.equator),

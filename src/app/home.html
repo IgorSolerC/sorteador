@@ -10,7 +10,8 @@
 
   <nav class="topbar-actions" aria-label="Você">
     <button type="button" class="who-chip" (click)="changeIdentity.emit()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="color()">{{ authorInitials() }}</span>
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="color()"
+            [style.--capsule-ink]="ink()">{{ authorInitials() }}</span>
       <span class="who-name">{{ author() }}</span>
       <span class="visually-hidden">— trocar de pessoa</span>
     </button>
@@ -43,7 +44,8 @@
         @for (group of groups(); track group.id) {
           <li>
             <a class="home-row" [href]="linkTo(group)">
-              <span class="capsule-mark" aria-hidden="true" [style.--capsule]="colorOf(group)">
+              <span class="capsule-mark" aria-hidden="true" [style.--capsule]="colorOf(group)"
+                    [style.--capsule-ink]="inkOf(group)">
                 {{ initials(group.name) }}
               </span>
               <span class="capsule-who">

@@ -153,6 +153,20 @@ describe('a gaveta da coleção', () => {
     fixture.destroy();
   });
 
+  it('depois de salvar uma cápsula ainda abre a bancada de outra pessoa', async () => {
+    const fixture = await render([member(), member({ id: 'b2', name: 'Ana' })]);
+    abrirCapsula(fixture);
+    fixture.componentRef.setInput('restyled', 1);
+    fixture.detectChanges();
+
+    abrirCapsula(fixture, 1);
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelector('.color-grid')).toBeTruthy();
+    expect(el(fixture).querySelector('.capsule-title')?.textContent).toContain('Ana');
+    fixture.destroy();
+  });
+
   it('tirar do globo avisa quem vai gravar', async () => {
     const fixture = await render([member()]);
     let removido: GroupMember | null = null;

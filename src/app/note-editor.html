@@ -14,7 +14,8 @@
     {{ spin().at | date: 'dd/MM/yy HH:mm' }}
   </p>
   <h2 id="note-card-title">
-    <span class="note-card-capsule" aria-hidden="true" [style.--capsule]="capsule()">
+    <span class="note-card-capsule" aria-hidden="true" [style.--capsule]="capsule()"
+          [style.--capsule-ink]="capsuleInk()">
       {{ capsuleEmoji() || spin().winnerName.slice(0, 1).toUpperCase() }}
     </span>
     <span class="visually-hidden">Etiqueta de&nbsp;</span>{{ spin().winnerName }}

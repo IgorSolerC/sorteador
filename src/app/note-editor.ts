@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { MAX_NOTE_DESCRIPTION, MAX_NOTE_SUBTITLE, MAX_NOTE_TITLE, SpinRecord } from './group-log';
 import { trapFocusWithin } from './focus-trap';
+import { capsuleInkForColor } from './palette';
 
 /**
  * A bancada onde a etiqueta é escrita. Ela não fala com o servidor: recebe o giro, devolve
@@ -38,6 +39,8 @@ export class NoteEditor {
   readonly capsule = input<string>('#FFC53D');
   /** O símbolo da pessoa, quando ela escolheu um. */
   readonly capsuleEmoji = input<string>('');
+
+  protected readonly capsuleInk = computed(() => capsuleInkForColor(this.capsule()));
 
   /** O resumo como ele vai aparecer no registro, montado enquanto se digita. */
   protected readonly summary = computed(() => {

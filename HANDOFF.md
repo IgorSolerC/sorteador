@@ -45,8 +45,9 @@ Estas não são preferências. Quebrar qualquer uma reescreve o passado de gente
    log como **índice**, não hexadecimal. Reordenar repinta todo mundo. **A paleta só cresce
    pelo fim**, e `STRIDE` tem que continuar **primo com o tamanho dela** (hoje 11 e 24) —
    um passo não-primo fecha um ciclo curto e repete cores.
-5. **Toda cor de cápsula passa de 4.5:1 sobre o esmalte E aceita tinta escura por cima.**
-   `palette.spec.ts` mede as 24 nos dois sentidos e derruba o build se uma nova falhar.
+5. **Toda cor de cápsula escolhe tinta clara ou escura com contraste de pelo menos 4.5:1.**
+   `palette.spec.ts` mede as 24 sobre a cápsula e também o nome vencedor sobre o esmalte.
+   Tons profundos continuam na chapa, no aro e no brilho, mas não podem fazer texto sumir.
 6. **As rules vão ao ar ANTES do site.** Na ordem inversa, todo mundo recebe uma interface
    cujas escritas o servidor recusa:
    ```
@@ -119,11 +120,11 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 232 unitários e de componente
+npm test -- --watch=false   # 233 unitários e de componente
 npm run test:rules          # 75 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 28 de integração da camada de dados
 npm run test:a11y           # 8 telas x 3 larguras — precisa de npm start + emulador
-npm run test:etiqueta       # 35 de ponta a ponta num navegador real — idem
+npm run test:etiqueta       # 36 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
@@ -174,24 +175,21 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 
 ## 7. O que ficou aberto
 
-Nada bloqueante. Em ordem de custo:
+Nada pendente no código em 2026-09-04. A rodada de acabamento seguinte fechou os itens daqui:
 
-1. **`.impeccable/design.json` está defasado** da paleta de 24 cores (o sidecar ainda tem os
-   `colorMeta` das seis antigas). A skill manda **reportar, não consertar de lado** — é
-   `/impeccable document` quando o usuário pedir. Não rode sem avisar: ele regenera DESIGN.md,
-   que hoje é escrito à mão.
-2. **Sete achados de UX que o usuário adiou explicitamente** numa varredura anterior
-   ("os demais pontos vou pensar"): a cartela quase vazia, o desequilíbrio de duas colunas na
-   coleção, o CTA de grupo sincronizado enterrado, três contagens de cápsula conflitantes, e
-   cabeçalhos de rodada grudentos no álbum. **Vários deixaram de existir** com a remoção do
-   modo por link e com a gaveta; vale refazer a varredura em vez de partir da lista velha.
-   Havia também 10 propostas funcionais (F1–F10) num artefato de sessão anterior — **o
-   conteúdo delas se perdeu**; peça ao usuário se ele quiser retomá-las.
-3. **`npx impeccable update` falha** com `Download failed: invalid zip data`. A instalação está
-   íntegra e nada foi escrito. Não investigado.
-4. **A cor dos grupos existentes mudou** com este deploy (ela deixou de vir da posição no anel
-   e passou a pertencer à pessoa). Foi avisado e aceito. Se alguém reclamar, o caminho é
-   **A coleção → clicar no nome → escolher a cor**, não reverter o modelo.
+1. **Sidecar atualizado:** `.impeccable/design.json` agora registra as 24 cores JASC na ordem
+   real e `DESIGN.md` documenta a tinta adaptativa clara/escura.
+2. **Varredura de UX refeita em desktop e celular:** os achados de layout antigos já tinham
+   desaparecido com a gaveta e a remoção do modo por link. A ambiguidade que restava foi
+   corrigida: a máquina histórica diz `N NO GIRO`, enquanto a grade diz `NO GLOBO AGORA`.
+3. **Atualizador destravado:** o `npx` em cache ainda executava o CLI 3.5.0 e baixava um ZIP
+   inválido. `npx --yes impeccable@3.6.1 update` atualizou as cópias do projeto para 4.1.3.
+4. **Paleta substituída por solicitação explícita:** os índices continuam na mesma ordem do
+   log, mas os 24 valores agora são os do JASC-PAL fornecido. Como há tons profundos, texto e
+   ferragens usam `capsuleInk()`; o caminho de ajuste continua sendo **A coleção → pessoa**.
+
+As propostas F1–F10 continuam irrecuperáveis: o artefato que continha o texto se perdeu antes
+deste handoff. Não são tratadas como backlog sem uma nova descrição do usuário.
 
 ---
 

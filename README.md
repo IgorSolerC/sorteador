@@ -68,7 +68,7 @@ npm run build:testjs && node tests/seed-emulator.mjs
 ## Testar e compilar
 
 ```bash
-npm test -- --watch=false   # 232 unitários e de componente
+npm test -- --watch=false   # 233 unitários e de componente
 npm run test:rules          # 75 rules no emulador, sem projeto nem rede
 npm run test:store          # 28 de integração da camada de dados
 npm run test:a11y           # 8 telas x 3 larguras, contra o servidor local

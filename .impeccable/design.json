@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-04T02:15:26.848Z",
+  "generatedAt": "2026-09-04T15:56:00.000Z",
   "title": "Design System: Mesa do Mês",
   "extensions": {
     "colorMeta": {
@@ -274,96 +274,30 @@
           "#fff0c8"
         ]
       },
-      "capsule-amber": {
-        "role": "secondary",
-        "displayName": "Cápsula Âmbar",
-        "canonical": "#ffc53d",
-        "tonalRamp": [
-          "#3a2903",
-          "#5d4308",
-          "#855f0d",
-          "#ad7d13",
-          "#d29a1c",
-          "#ffc53d",
-          "#ffd97e",
-          "#fff0c8"
-        ]
-      },
-      "capsule-mint": {
-        "role": "secondary",
-        "displayName": "Cápsula Menta",
-        "canonical": "#4fe0c8",
-        "tonalRamp": [
-          "#04302a",
-          "#075045",
-          "#0b7264",
-          "#109485",
-          "#1fb5a3",
-          "#4fe0c8",
-          "#95efe0",
-          "#d6faf3"
-        ]
-      },
-      "capsule-coral": {
-        "role": "secondary",
-        "displayName": "Cápsula Coral",
-        "canonical": "#ff6b7d",
-        "tonalRamp": [
-          "#3d0611",
-          "#631021",
-          "#8b1b33",
-          "#b32948",
-          "#d9435f",
-          "#ff6b7d",
-          "#ffa2ae",
-          "#ffd9de"
-        ]
-      },
-      "capsule-violet": {
-        "role": "secondary",
-        "displayName": "Cápsula Violeta",
-        "canonical": "#a78bff",
-        "tonalRamp": [
-          "#1d0f4a",
-          "#2f1a72",
-          "#43289b",
-          "#5838c1",
-          "#7a5ce0",
-          "#a78bff",
-          "#c7b4ff",
-          "#e8e0ff"
-        ]
-      },
-      "capsule-tangerine": {
-        "role": "secondary",
-        "displayName": "Cápsula Tangerina",
-        "canonical": "#ff9a3c",
-        "tonalRamp": [
-          "#3b1e02",
-          "#5f3306",
-          "#87490b",
-          "#b06110",
-          "#d67b1c",
-          "#ff9a3c",
-          "#ffbe83",
-          "#ffe4c9"
-        ]
-      },
-      "capsule-rose": {
-        "role": "secondary",
-        "displayName": "Cápsula Rosa",
-        "canonical": "#ff8fc7",
-        "tonalRamp": [
-          "#3f0a27",
-          "#66163f",
-          "#8f2559",
-          "#b93875",
-          "#e05494",
-          "#ff8fc7",
-          "#ffb9dc",
-          "#ffe0ef"
-        ]
-      },
+      "capsule-breu": { "role": "secondary", "displayName": "Cápsula Breu", "canonical": "#0f0f12" },
+      "capsule-grafite": { "role": "secondary", "displayName": "Cápsula Grafite", "canonical": "#505359" },
+      "capsule-nevoa": { "role": "secondary", "displayName": "Cápsula Névoa", "canonical": "#b6bfbc" },
+      "capsule-gelo": { "role": "secondary", "displayName": "Cápsula Gelo", "canonical": "#f2fbff" },
+      "capsule-ciano": { "role": "secondary", "displayName": "Cápsula Ciano", "canonical": "#5ee7ff" },
+      "capsule-azul-piscina": { "role": "secondary", "displayName": "Cápsula Azul-piscina", "canonical": "#00a1db" },
+      "capsule-cobalto": { "role": "secondary", "displayName": "Cápsula Cobalto", "canonical": "#1d5bb8" },
+      "capsule-indigo": { "role": "secondary", "displayName": "Cápsula Índigo", "canonical": "#1f2c66" },
+      "capsule-pinho": { "role": "secondary", "displayName": "Cápsula Pinho", "canonical": "#1b5245" },
+      "capsule-folha": { "role": "secondary", "displayName": "Cápsula Folha", "canonical": "#2e8f46" },
+      "capsule-lima": { "role": "secondary", "displayName": "Cápsula Lima", "canonical": "#58d92e" },
+      "capsule-broto": { "role": "secondary", "displayName": "Cápsula Broto", "canonical": "#cbff70" },
+      "capsule-baunilha": { "role": "secondary", "displayName": "Cápsula Baunilha", "canonical": "#ffff8f" },
+      "capsule-girassol": { "role": "secondary", "displayName": "Cápsula Girassol", "canonical": "#ffdf2b" },
+      "capsule-tangerina": { "role": "secondary", "displayName": "Cápsula Tangerina", "canonical": "#f0771a" },
+      "capsule-carmim": { "role": "secondary", "displayName": "Cápsula Carmim", "canonical": "#e32239" },
+      "capsule-vinho": { "role": "secondary", "displayName": "Cápsula Vinho", "canonical": "#851540" },
+      "capsule-ameixa": { "role": "secondary", "displayName": "Cápsula Ameixa", "canonical": "#401a24" },
+      "capsule-tijolo": { "role": "secondary", "displayName": "Cápsula Tijolo", "canonical": "#9c3b30" },
+      "capsule-terracota": { "role": "secondary", "displayName": "Cápsula Terracota", "canonical": "#c95d3c" },
+      "capsule-salmao": { "role": "secondary", "displayName": "Cápsula Salmão", "canonical": "#ed8a5f" },
+      "capsule-pessego": { "role": "secondary", "displayName": "Cápsula Pêssego", "canonical": "#ffbca6" },
+      "capsule-rosa": { "role": "secondary", "displayName": "Cápsula Rosa", "canonical": "#eb75be" },
+      "capsule-roxo": { "role": "secondary", "displayName": "Cápsula Roxo", "canonical": "#77388c" },
       "line": {
         "role": "neutral",
         "displayName": "Linha",
@@ -600,7 +534,7 @@
       "kind": "card",
       "refersTo": "person-capsule",
       "description": "Uma pessoa na cartela de papel: índice em mono, disco de iniciais na cor da sua cápsula, nome e remoção.",
-      "html": "<ul class=\"ds-roster\"><li><span class=\"ds-person-index\">03</span><span class=\"ds-person-capsule\" style=\"--capsule:#ff6b7d\">CE</span><strong>Cecília</strong><button type=\"button\" aria-label=\"Remover Cecília\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path></svg><span>Remover</span></button></li></ul>",
+      "html": "<ul class=\"ds-roster\"><li><span class=\"ds-person-index\">03</span><span class=\"ds-person-capsule\" style=\"--capsule:#ed8a5f\">CE</span><strong>Cecília</strong><button type=\"button\" aria-label=\"Remover Cecília\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path></svg><span>Remover</span></button></li></ul>",
       "css": ".ds-roster { margin: 0; padding: 0; list-style: none; background: #faf6ec; } .ds-roster li { min-height: 74px; display: grid; grid-template-columns: 2rem 2.7rem 1fr auto; align-items: center; gap: .9rem; border-bottom: 1px solid rgba(22, 35, 58, .18); } .ds-person-index { color: #5b6779; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .66rem; font-variant-numeric: tabular-nums; } .ds-person-capsule { width: 2.7rem; height: 2.7rem; display: grid; place-items: center; padding-bottom: .8rem; background: var(--capsule, #f0e9d9); border-radius: 999px; box-shadow: inset 0 -.85rem 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(22, 35, 58, .16); color: #16233a; font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: .84rem; font-weight: 600; } .ds-roster strong { color: #16233a; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 1rem; overflow-wrap: anywhere; } .ds-roster button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .42rem; padding: .5rem; background: transparent; color: #6d5560; border: 0; border-radius: 999px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; } .ds-roster button:hover { background: rgba(163, 18, 63, .09); color: #8f0f37; } .ds-roster button:focus-visible { outline: 3px solid #b5761c; outline-offset: 3px; } .ds-roster button svg { width: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }"
     },
     {
@@ -608,7 +542,7 @@
       "kind": "card",
       "refersTo": "chart-cell-capsule",
       "description": "Um mês da coleção: tique na régua, cápsula achatada na cor da pessoa, mês em mono e nome. O mês corrente acende; os já saídos são riscados.",
-      "html": "<ol class=\"ds-chart\"><li class=\"ds-chart-cell current\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#ffc53d\"></span><span class=\"ds-cell-month\">AGO 2026</span><strong>Fátima</strong><span class=\"ds-cell-status\">Nesta rodada</span></li><li class=\"ds-chart-cell drawn\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#4fe0c8\"></span><span class=\"ds-cell-month\">JUL 2026</span><strong>Breno</strong></li></ol>",
+      "html": "<ol class=\"ds-chart\"><li class=\"ds-chart-cell current\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#ffdf2b\"></span><span class=\"ds-cell-month\">AGO 2026</span><strong>Fátima</strong><span class=\"ds-cell-status\">Nesta rodada</span></li><li class=\"ds-chart-cell drawn\"><span class=\"ds-cell-tick\" aria-hidden=\"true\"></span><span class=\"ds-cell-capsule\" aria-hidden=\"true\" style=\"background:#5ee7ff\"></span><span class=\"ds-cell-month\">JUL 2026</span><strong>Breno</strong></li></ol>",
       "css": ".ds-chart { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); margin: 0; padding: 0; background: #0a1830; border-top: 2px solid rgba(200, 220, 255, .34); list-style: none; } .ds-chart-cell { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; color: #ffffff; } .ds-cell-tick { position: absolute; top: 0; left: 0; width: 1px; height: 13px; background: rgba(200, 220, 255, .34); } .ds-cell-capsule { width: 1.55rem; height: 1.1rem; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); } .ds-cell-month { color: #bccde6; font-family: 'Martian Mono', ui-monospace, monospace; font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; } .ds-chart-cell strong { font-family: 'Fredoka Variable', 'Trebuchet MS', sans-serif; font-size: 1.1rem; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; } .ds-cell-status { color: #ffc53d; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: .7rem; font-weight: 700; } .ds-chart-cell.current .ds-cell-tick { width: 3px; height: 26px; background: #ffc53d; } .ds-chart-cell.current .ds-cell-month { color: #ffc53d; } .ds-chart-cell.drawn { color: #93a6be; } .ds-chart-cell.drawn .ds-cell-tick { background: #93a6be; } .ds-chart-cell.drawn strong { text-decoration: line-through; text-decoration-thickness: 1.5px; } .ds-chart-cell.drawn .ds-cell-capsule { opacity: .4; }"
     },
     {
@@ -625,7 +559,7 @@
       "refersTo": "note-sticker",
       "description": "O papel colado na cápsula que já saiu, com o que o clube jogou. Levemente torto, como um adesivo de verdade.",
       "html": "<article class=\"ds-note-sticker\"><span class=\"ds-note-chip\"></span><p class=\"ds-note-serial\">Etiqueta · cápsula 3</p><h2 class=\"ds-note-title\">Click The Button!</h2><p class=\"ds-note-description\">Nota final 8/10. Jogamos em cinco.</p><p class=\"ds-note-meta\"><span>por Igor · 12/09/26</span><button class=\"ds-note-edit\" type=\"button\">Editar</button></p></article>",
-      "css": ".ds-note-sticker { position: relative; width: min(100%, 33rem); padding: 1.15rem 3.6rem 1rem 1.3rem; background: #faf6ec; color: #16233a; border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); text-align: left; transform: rotate(-.9deg); font-family: \"Atkinson Hyperlegible\", sans-serif; }\n.ds-note-chip { position: absolute; top: 1.2rem; right: 1.3rem; width: 1.55rem; height: 1.1rem; background: #ff6b7d; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }\n.ds-note-serial { margin: 0; color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }\n.ds-note-title { margin: .5rem 0 0; font-family: \"Fredoka Variable\", sans-serif; font-size: 1.42rem; font-weight: 600; line-height: 1.18; letter-spacing: -.03em; }\n.ds-note-description { max-width: 46ch; margin: .5rem 0 0; color: #5b6779; font-size: .92rem; line-height: 1.55; }\n.ds-note-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .55rem 0 0; padding-top: .35rem; border-top: 1px solid rgba(22, 35, 58, .18); color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n.ds-note-edit { min-height: 44px; padding: 0 .2rem; background: transparent; border: 0; color: #16233a; font-family: \"Atkinson Hyperlegible\", sans-serif; font-size: .82rem; font-weight: 700; text-transform: none; letter-spacing: normal; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }"
+      "css": ".ds-note-sticker { position: relative; width: min(100%, 33rem); padding: 1.15rem 3.6rem 1rem 1.3rem; background: #faf6ec; color: #16233a; border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); text-align: left; transform: rotate(-.9deg); font-family: \"Atkinson Hyperlegible\", sans-serif; }\n.ds-note-chip { position: absolute; top: 1.2rem; right: 1.3rem; width: 1.55rem; height: 1.1rem; background: #ed8a5f; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }\n.ds-note-serial { margin: 0; color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }\n.ds-note-title { margin: .5rem 0 0; font-family: \"Fredoka Variable\", sans-serif; font-size: 1.42rem; font-weight: 600; line-height: 1.18; letter-spacing: -.03em; }\n.ds-note-description { max-width: 46ch; margin: .5rem 0 0; color: #5b6779; font-size: .92rem; line-height: 1.55; }\n.ds-note-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .55rem 0 0; padding-top: .35rem; border-top: 1px solid rgba(22, 35, 58, .18); color: #5b6779; font-family: \"Martian Mono\", ui-monospace, monospace; font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }\n.ds-note-edit { min-height: 44px; padding: 0 .2rem; background: transparent; border: 0; color: #16233a; font-family: \"Atkinson Hyperlegible\", sans-serif; font-size: .82rem; font-weight: 700; text-transform: none; letter-spacing: normal; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }"
     },
     {
       "name": "Cartão do Álbum",
@@ -641,7 +575,7 @@
     "overview": "O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula colorida encaixada no aro do globo de acrílico; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete é esmalte azul-noite com brilho especular, aro cromado canelado e acrílico translúcido, e ocupa a tela inteira em vez de flutuar dentro de um cartão. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão \"Sortear\" que todo sorteador web entrega.\n\nA densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: a cartela e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.\n\nHá exatamente uma quebra no esmalte: a seção da coleção é papel quente impresso (paper), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.",
     "keyCharacteristics": [
       "Máquina de cápsulas em esmalte azul-noite sangrando na tela, nunca um cartão centralizado.",
-      "Seis cores fixas de cápsula, atribuídas por posição, que são a única fonte de cor viva.",
+      "Vinte e quatro tintas JASC variadas, escolhidas por pessoa, com contraste adaptativo para texto e ferragens.",
       "A cor da cápsula vencedora repinta o corpo da máquina e carrega o nome em escala gigante.",
       "Monoespaçada apenas em valores de série e medição; nunca como fantasia técnica.",
       "Papel quente como única quebra do esmalte, reservado à administração.",
@@ -650,12 +584,12 @@
     "rules": [
       {
         "name": "A Regra da Cápsula Portante",
-        "body": "Toda cor de cápsula passa de 4.5:1 sobre enamel, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados.",
+        "body": "Cada cor escolhe tinta clara ou escura por contraste medido. capsuleInk garante pelo menos 4.5:1 para iniciais, nomes do aro e ferragens; quando a cor não passa como texto sobre o esmalte, o nome vencedor fica branco e a cor continua na chapa, no aro e no brilho.",
         "section": "colors"
       },
       {
         "name": "A Regra da Repintura Total",
-        "body": "Quando a rodada é revelada, o corpo da máquina (.body-plate) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.",
+        "body": "Quando a rodada é revelada, o corpo da máquina (.body-plate) é preenchido com a cor da cápsula vencedora como campo chapado, e todos os elementos montados na chapa recebem a tinta AA calculada daquela cápsula. A tinta aparece inteira na chapa; só o brilho atmosférico usa mistura.",
         "section": "colors"
       },
       {
@@ -675,7 +609,7 @@
       },
       {
         "name": "A Regra da Escala Sozinha",
-        "body": "A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.",
+        "body": "A hierarquia da primeira dobra é feita só de escala e contraste: o nome enorme usa a cor da cápsula quando legível e branco quando ela é profunda; o parágrafo fica em céu e os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.",
         "section": "typography"
       },
       {
@@ -717,7 +651,7 @@
     "dos": [
       "Do deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.",
       "Do usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, cartela, coleção, bandeja — para que a coleção leia como coleção.",
-      "Do pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para tinta escura.",
+      "Do pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para a tinta AA calculada.",
       "Do reservar Martian Mono para valores de série e medição, com números tabulares.",
       "Do construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.",
       "Do manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.",
@@ -727,7 +661,7 @@
     "donts": [
       "Don't centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.",
       "Don't misturar a cor da cápsula difusamente no azul como tintura de fundo — o resultado é oliva.",
-      "Don't introduzir uma cor de cápsula que não passe de 4.5:1 sobre o esmalte e não aceite tinta escura por cima.",
+      "Don't introduzir uma cor de cápsula sem definir e testar a tinta clara ou escura que a torna legível em cada superfície.",
       "Don't trazer papel para fora da seção da coleção.",
       "Don't usar sombra dura de bloco com deslocamento diagonal e zero desfoque; a parede lateral do botão é vertical, sólida, e vem com sombra ambiente.",
       "Don't colocar kicker, sobrancelha ou rótulo acima de um título.",

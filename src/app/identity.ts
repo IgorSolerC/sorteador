@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 
 import { hashString, normalizeName } from './naming';
-import { capsuleColor, CAPSULE_COLOR_COUNT } from './palette';
+import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 
 const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
 export const MAX_AUTHOR = 60;
@@ -37,6 +37,9 @@ export class Identity {
     const name = this.value().toLowerCase();
     return name ? capsuleColor(hashString(`cracha:v1:${name}`) % CAPSULE_COLOR_COUNT) : 'var(--chrome-dim)';
   });
+
+  /** Tinta que mantém as iniciais legíveis tanto nas cápsulas claras quanto nas escuras. */
+  readonly ink = computed(() => capsuleInkForColor(this.color()));
 
   /** As iniciais do crachá, no máximo duas. */
   readonly initials = computed(() =>

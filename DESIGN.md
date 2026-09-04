@@ -24,30 +24,30 @@ colors:
   ink-quiet: "#5b6779"
   white: "#ffffff"
   yellow: "#ffc53d"
-  capsule-coral: "#ff6b7d"
-  capsule-salmao: "#ff9985"
-  capsule-pessego: "#ff9c70"
-  capsule-tangerina: "#ff9a3c"
-  capsule-areia: "#ffc277"
-  capsule-ambar: "#ffc53d"
-  capsule-ouro: "#f1d100"
-  capsule-limao: "#d5dc04"
-  capsule-lima: "#b1e546"
-  capsule-broto: "#83ea6c"
-  capsule-trevo: "#42ec8e"
-  capsule-jade: "#00e7ae"
-  capsule-menta: "#4fe0c8"
-  capsule-turquesa: "#00d7d6"
-  capsule-piscina: "#00cfe4"
-  capsule-ceu: "#00c6f4"
-  capsule-anil: "#38bcff"
-  capsule-azulejo: "#65b2ff"
-  capsule-pervinca: "#80a9ff"
-  capsule-lavanda: "#97a0ff"
-  capsule-violeta: "#a78bff"
-  capsule-orquidea: "#cf89ff"
-  capsule-magenta: "#f27fea"
-  capsule-rosa: "#ff8fc7"
+  capsule-breu: "#0f0f12"
+  capsule-grafite: "#505359"
+  capsule-nevoa: "#b6bfbc"
+  capsule-gelo: "#f2fbff"
+  capsule-ciano: "#5ee7ff"
+  capsule-azul-piscina: "#00a1db"
+  capsule-cobalto: "#1d5bb8"
+  capsule-indigo: "#1f2c66"
+  capsule-pinho: "#1b5245"
+  capsule-folha: "#2e8f46"
+  capsule-lima: "#58d92e"
+  capsule-broto: "#cbff70"
+  capsule-baunilha: "#ffff8f"
+  capsule-girassol: "#ffdf2b"
+  capsule-tangerina: "#f0771a"
+  capsule-carmim: "#e32239"
+  capsule-vinho: "#851540"
+  capsule-ameixa: "#401a24"
+  capsule-tijolo: "#9c3b30"
+  capsule-terracota: "#c95d3c"
+  capsule-salmao: "#ed8a5f"
+  capsule-pessego: "#ffbca6"
+  capsule-rosa: "#eb75be"
+  capsule-roxo: "#77388c"
   line: "rgba(200, 220, 255, .17)"
   line-strong: "rgba(200, 220, 255, .34)"
   line-paper: "rgba(22, 35, 58, .18)"
@@ -242,9 +242,9 @@ Uma paleta de esmalte industrial — azul-noite profundo, cromo e céu frio — 
 - **Amarelo de Cápsula** (`yellow`): a ação primária, o adesivo redondo da rodada, o anel de foco e o marcador de estado. É também o **Âmbar** da roda de cápsulas, e essa coincidência é intencional: a marca é uma cápsula.
 
 ### Secondary — a roda de vinte e quatro cápsulas
-Uma volta completa na roda de matizes em vinte e quatro passos, com a luminosidade acompanhando o formato do gamut sRGB: alta no amarelo-verde, onde há croma de sobra; mais baixa no azul-violeta, onde só existe cor se a tinta escurecer. É uma rampa, não um zigue-zague, e é isso que faz o conjunto ler como uma caixa de cápsulas de plástico em vez de um sortido aleatório.
+Uma caixa de vinte e quatro tintas deliberadamente variada: quatro neutros, seis frios, quatro verdes, nove quentes e dois violetas. A mistura inclui breu, grafite e índigo profundos ao lado de gelo, ciano, lima, girassol, terracota e rosa; a coleção agora distingue pessoas por temperatura, luminosidade e saturação, não só por matiz.
 
-A fonte da verdade é `src/app/palette.ts`; o frontmatter deste arquivo é a cópia legível. As seis cores originais do produto continuam no conjunto, nas matizes onde sempre estiveram — quem já tinha uma cápsula não a perde por causa de uma paleta maior.
+A fonte da verdade é `src/app/palette.ts`; o frontmatter deste arquivo é a cópia legível. A ordem é exatamente a do JASC-PAL fornecido em 2026-09-04. Como o log guarda índices, os vinte e quatro valores podem ser afinados em posição, mas nunca reordenados.
 
 A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua na gaveta da coleção, e essa cor a identifica em toda parte — a cunha no aro do globo, a bolinha do registro, o disco de iniciais, a cápsula na bandeja, o cartão no álbum, e o confete quando ela sai. É o vínculo que faz a coleção ler como coleção. Antes a cor vinha da posição, e a mesma pessoa mudava de cor quando o bolo mudava de tamanho.
 
@@ -260,13 +260,13 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 ### Named Rules
 
-**A Regra da Cápsula Portante.** Toda cor de cápsula passa de 4.5:1 sobre `enamel`, e tinta escura sobre qualquer cor de cápsula também passa de 4.5:1. É isso que autoriza a cápsula a carregar o nome vencedor em escala gigante e a receber texto escuro por cima. Uma cor nova só entra no conjunto se cumprir os dois lados — e isso não é promessa: `palette.spec.ts` mede as vinte e quatro nos dois sentidos, e a pior delas (o coral) fica em 5.73 e 6.45.
+**A Regra da Cápsula Portante.** Cada cor escolhe tinta clara ou escura por contraste medido, nunca por suposição. `capsuleInk()` garante pelo menos 4.5:1 para iniciais, nomes do aro e ferragens sobre qualquer uma das vinte e quatro tintas. Quando a cor da pessoa não alcança 4.5:1 como texto sobre o esmalte, o nome vencedor fica branco; a cor continua inequívoca na chapa, no aro, na cápsula e no brilho. `palette.spec.ts` derruba o build se qualquer um desses dois contextos falhar.
 
-**A Regra do Passo, Não da Ordem.** Vinte e quatro matizes em volta da roda são vinte e quatro vizinhas parecidas: duas cores separadas por 15° são parecidas mesmo, e nenhuma escolha de paleta conserta isso. Quem conserta é a ordem em que elas são distribuídas — o passo 11 é primo com 24, percorre as vinte e quatro sem repetir e coloca cada nova cápsula quase do outro lado da roda. Um passo que não seja primo com o tamanho da paleta fecha um ciclo curto e repete; a paleta cresce, o passo acompanha.
+**A Regra do Passo, Não da Ordem.** A lista alterna famílias, mas seus trechos ainda têm parentes próximos. O passo 11 é primo com 24, percorre as vinte e quatro sem repetir e impede que os primeiros membros recebam uma sequência inteira do mesmo trecho. Um passo que não seja primo com o tamanho da paleta fecha um ciclo curto e repete; a paleta cresce, o passo acompanha.
 
 **A Regra da Cor Escolhida.** A cor guardada é a **posição na paleta**, nunca um hexadecimal livre — nem no log, nem nas rules. É o que garante que toda cápsula continue passando no contraste sem que o servidor precise saber calcular contraste, e o que permite reafinar a paleta inteira sem reescrever um evento sequer.
 
-**A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para tinta escura. Nunca dilua essa cor em tinta de fundo: uma cor quente de cápsula misturada difusamente no azul produz oliva.
+**A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para a tinta AA calculada daquela cápsula. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
 
 **A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a seção da coleção, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. Uma terceira superfície clara precisa antes provar que é administração.
 
@@ -296,7 +296,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Mono de Série.** Martian Mono só aparece em valores de série e medição: grade de série, data de cada giro, subtítulo da etiqueta, nome da cor na gaveta, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia "técnica" em texto corrido, botão ou título.
 
-**A Regra da Escala Sozinha.** A hierarquia da primeira dobra é feita só de escala e cor: o nome enorme na cor da própria cápsula, o parágrafo em céu, os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.
+**A Regra da Escala Sozinha.** A hierarquia da primeira dobra é feita só de escala e contraste: o nome enorme na cor da própria cápsula quando legível, ou branco quando a tinta é profunda; o parágrafo em céu; os valores em mono pequena. Nenhum kicker, sobrancelha ou rótulo antes do título.
 
 **A Regra do Nome Inteiro.** O nome vencedor sempre aparece por extenso no `h1`. A degradação — primeiro nome, iniciais, uma letra — existe apenas dentro do aro do globo, onde o comprimento do arco manda.
 
@@ -379,7 +379,7 @@ A máquina é um único SVG (`viewBox="-26 -26 452 576"`) desenhado em espaço p
 
 - **Rótulos no aro:** cada nome corre tangencialmente pelo aro via `textPath`. O arco do rótulo é invertido para as cápsulas que param na metade inferior, de modo que nenhum nome fique de cabeça para baixo. O texto degrada por orçamento de arco — primeiro nome, iniciais, uma letra — conforme o número de participantes; o tamanho da fonte é `min(17, max(8, 46/√n))`.
 - **Calha às seis horas:** a rotação de destino é calculada para que a cápsula vencedora pare exatamente na calha, na base do globo.
-- **Estado ao vivo:** revelada a rodada, a chapa recebe a cor da cápsula, os elementos montados nela viram tinta escura, e um brilho radial suave da mesma cor aparece atrás do palco.
+- **Estado ao vivo:** revelada a rodada, a chapa recebe a cor da cápsula, os elementos montados nela recebem a tinta AA calculada, e um brilho radial suave da mesma cor aparece atrás do palco.
 
 ### A Porta
 
@@ -456,7 +456,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Do** deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.
 - **Do** usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, registro, gaveta, bandeja, álbum e confete — para que a coleção leia como coleção.
 - **Do** guardar a cor como posição na paleta, nunca como hexadecimal livre, para que o contraste continue garantido sem o servidor precisar calculá-lo.
-- **Do** pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para tinta escura.
+- **Do** pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para a tinta AA calculada.
 - **Do** reservar Martian Mono para valores de série e medição, com números tabulares.
 - **Do** construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.
 - **Do** manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.
@@ -466,7 +466,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 ### Don't:
 - **Don't** centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.
 - **Don't** misturar a cor da cápsula difusamente no azul como tintura de fundo — o resultado é oliva.
-- **Don't** introduzir uma cor de cápsula que não passe de 4.5:1 sobre o esmalte e não aceite tinta escura por cima.
+- **Don't** introduzir uma cor de cápsula sem definir e testar a tinta clara ou escura que a torna legível em cada superfície.
 - **Don't** trazer papel para fora de onde se administra: a gaveta da coleção, a bancada da etiqueta e a própria etiqueta.
 - **Don't** empilhar um modal sobre outro: duas faces na mesma gaveta, e o Esc volta uma de cada vez.
 - **Don't** deixar uma grade de escolhas com uma fileira órfã; o número de colunas divide o número de itens.

@@ -48,6 +48,7 @@ Thumbs.db
 /.codex/
 /.gemini/
 /.claude/skills/
+/.claude/agents/
 # Design review captures are working artifacts; DESIGN.md and its sidecar are the record
 /.impeccable/review/
 

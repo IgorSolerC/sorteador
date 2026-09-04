@@ -15,7 +15,8 @@
     </button>
     <a class="plate-action" [href]="albumUrl()">O álbum</a>
     <button type="button" class="who-chip" (click)="askIdentityChange()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()">{{ authorInitials() }}</span>
+      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
+            [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
       <span class="who-name">{{ author() }}</span>
       <span class="visually-hidden">— trocar de pessoa</span>
     </button>
@@ -51,6 +52,7 @@
     aria-labelledby="synced-title"
     [class.is-live]="revealed() && displayed().chosenIndex >= 0"
     [style.--live]="winnerHex()"
+    [style.--live-ink]="winnerInk()"
   >
     <p class="month-sticker" aria-label="Rodada atual">
       <span>R{{ snap.state.round }}</span>
@@ -79,7 +81,7 @@
           <h1 id="synced-title">Entregando</h1>
           <p class="result-copy">A cápsula já saiu do globo. A manivela está só trazendo ela até a bandeja.</p>
         } @else if (snap.state.lastSpin; as last) {
-          <h1 id="synced-title" class="winner-name">
+          <h1 id="synced-title" class="winner-name" [style.color]="winnerText()">
             <span>{{ last.winnerName }}</span>
             @if (winnerEmoji()) {
               <span class="winner-emoji" aria-hidden="true">{{ winnerEmoji() }}</span>
@@ -187,7 +189,7 @@
           <dd>{{ snap.state.round }}</dd>
         </div>
         <div>
-          <dt>No globo</dt>
+          <dt>No globo agora</dt>
           <dd>{{ pool().length }} / {{ members().length }}</dd>
         </div>
         <div>
