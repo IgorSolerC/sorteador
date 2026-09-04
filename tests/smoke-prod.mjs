@@ -12,7 +12,7 @@ import {
   deleteDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { FIREBASE_CONFIG } from '../src/app/firebase-config.js';
+import { FIREBASE_CONFIG } from '../tmpjs/src/app/firebase-config.js';
 
 /**
  * Toca o projeto de verdade, não o emulador. Só para confirmar o que o emulador não
