@@ -431,9 +431,9 @@ await it('uma etiqueta gravada não pode ser reescrita nem apagada', async () =>
   await assertFails(deleteDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id)));
 });
 
-// --- subtítulo da etiqueta ---
+// --- subtítulo: saiu do produto, mas a rule continua aceitando a chave ---
 
-await it('aceita etiqueta com subtítulo', async () => {
+await it('aceita etiqueta com subtítulo, de uma aba que ainda não recarregou', async () => {
   await comGrupo({ versaoLog: 2 });
   await assertSucceeds(
     gravaEvento(alice(), etiqueta(0, { subtitulo: 'Nota 8/10' }), { versaoAtual: 2 }),
@@ -467,6 +467,249 @@ await it('recusa subtítulo num evento que não é etiqueta', async () => {
   await assertFails(
     gravaEvento(alice(), { ...entrada('Ana'), subtitulo: 'Contrabando' }, { versaoAtual: 2 }),
   );
+});
+
+// --- a resenha de cada pessoa ---
+
+const resenha = (giroIndex = 0, extra = {}) => ({
+  tipo: 'spin_reviewed',
+  em: serverTimestamp(),
+  giro: giroIndex,
+  autor: 'Ana',
+  nota: 8,
+  status: 'finalizado',
+  ...extra,
+});
+
+await it('aceita a resenha mínima: nota final, completude e assinatura', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), resenha(0), { versaoAtual: 2 }));
+});
+
+await it('aceita a resenha inteira, com os cinco critérios e o texto', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), resenha(0, {
+    diversao: 10, dificuldade: 0, historia: 5, qualidade: 9, jogabilidade: 7,
+    texto: 'Melhor coop que já jogamos.',
+  }), { versaoAtual: 2 }));
+});
+
+await it('recusa resenha sem assinatura: ela não seria de ninguém', async () => {
+  // Sem autor não há de quem a resenha seja, e ninguém conseguiria editá-la depois.
+  await comGrupo({ versaoLog: 2 });
+  const { autor, ...semAutor } = resenha(0);
+  await assertFails(gravaEvento(alice(), semAutor, { versaoAtual: 2 }));
+});
+
+await it('recusa resenha sem nota final', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { nota, ...semNota } = resenha(0);
+  await assertFails(gravaEvento(alice(), semNota, { versaoAtual: 2 }));
+});
+
+await it('recusa resenha sem completude', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { status, ...semStatus } = resenha(0);
+  await assertFails(gravaEvento(alice(), semStatus, { versaoAtual: 2 }));
+});
+
+await it('recusa nota acima da régua de onze casas', async () => {
+  // Uma nota fora da régua envenenaria a média daquele jogo para sempre: o log não se
+  // reescreve, e a média é derivada dele.
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { nota: 11 }), { versaoAtual: 2 }));
+});
+
+await it('recusa nota negativa', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { nota: -1 }), { versaoAtual: 2 }));
+});
+
+await it('recusa nota quebrada: a régua é de inteiros', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { nota: 7.5 }), { versaoAtual: 2 }));
+});
+
+await it('recusa critério fora da régua', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { dificuldade: 99 }), { versaoAtual: 2 }));
+});
+
+await it('recusa completude inventada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { status: 'zerado' }), { versaoAtual: 2 }));
+});
+
+await it('recusa texto de resenha longo demais', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), resenha(0, { texto: 'x'.repeat(601) }), { versaoAtual: 2 }),
+  );
+});
+
+await it('aceita o tempo de jogo em horas inteiras, e ele é opcional', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), resenha(0, { horas: 24 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), resenha(0), { versaoAtual: 2 }));
+});
+
+await it('recusa tempo de jogo quebrado, zerado ou absurdo', async () => {
+  // Zero hora não é um tempo: é a ausência dele, e a ausência se diz não mandando a chave.
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { horas: 2.5 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { horas: 0 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { horas: 99999 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, { horas: '24' }), { versaoAtual: 2 }));
+});
+
+await it('recusa tempo de jogo num evento que não é resenha, e numa retirada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), horas: 3 }, { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), {
+    tipo: 'spin_reviewed', em: serverTimestamp(), giro: 0, autor: 'Ana', retirada: true, horas: 3,
+  }, { versaoAtual: 2 }));
+});
+
+await it('recusa resenha de um giro que ainda não aconteceu', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(9), { versaoAtual: 2 }));
+});
+
+await it('aceita a retirada da própria resenha, sem nota nenhuma junto', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), {
+    tipo: 'spin_reviewed', em: serverTimestamp(), giro: 0, autor: 'Ana', retirada: true,
+  }, { versaoAtual: 2 }));
+});
+
+await it('recusa retirada que ainda carrega nota: ela não retira nada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), {
+    tipo: 'spin_reviewed', em: serverTimestamp(), giro: 0, autor: 'Ana',
+    retirada: true, nota: 8, status: 'finalizado',
+  }, { versaoAtual: 2 }));
+});
+
+await it('recusa campo de resenha num evento que não é resenha', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), { ...entrada('Ana'), nota: 10 }, { versaoAtual: 2 }),
+  );
+  await assertFails(
+    gravaEvento(alice(), { ...etiqueta(0), status: 'platinado' }, { versaoAtual: 2 }),
+  );
+});
+
+await it('recusa campo de etiqueta numa resenha', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(
+    gravaEvento(alice(), resenha(0, { titulo: 'Contrabando' }), { versaoAtual: 2 }),
+  );
+});
+
+await it('uma resenha não pode empurrar a espera do próximo giro', async () => {
+  const agora = new Date();
+  await comGrupo({ versaoLog: 2, ultimoGiroEm: agora });
+  await assertFails(gravaEvento(alice(), resenha(0), {
+    versaoAtual: 2,
+    grupoExtra: { ultimoGiroEm: serverTimestamp() },
+  }));
+});
+
+await it('uma resenha gravada não pode ser reescrita nem apagada', async () => {
+  // Reescrever é gravar outra; o replay faz a última valer. O log em si é imutável.
+  await comGrupo({ versaoLog: 2 });
+  let ref;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    ref = await addDoc(collection(ctx.firestore(), 'grupos', GRUPO, 'eventos'), {
+      tipo: 'spin_reviewed', em: new Date(), giro: 0, autor: 'Ana', nota: 8, status: 'finalizado',
+    });
+  });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id), { nota: 10 }),
+  );
+  await assertFails(deleteDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id)));
+});
+
+// --- a mesa de um jogo: quem jogou, nunca quem estava no globo ---
+
+const cadeira = (extra = {}) => ({
+  tipo: 'spin_seated',
+  em: serverTimestamp(),
+  giro: 0,
+  memberId: 'a1b2c3d4e5f60718',
+  mesa: true,
+  autor: 'Ana',
+  ...extra,
+});
+
+await it('aceita pôr e tirar alguém da mesa de um giro que já aconteceu', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), cadeira(), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), cadeira({ mesa: false }), { versaoAtual: 2 }));
+});
+
+await it('recusa mesa de um giro que ainda não aconteceu', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), cadeira({ giro: 9 }), { versaoAtual: 2 }));
+});
+
+await it('recusa mesa sem pessoa, e mesa que não diz de que lado está', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { memberId, ...semPessoa } = cadeira();
+  await assertFails(gravaEvento(alice(), semPessoa, { versaoAtual: 2 }));
+
+  await comGrupo({ versaoLog: 2 });
+  const { mesa, ...semLado } = cadeira();
+  await assertFails(gravaEvento(alice(), semLado, { versaoAtual: 2 }));
+
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), cadeira({ mesa: 'sim' }), { versaoAtual: 2 }));
+});
+
+await it('recusa campo de mesa num evento que não é mesa', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), mesa: true }, { versaoAtual: 2 }));
+  await assertFails(gravaEvento(alice(), { ...etiqueta(0), mesa: true }, { versaoAtual: 2 }));
+});
+
+await it('recusa mesa que carrega nota, etiqueta ou pintura junto', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), cadeira({ nota: 8 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), cadeira({ titulo: 'Contrabando' }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), cadeira({ cor: 3 }), { versaoAtual: 2 }));
+});
+
+await it('a mesa não pode empurrar a espera do próximo giro', async () => {
+  // Corrigir o elenco em rajada travaria a máquina do grupo inteiro sem girar uma vez.
+  const agora = new Date();
+  await comGrupo({ versaoLog: 2, ultimoGiroEm: agora });
+  await assertFails(gravaEvento(alice(), cadeira(), {
+    versaoAtual: 2,
+    grupoExtra: { ultimoGiroEm: serverTimestamp() },
+  }));
+});
+
+await it('uma cadeira gravada não pode ser reescrita nem apagada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  let ref;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    ref = await addDoc(collection(ctx.firestore(), 'grupos', GRUPO, 'eventos'), {
+      tipo: 'spin_seated', em: new Date(), giro: 0, memberId: 'a1b2c3d4e5f60718', mesa: true,
+    });
+  });
+  await assertFails(
+    updateDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id), { mesa: false }),
+  );
+  await assertFails(deleteDoc(doc(alice(), 'grupos', GRUPO, 'eventos', ref.id)));
 });
 
 // --- a cápsula de cada pessoa: cor e emoji ---

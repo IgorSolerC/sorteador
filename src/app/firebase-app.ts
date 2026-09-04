@@ -8,8 +8,8 @@ import { GroupStore, browserLogCache } from './group-store';
 import { UsageGuard, browserUsageStore } from './usage-guard';
 
 /**
- * O Firebase só é inicializado quando alguém entra num grupo sincronizado. O modo por link
- * continua sem tocar em rede, e quem nunca abrir um grupo não paga o custo de conexão.
+ * O Firebase só é inicializado quando alguém entra num grupo. A porta e a prateleira não
+ * tocam em rede, e quem nunca abrir uma máquina não paga o custo de conexão.
  */
 
 let store: GroupStore | null = null;

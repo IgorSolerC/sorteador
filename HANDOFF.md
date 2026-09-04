@@ -79,7 +79,8 @@ src/app/
   roster-bench.*       A GAVETA da coleção: duas faces (lista / bancada de uma cápsula)
   note-editor.*        a bancada da etiqueta (apresentacional)
   note-bench.ts        a orquestração da etiqueta, compartilhada por máquina e álbum
-  confetti.ts          canvas, 64 partículas, sai da bandeja
+  confetti.ts          canvas, 64 partículas, sai da bandeja. Folha absoluta (rola com a
+                       página) e uma partícula rasterizada uma vez, depois só copiada
   palette.ts           as 24 cores + o passo de distribuição
   group-log.ts         O CORAÇÃO: tipos de evento e replay() puro
   group-store.ts       a camada Firestore. Toda ida à rede passa pelo UsageGuard
@@ -102,13 +103,29 @@ grupos/{id}
   nome, criadoEm, ultimoGiroEm, versaoLog     ← só o que as rules validam sozinhas
 
 grupos/{id}/eventos/{eventoId}                ← append-only
-  tipo: member_added | member_removed | member_styled | spin | spin_annotated
+  tipo: member_added | member_removed | member_styled | spin
+      | spin_annotated | spin_reviewed | spin_seated
   em: timestamp                               ← obrigatoriamente request.time
   nome? memberId? cor? emoji?                 ← membros
-  giro? titulo? subtitulo? descricao?         ← etiquetas
+  giro? titulo? descricao?                    ← o jogo do giro
+  nota? status? horas? texto? retirada?       ← a resenha de UMA pessoa
+  diversao? historia? qualidade?
+  jogabilidade? dificuldade?                  ← critérios, inteiros 0..10, opcionais
+  memberId? mesa?                             ← a mesa: quem jogou aquele jogo
   autor?                                      ← não verificado, é um crachá
+                                                (obrigatório só em spin_reviewed)
 ```
 
+- **`subtitulo` saiu em 09/2026 e a rule ainda o ACEITA.** Uma aba aberta no minuto do deploy
+  ainda o manda. O replay não o lê. Não apague os eventos antigos: a contagem local nunca
+  fecharia com `versaoLog`.
+- **Nenhuma média é gravada.** Nota do clube, média de critério, tempo médio e completude são
+  recontados pelo replay a cada carga. Um campo de média gravável é um número que alguém
+  escreve à mão — a mesma classe de buraco do campo `estado` que já existiu aqui.
+- **`spin_seated` corrige o ELENCO, nunca o sorteio.** `eligible` — o globo daquele giro — é
+  imutável, porque o vencedor sai dele. A mesa é um campo derivado separado (`seated`), montado
+  em três camadas: o globo, as correções, e por cima de tudo quem resenhou. A terceira camada é
+  o que impede "6 resenhas de 5".
 - **`versaoLog` sobe na MESMA escrita em lote do evento** (`getAfter()`). Um evento não entra
   sozinho. É isso que permite o cache local buscar só o delta: **1 leitura no caso comum**.
 - **Todo `spin` tem que carimbar `ultimoGiroEm == request.time`**, e só um `spin` pode mexer
@@ -120,8 +137,8 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 235 unitários e de componente
-npm run test:rules          # 75 rules no emulador (sobe o próprio, sem rede)
+npm test -- --watch=false   # 301 unitários e de componente
+npm run test:rules          # 103 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 28 de integração da camada de dados
 npm run test:a11y           # 8 telas x 3 larguras — precisa de npm start + emulador
 npm run test:etiqueta       # 37 de ponta a ponta num navegador real — idem
@@ -170,12 +187,73 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
   acentos, escreva um `.py` num arquivo e rode — não `python -c` dentro de aspas duplas.
 - **Arquivos com CRLF** quebram substituição por regex silenciosamente. Use a ferramenta de
   edição ou fatie por `indexOf`.
+- **`fillText` de emoji sob rotação erra o cache de glifos a cada chamada**, e o preço
+  acompanha a área do canvas — foi por isso que o confete engasgava só no desktop. Rasterize a
+  partícula uma vez num canvas de apoio e copie com `drawImage`.
+- **Elemento absoluto do tamanho da tela cria overflow de rolagem; `fixed` não.** Meça a
+  viewport por `documentElement.clientWidth/clientHeight` (que exclui as barras) e devolva o
+  elemento a `0x0` quando ele terminar.
+- **Ler um signal dentro de um `effect` o transforma em dependência.** O confete montava o
+  carimbo lendo `emoji()` e `color()`: sem `untracked`, repintar a cápsula de quem acabou de
+  ganhar soltaria um confete que ninguém pediu.
+- **`ngModel` num `<input type="number">` devolve `number | null`, não string.** Chamar
+  `.trim()` no que ele entrega derruba o `submit` inteiro, e o teste vê só "não emitiu nada".
+- **`text-transform` do CSS aparece em `innerText`, mas só se a regra existir.** As casas da
+  régua não têm `text-transform` (elas guardam dígitos), então os degraus da dificuldade saem
+  em caixa mista — um `includes('IMPOSSÍVEL')` num e2e falha ali e passa no `.album-criteria`.
+- **`setInterval` e `addEventListener` num componente precisam de `DestroyRef`.** Ir para o
+  álbum e voltar deixava para trás um relógio e um ouvinte de `visibilitychange`, e cada
+  visita à aba fazia todos os fantasmas recarregarem o grupo — leituras do orçamento
+  queimadas por telas que não existem mais.
 
 ---
 
 ## 7. O que ficou aberto
 
-Nada pendente no código em 2026-09-04. A rodada de acabamento seguinte fechou os itens daqui:
+Nada pendente no código. A rodada de 2026-09-04 (noite) fechou:
+
+- **As quatro tintas da nota**, no lugar do ouro-e-mofo da tentativa anterior: ciano de 8 para
+  cima com faísca, laranja entre 2 e 4, vermelho de 2 para baixo, tinta preta no miolo — e a
+  platina no mesmo ciano, porque platina é metal frio. Só sobre papel; no esmalte a cor
+  continua sendo das pessoas.
+- **Dificuldade virou palavra**: cinco degraus (`Nenhuma`…`Impossível`) gravados na mesma
+  escala 0–10 de todo critério — 0, 2, 5, 8, 10 —, então rules, média e denominador não
+  mudaram. No boletim ela é um traço na régua, e não um filete que enche.
+- **A mesa de cada giro**, com "X resenhas de Y" e a quarta face da ficha para corrigir o
+  elenco. Ela nunca alcança o globo do giro.
+- **A completude passou a ser sobre quem jogou**: quem está na mesa e não resenhou conta como
+  incompleto.
+- **Tempo de jogo em horas inteiras** (1 a 2000), opcional, com média na ficha e no cartão.
+- **O álbum ordena** por nota do clube, por qualquer critério ou por tempo — e aí desmancha as
+  rodadas de propósito.
+- **A face da resenha foi refeita em duas faixas** (o que ela cobra / o que ela aceita). Os
+  cinco selos de "obrigatória"/"opcional", que apareciam em duas posições diferentes, viraram
+  um cabeçalho por faixa mais `aria-required`.
+- **Dois defeitos achados de passagem:** o aviso de parada de segurança tinha 1.72:1 (tinta
+  escura sobre esmalte, porque o fundo era translúcido), e o "saiu para Fulano" repetia em
+  miúdo o nome que já estava em 1.42rem no alto do cartão.
+
+A rodada de 2026-09-04 (tarde) tinha fechado:
+
+- **Confete corrigido nos dois defeitos relatados:** ele engasgava no desktop (medido no app:
+  `148ms` por quadro a 2560x1440, `131ms` a 430x932) e ficava preso à tela em vez de rolar com
+  a página. Com o carimbo rasterizado uma vez e a folha absoluta, os dois tamanhos passaram a
+  fechar em `8.3ms`, e a folha acompanha o scroll pixel a pixel (medido).
+- **Vazamento na máquina:** `setInterval` e `visibilitychange` agora morrem com o componente.
+- **Código morto retirado:** `spinNote()` e `annotatedSpins()` (sem chamador nem teste), o
+  reexport de `CAPSULE_COLOR_COUNT` em `group-log.ts`, `SPIN_COOLDOWN_S` em `synced-group.ts`,
+  `summaryOf()` no álbum, quatro regras de CSS de telas que não existem mais, e o bloco de
+  comentário de briefing que ainda ia dentro do `index.html` publicado (com fatos vencidos:
+  falava em seis cores de cápsula, e hoje são 24).
+- **`README.md` virou o contrato de trabalho do repositório**, com `AGENTS.md` e `CLAUDE.md`
+  apontando para ele — é onde estão as regras de como a AI trabalha aqui.
+
+**Aberto, e não corrigido de propósito:** os briefings em `.impeccable/surfaces/` descrevem o
+modo por link estático que saiu (`src-index-html.md` fala em "data de início" e "compartilhada
+pelo fragmento do link"). Reparar drift de artefato não é efeito colateral de tarefa de
+design; peça `/impeccable doctor` quando quiser fechá-lo.
+
+A rodada anterior tinha fechado:
 
 1. **Sidecar atualizado:** `.impeccable/design.json` agora registra as 24 cores JASC na ordem
    real e `DESIGN.md` documenta a tinta adaptativa clara/escura.

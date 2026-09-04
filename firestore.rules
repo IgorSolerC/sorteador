@@ -77,18 +77,29 @@ service cloud.firestore {
               'tipo', 'em', 'autor',
               'nome', 'memberId', 'cor', 'emoji',
               'giro', 'titulo', 'subtitulo', 'descricao',
+              'nota', 'status', 'texto', 'retirada', 'horas',
+              'diversao', 'dificuldade', 'historia', 'qualidade', 'jogabilidade',
+              'mesa',
             ])
             // O carimbo é do servidor, sempre. É a única entrada que o cliente não
             // escolhe, e é dela que o sorteio tira o resultado.
             && d.em == request.time
-            && d.tipo in ['member_added', 'member_removed', 'member_styled', 'spin', 'spin_annotated']
+            && d.tipo in [
+              'member_added', 'member_removed', 'member_styled',
+              'spin', 'spin_annotated', 'spin_reviewed', 'spin_seated',
+            ]
             && (!('autor' in d) || texto(d.autor, 60))
             && (d.tipo != 'member_added' || texto(d.nome, 60))
             && (d.tipo != 'member_removed' || texto(d.memberId, 32))
             && (d.tipo != 'member_styled' || estiloValido())
             && (d.tipo != 'spin' || (giroPermitido() && marcaDeGiroCarimbada()))
             && (d.tipo != 'spin_annotated' || anotacaoValida())
+            && (d.tipo != 'spin_reviewed' || resenhaValida())
+            && (d.tipo != 'spin_seated' || mesaValida())
+            && (d.tipo in ['spin_annotated', 'spin_reviewed', 'spin_seated'] || semCampoDeGiro())
+            && (d.tipo == 'spin_seated' || !('mesa' in d))
             && (d.tipo == 'spin_annotated' || semCamposDeEtiqueta())
+            && (d.tipo == 'spin_reviewed' || semCamposDeResenha())
             && (d.tipo == 'member_styled' || semCamposDeEstilo())
             && (d.tipo == 'spin' || marcaDeGiroIntacta())
             && contadorAcompanha();
@@ -103,9 +114,10 @@ service cloud.firestore {
             && d.giro >= 0
             && d.giro < grupoAntes().versaoLog
             && textoOpcional(d.titulo, 80)
-            // O subtítulo é opcional na regra, e não só no conteúdo: uma aba aberta antes
-            // de o campo existir não manda a chave, e recusá-la quebraria quem está com o
-            // app na tela no momento do deploy. O replay lê a ausência como vazio.
+            // O subtítulo saiu do produto em setembro de 2026 — o lugar dele virou a nota
+            // média, derivada das resenhas. A regra continua ACEITANDO a chave de
+            // propósito: uma aba aberta no minuto do deploy ainda a manda, e recusá-la
+            // quebraria quem está com o app na tela. O replay não a lê mais.
             && (!('subtitulo' in d) || textoOpcional(d.subtitulo, 60))
             && textoOpcional(d.descricao, 280)
             && !('nome' in d)
@@ -125,9 +137,94 @@ service cloud.firestore {
             && !('nome' in d);
         }
 
+        // A resenha é a opinião de UMA pessoa sobre o jogo daquele giro. O servidor não
+        // sabe quem é quem — `autor` é um crachá, não uma credencial —, mas sabe que uma
+        // resenha sem assinatura não é de ninguém e ninguém conseguiria editá-la depois.
+        // Por isso aqui, e só aqui, o autor é obrigatório.
+        //
+        // A nota média NÃO é gravada em lugar nenhum: ela é derivada das resenhas pelo
+        // replay. Um campo de média gravável seria um número que alguém escreve à mão,
+        // exatamente o que o campo de vencedor gravável já foi.
+        function resenhaValida() {
+          let d = request.resource.data;
+          return d.giro is int
+            && d.giro >= 0
+            && d.giro < grupoAntes().versaoLog
+            && texto(d.autor, 60)
+            && (retiradaDeResenha() || resenhaEscrita())
+            && !('nome' in d)
+            && !('memberId' in d);
+        }
+
+        // Retirar a própria resenha é gravar a retirada, como tudo neste log. Um evento de
+        // retirada não carrega nota nenhuma: ele diz apenas que aquilo deixou de valer.
+        function retiradaDeResenha() {
+          let d = request.resource.data;
+          return ('retirada' in d) && d.retirada == true
+            && !('nota' in d) && !('status' in d) && !('texto' in d) && !('horas' in d)
+            && semNotasDeCriterio();
+        }
+
+        function resenhaEscrita() {
+          let d = request.resource.data;
+          return !('retirada' in d)
+            // Nota final e completude são o mínimo: sem os dois não há opinião, e a conta
+            // do álbum ficaria com denominador escondido.
+            && notaValida(d.nota)
+            && d.status in ['platinado', 'finalizado', 'incompleto']
+            && (!('texto' in d) || textoOpcional(d.texto, 600))
+            // Tempo de jogo é opcional e em horas inteiras. Zero hora não é um tempo: é a
+            // ausência dele, e a ausência já se diz não mandando a chave.
+            && (!('horas' in d) || (d.horas is int && d.horas >= 1 && d.horas <= 2000))
+            // Critério ausente é "não avaliei", e é isso que dá a cada um o próprio
+            // denominador na média. Presente, vale a mesma régua da nota final.
+            && (!('diversao' in d) || notaValida(d.diversao))
+            && (!('dificuldade' in d) || notaValida(d.dificuldade))
+            && (!('historia' in d) || notaValida(d.historia))
+            && (!('qualidade' in d) || notaValida(d.qualidade))
+            && (!('jogabilidade' in d) || notaValida(d.jogabilidade));
+        }
+
+        // A mesa diz quem JOGOU aquele jogo, e nunca quem estava no globo. O globo de um
+        // giro é imutável porque é dele que o vencedor sai: se esta correção pudesse
+        // alterá-lo, o vencedor de um giro de meses atrás mudaria com uma escrita, e o
+        // sorteio inteiro deixaria de ser reproduzível a partir do registro. Por isso ela
+        // é um evento novo, e não uma reescrita — o log continua append-only.
+        function mesaValida() {
+          let d = request.resource.data;
+          return d.giro is int
+            && d.giro >= 0
+            && d.giro < grupoAntes().versaoLog
+            && texto(d.memberId, 32)
+            && d.mesa is bool
+            && !('nome' in d);
+        }
+
+        // Toda nota é um inteiro de 0 a 10. A régua da ficha tem onze casas, e uma nota
+        // fora dela envenenaria a média de um jogo para sempre — o log não se reescreve.
+        function notaValida(valor) {
+          return valor is int && valor >= 0 && valor <= 10;
+        }
+
+        function semNotasDeCriterio() {
+          let d = request.resource.data;
+          return !('diversao' in d) && !('dificuldade' in d) && !('historia' in d)
+            && !('qualidade' in d) && !('jogabilidade' in d);
+        }
+
+        function semCampoDeGiro() {
+          return !('giro' in request.resource.data);
+        }
+
         function semCamposDeEtiqueta() {
           let d = request.resource.data;
-          return !('giro' in d) && !('titulo' in d) && !('subtitulo' in d) && !('descricao' in d);
+          return !('titulo' in d) && !('subtitulo' in d) && !('descricao' in d);
+        }
+
+        function semCamposDeResenha() {
+          let d = request.resource.data;
+          return !('nota' in d) && !('status' in d) && !('texto' in d) && !('retirada' in d)
+            && !('horas' in d) && semNotasDeCriterio();
         }
 
         function semCamposDeEstilo() {

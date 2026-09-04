@@ -68,7 +68,7 @@
         [restRotation]="targetRotation()"
         [busy]="isSpinning()"
         (replay)="replayScene()"
-        caption="O giro fica gravado com a hora do servidor. Toque no globo para ver a entrega de novo — a cápsula é sempre a mesma."
+        caption="Toque no globo para ver a entrega de novo — a cápsula é sempre a mesma."
       />
     </div>
 
@@ -88,8 +88,7 @@
             }
           </h1>
           <p class="result-copy">
-            {{ last.winnerName }} escolhe o jogo. Foi a cápsula {{ last.index + 1 }} do grupo,
-            na rodada {{ last.round }}.
+            {{ last.winnerName }} escolhe o jogo.
             @if (pool().length === 1) {
               Resta 1 cápsula no globo antes de todos terem saído.
             } @else if (pool().length) {
@@ -111,35 +110,56 @@
 
       @if (!isSpinning() && snap.state.lastSpin) {
         @let last = snap.state.lastSpin;
+        <!-- A etiqueta inteira é o controle, e ele abre a ficha para LER: a nota do clube,
+             as resenhas e, só então, os dois jeitos de escrever. -->
         @if (last.note; as note) {
-          <article class="note-sticker">
+          <button
+            type="button"
+            class="note-sticker"
+            (click)="openSheet(last, $event)"
+            [attr.aria-label]="'Abrir a ficha de ' + note.title + ', a cápsula de ' + last.winnerName"
+          >
             <span class="note-chip" aria-hidden="true" [style.--capsule]="colorOf(last)"></span>
-            <p class="note-serial">Etiqueta · cápsula {{ last.index + 1 }}</p>
-            <h2 class="note-title">{{ note.title }}</h2>
-            @if (note.subtitle) {
-              <p class="note-subtitle">{{ note.subtitle }}</p>
-            }
-            @if (note.description) {
-              <p class="note-description">{{ note.description }}</p>
-            }
-            <p class="note-meta">
-              <span>
-                {{ note.actor ? 'por ' + note.actor : 'sem assinatura' }} ·
-                {{ note.at | date: 'dd/MM/yy' }}
-                @if (note.revision > 1) {
-                  · reescrita {{ note.revision }}×
-                }
+            <span class="note-serial">O jogo · cápsula {{ last.index + 1 }}</span>
+            <span class="note-title">{{ note.title }}</span>
+
+            @if (summaryScore(last); as nota) {
+              <span [class]="'note-score is-' + toneOf(last)">
+                <b>{{ nota }}</b>
+                <span>
+                  Nota do clube
+                  <br />{{ last.reviews.length }}{{ last.reviews.length === 1 ? ' resenha' : ' resenhas' }}
+                  de {{ last.seated.length }}
+                </span>
               </span>
-              <button type="button" class="note-edit" (click)="openNote(last, $event)">
-                Editar<span class="visually-hidden"> a etiqueta de {{ last.winnerName }}</span>
-              </button>
-            </p>
-          </article>
+            } @else {
+              <span class="note-score is-empty">
+                Sem nota · seja quem escreve a primeira resenha
+              </span>
+            }
+
+            @if (note.description) {
+              <span class="note-description">{{ note.description }}</span>
+            }
+            <span class="note-meta">
+              <span>
+                {{ note.actor ? 'escrito por ' + note.actor : 'sem assinatura' }} ·
+                {{ note.at | date: 'dd/MM/yy' }}
+              </span>
+              <span class="note-open">Abrir a ficha</span>
+            </span>
+          </button>
         } @else {
-          <button type="button" class="note-sticker is-blank" (click)="openNote(last, $event)">
-            <span class="note-serial">Etiqueta em branco</span>
-            <span class="note-title">Etiquetar este giro</span>
-            <span class="note-description">Anote o que o clube jogou e como foi.</span>
+          <button
+            type="button"
+            class="note-sticker is-blank"
+            (click)="openSheet(last, $event)"
+          >
+            <span class="note-serial">Cápsula sem jogo</span>
+            <span class="note-title">Escrever o jogo desta cápsula</span>
+            <span class="note-description">
+              Diga o que o clube jogou. Depois, cada um escreve a resenha dele.
+            </span>
           </button>
         }
       }
@@ -208,8 +228,7 @@
     <div class="section-heading">
       <h2 id="log-title">O registro</h2>
       <p>
-        Cada giro ficou gravado com a hora do servidor e não pode ser reescrito nem apagado.
-        Abra qualquer um — o de agora ou o do ano passado — para etiquetar o que foi jogado.
+        Clique em um registro para escrever uma resenha!
         <b>No globo agora: {{ pool().length }}.</b>
       </p>
       <p class="log-freshness">
@@ -231,14 +250,19 @@
             <button
               type="button"
               class="cell-open"
-              (click)="openNote(spin, $event)"
+              (click)="openSheet(spin, $event)"
               [attr.aria-label]="
-                (spin.note ? 'Editar a etiqueta do giro ' : 'Etiquetar o giro ') +
-                (spin.index + 1) + ', ' + spin.winnerName
+                'Abrir a ficha do giro ' + (spin.index + 1) + ', ' + spin.winnerName +
+                (spin.note ? ', ' + spin.note.title : ', ainda sem jogo escrito')
               "
             >
-              <span class="cell-capsule" aria-hidden="true" [style.background]="colorOf(spin)"></span>
-              <span class="cell-month">Rodada {{ spin.round }} · {{ spin.at | date: 'dd/MM/yy HH:mm' }}</span>
+              
+              <!-- A cápsula é um desenho de 1.55rem: um texto dentro dela sai por fora.
+                   A linha existe para os dois ficarem lado a lado sem se atropelar. -->
+              <span class="cell-head">
+                <span class="cell-capsule" aria-hidden="true" [style.background]="colorOf(spin)"></span>
+                <span class="cell-month">Rodada {{ spin.round }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
+              </span>
               <strong>
                 @if (emojiOf(spin); as emoji) {
                   <span aria-hidden="true">{{ emoji }}</span>
@@ -248,7 +272,13 @@
               @if (spin.note) {
                 <span class="cell-note">{{ summaryOf(spin) }}</span>
               } @else {
-                <span class="cell-note is-blank">Sem etiqueta</span>
+                <span class="cell-note is-blank">Sem jogo escrito</span>
+              }
+              @if (spin.reviews.length; as resenhas) {
+                <span class="cell-reviews">
+                  {{ resenhas }}{{ resenhas === 1 ? ' resenha' : ' resenhas' }}
+                  de {{ spin.seated.length }}
+                </span>
               }
               @if (spin.actor) {
                 <span class="cell-actor">girado por {{ spin.actor }}</span>
@@ -272,7 +302,7 @@
   <footer>
     <span>{{ snap.name }}</span>
     <p>
-      O link é o grupo. Cada giro e cada etiqueta ficam num registro que ninguém pode
+      O link é o grupo. Cada giro, cada jogo e cada resenha ficam num registro que ninguém pode
       reescrever nem apagar.
     </p>
   </footer>
@@ -306,14 +336,21 @@
 }
 
 @if (editingSpin(); as spin) {
-  <app-note-editor
+  <app-game-sheet
     [spin]="spin"
+    [face]="sheetFace()"
     [capsule]="editingColor()"
     [capsuleEmoji]="editingEmoji()"
+    [author]="author()"
+    [members]="everyone()"
     [saving]="savingNote()"
     [error]="noteError()"
-    (commit)="commitNote($event)"
-    (remove)="removeNote()"
+    (showFace)="showFace($event)"
+    (commitNote)="commitNote($event)"
+    (removeNote)="removeNote()"
+    (commitReview)="commitReview($event)"
+    (removeReview)="removeReview()"
+    (commitSeat)="commitSeat($event)"
     (dismiss)="closeNote()"
   />
 }

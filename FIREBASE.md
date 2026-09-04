@@ -66,17 +66,27 @@ grupos/{grupoId}
   versaoLog: number          ← quantos eventos existem; sobe junto com cada evento
 
 grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
-  tipo: 'member_added' | 'member_removed' | 'member_styled' | 'spin' | 'spin_annotated'
+  tipo: 'member_added' | 'member_removed' | 'member_styled' | 'spin'
+      | 'spin_annotated' | 'spin_reviewed' | 'spin_seated'
   em: timestamp                          ← obrigatoriamente request.time
   nome?: string                          ← member_added
-  memberId?: string                      ← member_removed, member_styled
+  memberId?: string                      ← member_removed, member_styled, spin_seated
   cor?: number                           ← member_styled: posição na paleta, 0..23
   emoji?: string                         ← member_styled: até 16 unidades UTF-16
-  giro?: number                          ← spin_annotated: índice do giro etiquetado
+  giro?: number                          ← índice do giro descrito (annotated/reviewed/seated)
   titulo?: string                        ← spin_annotated, até 80
-  subtitulo?: string                     ← spin_annotated, até 60 (opcional na regra)
+  subtitulo?: string                     ← aceito, nunca mais lido (saiu em 09/2026)
   descricao?: string                     ← spin_annotated, até 280
+  nota?: number                          ← spin_reviewed: inteiro 0..10, obrigatório
+  status?: string                        ← spin_reviewed: platinado|finalizado|incompleto
+  horas?: number                         ← spin_reviewed: inteiro 1..2000, opcional
+  diversao?, historia?, qualidade?,
+  jogabilidade?, dificuldade?: number    ← spin_reviewed: inteiros 0..10, opcionais
+  texto?: string                         ← spin_reviewed, até 600
+  retirada?: bool                        ← spin_reviewed: retira a própria resenha
+  mesa?: bool                            ← spin_seated: põe (true) ou tira (false)
   autor?: string                         ← quem operou, não verificado
+                                           (obrigatório só em spin_reviewed)
 ```
 
 **Nenhum campo novo no doc do grupo.** A cor e o emoji de uma pessoa são derivados do log
@@ -157,12 +167,17 @@ navegador desenha como uma coisa só — e não por ponto de código: uma bandei
 com juntores seria partida ao meio e gravaria os cacos. O teto de 16 unidades UTF-16 existe
 porque uma família chega perto disso; um emoji simples ocupa 2.
 
-## Etiquetas: o que foi jogado e como foi
+## O jogo, a resenha e a mesa
 
-Um giro pode receber um **título**, um **subtítulo** e uma **descrição** — `Click The Button!`
-/ `Nota 8/10` / `Jogamos em cinco`. Onde só cabe uma linha, título e subtítulo viram
-`TÍTULO ● SUBTÍTULO`. Elas descrevem o giro; nunca participam dele. `group-log.spec.ts` trava
-isso: com e sem etiquetas, o vencedor, o bolo e a rodada são idênticos.
+Um giro pode receber um **jogo** (título e descrição), uma **resenha por pessoa** e uma
+correção de **mesa**. Os três descrevem o giro; nenhum participa dele. `group-log.spec.ts`
+trava isso: com e sem eles, o vencedor, o bolo e a rodada são idênticos.
+
+**O subtítulo saiu em setembro de 2026.** O lugar dele na tela virou a nota média, que é
+derivada das resenhas. A rule continua **aceitando** a chave de propósito — uma aba aberta no
+minuto do deploy ainda a manda, e recusá-la quebraria quem estava com o app na tela —, e o
+replay simplesmente não a lê. Os eventos antigos continuam no log: apagar um faria a contagem
+local nunca fechar com `versaoLog`.
 
 **A etiqueta é um evento, não um campo.** O giro não ganhou colunas: quem etiqueta grava um
 `spin_annotated` apontando para o índice do giro. Editar é gravar outro; o replay faz a
@@ -182,16 +197,43 @@ segunda consulta em toda carga — o cache por `versaoLog` não a cobre — dobr
 caso comum, hoje 1 leitura. E reintroduziria exatamente a classe de bug do campo `estado`
 descrita acima: um documento mutável que nenhuma regra consegue conferir contra o log.
 
-**O subtítulo é opcional na regra, e não só no conteúdo.** `(!('subtitulo' in d) || ...)`:
-uma aba aberta antes de o campo existir não manda a chave, e recusá-la quebraria quem estava
-com o app na tela no minuto da publicação. O replay lê a ausência como vazio. Foi o teste de
-regras que pegou isso — três casos antigos passaram a falhar assim que a validação virou
-obrigatória.
+**A resenha é de uma pessoa, e a assinatura é obrigatória — só aqui.** `spin_reviewed`
+carrega `nota` (0–10), `status` (`platinado` | `finalizado` | `incompleto`), até cinco notas
+de critério, um `texto` de até 600 e um `horas` opcional. O servidor não sabe quem é quem —
+`autor` é crachá, não credencial —, mas sabe que uma resenha sem assinatura não seria de
+ninguém e ninguém conseguiria editá-la depois. Reescrever é gravar outra; `retirada: true`
+a tira da conta sem tirá-la do log.
+
+**A nota média não é gravada em lugar nenhum.** Ela é derivada das resenhas pelo replay, a
+cada carga. Um campo de média gravável seria um número que alguém escreve à mão — exatamente
+a classe de buraco do campo `estado` descrita acima.
+
+**`horas` é inteiro de 1 a 2000.** Meia hora não muda a conversa do clube e as rules só sabem
+validar inteiro; zero hora não é um tempo, é a ausência dele, e a ausência se diz não mandando
+a chave. Ausente, a pessoa não entra na média de tempo — somar zero por ausência inventaria um
+jogo instantâneo em quem não contou.
+
+**A mesa corrige o elenco, nunca o sorteio.** `spin_seated` carrega `giro`, `memberId` e
+`mesa: bool`. Ela existe para quem entrou no clube depois e jogou assim mesmo, e para quem
+estava no globo e não apareceu. **O globo daquele giro (`eligible`) é imutável e continua
+sendo a entrada do sorteio**: se esta correção o alcançasse, o vencedor de um giro de meses
+atrás mudaria com uma escrita e nada aqui seria reproduzível a partir do registro. Por isso
+ela é um evento novo e um campo derivado separado (`seated`), e não uma reescrita.
+
+O replay monta a mesa em três camadas, nesta ordem: o globo daquele giro, as correções, e —
+por cima de tudo — quem resenhou. A terceira camada é o que mantém "X resenhas de Y" honesto:
+tirar da mesa quem já escreveu não tem efeito, e a tela também não oferece essa saída.
+
+**A completude é sobre quem jogou, não sobre quem escreveu.** Quem está na mesa e ainda não
+resenhou entra como incompleto. Sem isso, uma pessoa que zerou o jogo antes de os outros
+começarem fazia o cartão dizer "100% finalizado" para o clube inteiro.
 
 **O que as rules garantem.** O índice é inteiro, não-negativo e menor que `versaoLog` — o
-`get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título,
-subtítulo e descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem
-`memberId`, e nenhum outro tipo de evento pode carregar campos de etiqueta ou de pintura.
+`get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título e
+descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem `memberId`; uma
+resenha não pode carregar nenhum dos dois; uma mesa exige `memberId` e `mesa` booleano e não
+aceita campo de nota, de etiqueta nem de pintura. Nenhum tipo de evento pode carregar campos
+que não sejam dele.
 
 A espera de 30s **não** se aplica a etiquetar nem a pintar — corrigir um título nunca bloqueia
 o próximo giro. Em contrapartida, **só um giro pode mexer em `ultimoGiroEm`** (senão etiquetar
@@ -204,9 +246,11 @@ que o teste de integração recusou um título de emoji que parecia caber. É po
 `noteText()` corta caractere a caractere até o orçamento em unidades: um `slice` cru na
 mesma medida partiria um par substituto e gravaria meio emoji.
 
-**Custo.** Etiquetar é 1 leitura + 2 escritas, idêntico a adicionar alguém ou a pintar uma
-cápsula. Nenhum índice novo. Cada edição soma um evento ao log, o que entra na mesma conta de
-crescimento acima.
+**Custo.** Escrever o jogo, resenhar ou mexer numa cadeira da mesa é **1 leitura + 2
+escritas** cada — idêntico a adicionar alguém ou a pintar uma cápsula. Nenhum índice novo.
+Cada edição soma um evento ao log, o que entra na mesma conta de crescimento acima. Corrigir
+a mesa de seis pessoas custa seis vezes isso, e é por isso que a mesa vive numa aba de pouco
+foco: ela é uma correção rara, não uma tela do dia a dia.
 
 ## Quem está mexendo
 
@@ -223,7 +267,7 @@ sendo o segredo, e essa lista é só um atalho para não caçar a mensagem no Wh
 ## Rules
 
 O arquivo real é `firestore.rules`, e ele é a fonte da verdade — não há esboço aqui para
-divergir dele. `tests/firestore-rules.test.mjs` prova 75 comportamentos contra o emulador:
+divergir dele. `tests/firestore-rules.test.mjs` prova 103 comportamentos contra o emulador:
 
 ```
 npm run test:rules

@@ -18,6 +18,10 @@ colors:
   field-focus: "#b5761c"
   field-error: "#a3123f"
   field-error-ink: "#8f0f37"
+  score-high: "#0b6f7d"
+  score-high-lit: "#3fbccb"
+  score-low: "#a8481a"
+  score-worst: "#ae1f16"
   paper: "#faf6ec"
   paper-quiet: "#f0e9d9"
   ink: "#16233a"
@@ -125,6 +129,13 @@ typography:
     lineHeight: 1.3
     letterSpacing: "normal"
     fontFeature: "tnum"
+  tick:
+    fontFamily: "Martian Mono, ui-monospace, monospace"
+    fontSize: "0.55rem"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "0.04em"
+    fontFeature: "tnum"
   serial-label:
     fontFamily: "Martian Mono, ui-monospace, monospace"
     fontSize: "0.62rem"
@@ -132,6 +143,7 @@ typography:
     lineHeight: 1
     letterSpacing: "0.1em"
 rounded:
+  rule: "2px"
   sm: "4px"
   md: "8px"
   lg: "12px"
@@ -288,6 +300,10 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 - **Body** (400, `1rem`, 1.62): parágrafos, campos e instruções. Medida de 40–52ch conforme a coluna.
 - **Label** (700, `0.82rem`): links de texto, dica de trilho e mensagens de estado curtas.
 - **Serial** (700 mono, `0.74rem`, tabular): valores da grade de série, contadores e o link compartilhável.
+- **Tick** (700 mono, `0.55rem`, tabular): a casa de uma régua, e só ela. É o único degrau
+  abaixo do serial-label, e existe porque doze casas numa tela de 390px não cabem em
+  `0.62rem` sem o alvo de 44px encolher junto. Nunca em texto que se lê: só em valor que se
+  escolhe.
 - **Serial-label** (700 mono, `0.62rem`, `0.1em`, caixa alta): os rótulos acima desses valores, a data de cada giro no registro, a plaqueta e os comprimidos de navegação.
 
 ### Named Rules
@@ -411,16 +427,85 @@ Administrar é uma tarefa de uma vez por mês, e ela ocupava metade de toda visi
 - **Escolher uma cor é escolher uma cápsula:** os comprimidos da grade têm o mesmo semicírculo achatado da bolinha do registro (`999px 999px 6px 6px`), com a casca desenhada por sombra interna. O selecionado ganha um anel duplo papel-sobre-tinta, que não briga com o anel de foco amarelo.
 - **Salvar só volta para a lista quando o servidor confirma.** Voltar ao emitir levaria embora a cor que a pessoa acabou de escolher se a gravação falhasse, e ela teria de escolher tudo de novo sem saber por quê.
 
-### A Etiqueta
+### A Ficha do Jogo
 
-A etiqueta é o papel colado na cápsula depois que ela caiu: o que o clube jogou e como foi. Ela nunca é um "card de metadados" — é um objeto do mesmo mundo do adesivo da rodada.
+A ficha é o papel colado na cápsula depois que ela caiu: o que o clube jogou, o que ele achou
+e quem estava na mesa. Ela nunca é um "card de metadados" — é um objeto do mesmo mundo do
+adesivo da rodada.
 
-- **Etiqueta escrita:** retângulo de papel quente (`paper`), raio `4px`, largura `min(100%, 33rem)`, rotacionado `-0.9deg` (`-0.5deg` abaixo de 620px), com sombra de colagem `0 12px 26px rgba(6, 14, 28, .45)`. Rótulo de série em mono no topo, título em Fredoka `1.42rem`, descrição em corpo `0.92rem` preservando quebras de linha, e um rodapé em mono separado por hairline de papel com a assinatura e o botão **Editar**. Uma cápsula plana na cor da pessoa fica ancorada no canto superior direito, pela Regra da Cápsula Portante.
-- **Etiqueta em branco:** o mesmo objeto em `paper-quiet`, com uma segunda borda tracejada 6px para dentro — papel ainda não escrito, não um botão de "adicionar". É o `<button>` inteiro, e levanta 2px no hover.
-- **Bancada:** a etiqueta é escrita numa sobreposição de papel (`12px`, `min(34rem, 100vw - 2.4rem)`) sobre um véu de esmalte com `blur(2px)`, carregando a mesma marca de registro do impressor da seção da coleção. Cabeçalho com a série do giro, o disco de iniciais na cor da cápsula e o nome em `2.4rem`. Cada campo tem contador tabular no cabeçalho do rótulo, que vira `field-error-ink` no limite. A ação é o botão de esmalte, nunca o amarelo — é papel, pela Regra do Amarelo de Ação. **Retirar** vive separado à direita, em `remove-ink`.
-- **Título e subtítulo:** na etiqueta inteira eles se separam — o título em Fredoka `1.42rem`, o subtítulo logo abaixo em mono `0.74rem`, porque ele é a legenda do título (o placar, a nota), não a continuação dele. Onde só cabe uma linha, os dois viram um resumo só: `TÍTULO ● SUBTÍTULO`.
-- **O ensaio do resumo:** a bancada monta esse resumo enquanto se escreve, numa faixa de papel silencioso rotulada `NO REGISTRO`. É como o campo se explica sem uma frase de ajuda.
-- **No registro:** a célula inteira vira o controle que abre a bancada. Uma célula sem etiqueta diz `SEM ETIQUETA` em mono de série, e é assim que o retroativo se anuncia sem precisar de um botão por célula.
+**Ela abre para LER.** Antes, tocar numa cápsula abria o formulário direto, e ler virava
+escrever sem querer. A primeira face é o boletim; escrever é a decisão seguinte, e são duas
+decisões diferentes com nomes diferentes: **o jogo** é de todo mundo, **a resenha** é de cada
+um. A mesa é a terceira, e é uma nota de rodapé.
+
+- **Quatro faces, nunca quatro camadas.** Sobreposição de papel (`12px`,
+  `min(34rem, 100vw - 2.4rem)`) sobre um véu de esmalte com `blur(2px)`, com a marca de
+  registro do impressor. Um segundo modal por cima do primeiro deixaria dois véus e dois
+  `aria-modal` disputando a mesma tecla Esc; aqui o Esc volta uma face por vez.
+- **Face 1, o boletim:** duas medidas no alto — a nota do clube em display `clamp(3rem, 11vw,
+  4.2rem)` e o tempo médio em `clamp(2rem, 7vw, 2.7rem)` —, uma régua por critério, a barra de
+  completude com legenda escrita, e a lista de resenhas. Cada resenha traz o disco de cápsula
+  de quem escreveu, a nota, o selo de completude e o tempo.
+- **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
+  de Faixa).
+- **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
+  antigo subtítulo, e é o oposto dele: não se escreve, se recebe — e descrição.
+- **Face 4, a mesa:** quem jogou, com a saída para quem não resenhou e o convite para quem do
+  grupo ficou de fora. A entrada para ela é um rótulo de série empurrado para a direita da
+  fileira de ações, longe das duas decisões de verdade.
+- **A etiqueta no palco:** o mesmo papel `4px` em `min(100%, 33rem)`, rotacionado `-0.9deg`
+  (`-0.5deg` abaixo de 620px), com sombra de colagem `0 12px 26px rgba(6, 14, 28, .45)`. É o
+  `<button>` inteiro. Em branco, `paper-quiet` com uma segunda borda tracejada 6px para
+  dentro — papel ainda não escrito, não um botão de "adicionar".
+- **No registro:** a célula inteira é o controle. Uma célula sem jogo diz `SEM JOGO ESCRITO`
+  em mono de série, e é assim que o retroativo se anuncia sem um botão por célula.
+
+#### Named Rules
+
+**A Regra das Quatro Tintas da Nota.** Toda cor deste produto pertence a alguém — a cápsula
+que a pessoa mesma escolheu. A nota é a única exceção, e ela é justificada: uma parede de
+boletins em tinta preta não diz, de longe, qual jogo o clube amou e qual ele suportou. São
+quatro tintas, e a faixa é a mesma em toda parte: de **8 para cima** ciano (`score-high`) com
+duas faíscas de foil no número; de **2 para baixo** vermelho (`score-worst`); entre **2 e 4**
+laranja (`score-low`); e o miolo em tinta preta. O miolo é a maior parte de propósito — se
+toda nota tivesse cor, nenhuma seria vista. A cor nunca é a informação: o número está escrito
+ao lado, do mesmo tamanho de sempre.
+
+**A Regra da Tinta de Papel.** As quatro tintas da nota vivem **só no papel**. Sobre o esmalte
+a cor continua sendo das pessoas, e o registro mostra a nota em branco. Uma segunda rampa,
+clara o bastante para o azul-noite, seria uma quinta e uma sexta cor competindo com as vinte e
+quatro cápsulas.
+
+**A Regra da Platina Fria.** Platinar é o feito raro do clube e é o **único** status com
+tinta — a mesma dos jogos de 8 para cima, porque é o mesmo tipo de coisa, e porque platina é
+metal frio, não ouro. Um brilho atravessado dá o metal na barra, e a faísca substitui o
+quadradinho na legenda. Finalizar é o esperado e fica em meio-tom; incompleto continua
+hachurado, porque não terminar não é demérito nenhum. Com 0%, a platina perde a tinta: uma
+faísca dourada ao lado de "0%" promete o que não houve.
+
+**A Regra da Medida Sem Direção.** Quatro dos cinco critérios têm direção — diversão,
+história, qualidade e jogabilidade altas são elogio. Dificuldade não tem: 9 ali é um fato
+sobre o jogo, não um aplauso. Ela não recebe tinta, e no boletim não é um filete que enche e
+sim **um traço que cruza o trilho** na posição medida. Um filete cheio diria "tirou 8 em
+dificuldade", e dificuldade não se tira. No formulário, pelo mesmo motivo, ela é uma régua de
+cinco degraus com nome — `Nenhuma`, `Fácil`, `Médio`, `Difícil`, `Impossível` — desenhada como
+as réguas numéricas de cima para a coluna fechar.
+
+**A Regra da Exigência de Faixa.** A resenha pede duas coisas e aceita mais seis, e a folha
+diz qual é qual: **o que ela cobra** (nota final e completude, com o controle em largura cheia
+e o rótulo por cima, em 48px) e **o que ela aceita** (tempo, quatro escalas, a dificuldade e o
+texto livre, em fileiras rotuladas à esquerda, em 44px). A exigência é da faixa, não do campo,
+e se diz uma vez — antes eram cinco selos de "obrigatória"/"opcional" em duas posições
+diferentes, e cinco selos disputando a mesma pergunta viram ruído. `aria-required` leva a
+exigência a quem não vê o cabeçalho. As faixas se anunciam **numa frase em corpo**, e não num
+rótulo em mono caixa alta: dois rótulos iguais empilhados leem como a mesma coisa dita duas
+vezes.
+
+**A Regra do Denominador de Quem Jogou.** "X resenhas de Y" e a barra de completude são sobre
+quem **jogou**, e não sobre quem escreveu: quem está na mesa e ainda não resenhou entra como
+incompleto. Sem isso, uma pessoa que zerou o jogo antes de os outros começarem fazia o cartão
+dizer "100% finalizado" para o clube inteiro. Quem já escreveu não sai da mesa — a conta nunca
+pode ficar com X maior que Y —, e isso é dito uma vez abaixo da lista, não uma vez por linha.
 
 ### O Álbum
 
@@ -428,15 +513,20 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 
 - **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
-- **Régua de rodada:** filete de 2px com o número da rodada à esquerda e a contagem à direita, em mono de série. A ordem é da rodada mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer.
-- **Cartão:** a etiqueta de papel, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, descrição cortada em quatro linhas e o rodapé de assinatura preso na base para que os cartões de uma fileira terminem alinhados. O cartão inteiro é o controle que abre a bancada.
+- **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca.
+- **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
+- **Cartão:** a etiqueta de papel virou um boletim, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, a nota do clube em display `2.7rem` na tinta que ela merece, os critérios e o tempo em mono, a barra de completude com legenda, e a descrição cortada em quatro linhas. O cartão inteiro é o controle que abre a ficha. **O nome de quem ganhou não se repete no rodapé**: ele já está em `1.42rem` no alto, e dizê-lo de novo em mono miúdo era a mesma informação duas vezes — para quem não vê o cartão, ele continua no nome acessível do botão.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
-- **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM ETIQUETA` em mono. É como o retroativo se anuncia, sem precisar de um botão por cartão.
+- **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM JOGO ESCRITO` em mono e nada mais. Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas vezes.
 
 ### Motion
 Existe um único momento autoral, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s`, a cúpula se abre em `1.5s` — e o que estava dentro sai.
 
 **O confete** é a última batida desse momento, não um segundo: sessenta e quatro partículas em canvas, num leque para cima e para os lados, com gravidade de `1500px/s²` e vida de `2.6s`. Sai da bandeja quando a máquina está na tela, e do alto do centro quando não está. Com emoji, saem emoji; sem emoji, saem cápsulas na cor da pessoa. Canvas e não elementos: sessenta e quatro nós no DOM custariam sessenta e quatro reflows por quadro, e nada aqui precisa ser lido nem clicado.
+
+**A folha do confete é absoluta, e nunca fixa.** Ela nasce sobre a viewport do instante da entrega e fica onde nasceu: rolar a página leva o confete junto, porque o que caiu caiu num lugar da página, não na tela de quem olha. Ela também nasce e volta a ficar sem tamanho — uma folha do tamanho da tela parada no documento seria uma camada de composição viva e, no fim de uma página curta, uma barra de rolagem.
+
+**A partícula é rasterizada uma vez e depois só copiada.** `fillText` de emoji sob rotação erra o cache de glifos do navegador em toda chamada, e o preço acompanha a área do canvas — o que fazia a chuva engasgar justamente na tela grande. Medido no app, a 2560×1440: `148ms` por quadro desenhando cada partícula, `8.3ms` copiando um carimbo pronto. Qualquer partícula nova segue a mesma regra.
 
 **A cena é reencenável, e reencenar não é decidir.** A máquina abre girando, e o globo inteiro é um botão que a roda de novo — sempre parando na mesma cápsula, porque a rotação de destino sai do mesmo registro. É a diferença entre assistir e decidir, que é a promessa do produto. O confete fecha toda encenação completa — na abertura automática, no replay pedido ao clicar no globo e no giro verdadeiro — usando o emoji da pessoa quando ela escolheu um.
 
@@ -457,6 +547,14 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Do** usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, registro, gaveta, bandeja, álbum e confete — para que a coleção leia como coleção.
 - **Do** guardar a cor como posição na paleta, nunca como hexadecimal livre, para que o contraste continue garantido sem o servidor precisar calculá-lo.
 - **Do** pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para a tinta AA calculada.
+- **Do** usar o raio `rule` (2px) — e só ele — em marca de medição impressa: a régua de um
+  critério, a barra de completude e o quadradinho da legenda dela. Um raio de 4px numa
+  faixa de 6px de altura fecha em pílula, e a medição passa a parecer um indicador de
+  progresso de dashboard em vez de um filete impresso.
+- **Do** pintar a nota — e só a nota — em uma das quatro tintas, e só sobre papel: ciano de 8
+  para cima, vermelho de 2 para baixo, laranja entre os dois, tinta preta no miolo.
+- **Do** dizer a exigência de uma faixa de formulário uma vez, no cabeçalho dela, com
+  `aria-required` nos grupos — nunca um selo por campo.
 - **Do** reservar Martian Mono para valores de série e medição, com números tabulares.
 - **Do** construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.
 - **Do** manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.
@@ -474,4 +572,10 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Don't** colocar kicker, sobrancelha ou rótulo acima de um título.
 - **Don't** usar monoespaçada como sinal genérico de "técnico" em texto corrido, botão ou título.
 - **Don't** adicionar um segundo movimento autônomo à página; a entrega é o único momento.
+- **Don't** dar temperamento a uma medida sem direção: dificuldade alta não é elogio, e uma
+  régua colorida ali diria que difícil é bom.
+- **Don't** contar a completude só sobre quem escreveu: o denominador é quem jogou, e quem
+  ainda não resenhou conta como incompleto.
+- **Don't** deixar uma correção de elenco alcançar o globo de um giro: o vencedor sai dele, e
+  ele é imutável.
 - **Don't** falar em sorte, azar ou aleatoriedade na interface: o registro e a coleção completa são a prova.

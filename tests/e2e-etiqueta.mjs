@@ -104,42 +104,169 @@ const girosNoRegistro = await conta('.cell-open');
 check('o registro lista os giros', girosNoRegistro > 0, `${girosNoRegistro}`);
 
 const abriuPeloPalco = await ev(`(() => {
-  const alvo = document.querySelector('.note-sticker.is-blank') || document.querySelector('.note-edit');
+  const alvo = document.querySelector('.note-sticker');
   if (!alvo) return 'sem etiqueta no palco';
   alvo.click();
   return 'ok';
 })()`);
-check('o palco abre a bancada da etiqueta', abriuPeloPalco === 'ok', String(abriuPeloPalco));
+check('o palco abre a ficha do jogo', abriuPeloPalco === 'ok', String(abriuPeloPalco));
 await sleep(900);
-check('a bancada aparece', !!(await ev(`!!document.querySelector('[role="dialog"]')`)));
-check('o foco cai no primeiro campo', (await ev(`document.activeElement?.id`)) === 'note-title');
+check('a ficha aparece', !!(await ev(`!!document.querySelector('[role="dialog"]')`)));
+
+// A ficha abre para LER. As duas escritas são ações distintas, com nomes distintos.
+const acoes = await ev(`[...document.querySelectorAll('.sheet-actions button')].map((b) => b.textContent.trim())`);
+check('a ficha abre na face de leitura, com as duas escritas separadas',
+  Array.isArray(acoes) && acoes.length === 3 && acoes[0].includes('resenha') && acoes[1].includes('jogo'),
+  JSON.stringify(acoes));
+check('a mesa entra em terceiro, como nota de rodapé',
+  Array.isArray(acoes) && acoes[2].includes('A mesa'), JSON.stringify(acoes));
+check('a face de leitura não tem formulário',
+  !(await ev(`!!document.querySelector('#note-title, input[name=\"notaFinal\"]')`)));
+
+// --- o jogo: título e descrição, compartilhados por todo o clube ---
+
+await ev(`document.querySelector('.sheet-actions .note-cancel').click()`);
+await sleep(700);
+check('a face do jogo abre com o foco no nome dele',
+  (await ev(`document.activeElement?.id`)) === 'note-title');
+check('a nota média está ali, e é somente leitura',
+  (await texto('.note-average')).includes('SOMENTE LEITURA') &&
+  !(await ev(`!!document.querySelector('.note-average input, .note-average textarea')`)),
+  await texto('.note-average'));
 
 await digitar('note-title', marca);
-await digitar('note-subtitle', 'Nota 8/10');
 await digitar('note-description', 'Descrição escrita pelo teste de ponta a ponta.');
-check('o resumo se monta enquanto se escreve',
-  (await texto('.note-summary')).includes(marca + ' ● Nota 8/10'), await texto('.note-summary'));
 await salvar();
 await sleep(3200);
 
-check('a bancada fecha depois de gravar', !(await ev(`!!document.querySelector('[role="dialog"]')`)));
-check('a etiqueta aparece no palco', (await texto('.note-sticker')).includes(marca));
-check('o subtítulo aparece na etiqueta', (await texto('.note-sticker')).includes('Nota 8/10'));
-check('o registro mostra TÍTULO ● SUBTÍTULO numa linha',
-  (await ev(`[...document.querySelectorAll('.cell-note')].some((c) => c.textContent.includes(${JSON.stringify(marca)}) && c.textContent.includes('●'))`)) === true);
+check('salvar o jogo devolve à ficha, sem fechar tudo',
+  !!(await ev(`!!document.querySelector('[role="dialog"]')`)) &&
+  !!(await ev(`!!document.querySelector('.sheet-actions')`)));
+check('o nome do jogo aparece na ficha', (await texto('.sheet-card')).includes(marca));
+
+// --- a resenha: de UMA pessoa, e ela é a única que pode reescrevê-la ---
+
+await ev(`document.querySelector('.sheet-actions .secondary-action').click()`);
+await sleep(700);
+check('a régua da nota final tem onze casas',
+  (await conta('input[name=\"notaFinal\"]')) === 11, `${await conta('input[name=\"notaFinal\"]')}`);
+check('cada critério opcional ganha a casa do "não avaliei"',
+  (await conta('input[name=\"diversao\"]')) === 12, `${await conta('input[name=\"diversao\"]')}`);
+check('a dificuldade se responde por palavra, em cinco degraus mais o "não avaliei"',
+  (await conta('input[name=\"dificuldade\"]')) === 6 &&
+  (await texto('.score-ticks.is-named')).includes('Impossível'),
+  await texto('.score-ticks.is-named'));
+check('a exigência é da metade do formulário, e não de cada campo',
+  (await conta('.band-title')) === 2 && (await conta('[aria-required="true"]')) === 2,
+  `${await conta('.band-title')} faixas, ${await conta('[aria-required="true"]')} exigidos`);
+check('sem as duas obrigatórias, a gravação não é oferecida',
+  (await ev(`document.querySelector('.note-actions button').disabled`)) === true);
+
+await ev(`document.querySelector('#nota-final-9').click()`);
+await sleep(200);
+await ev(`document.querySelectorAll('input[name="completude"]')[0].click()`);
+await sleep(200);
+await ev(`document.querySelectorAll('input[name="diversao"]')[11].click()`);
+await sleep(200);
+await digitar('review-hours', '12');
+await digitar('review-text', 'Resenha escrita pelo teste de ponta a ponta.');
+check('com nota e completude, a gravação é oferecida',
+  (await ev(`document.querySelector('.note-actions button').disabled`)) === false);
+
+await salvar();
+await sleep(3500);
+
+check('gravar a resenha devolve à ficha', !!(await ev(`!!document.querySelector('.sheet-actions')`)));
+check('a resenha aparece na ficha com quem a escreveu',
+  (await texto('.reviews')).includes('Teste de Ponta a Ponta') &&
+  (await texto('.reviews')).includes('Resenha escrita pelo teste'),
+  await texto('.reviews'));
+check('a minha resenha é a que fica marcada como minha',
+  (await conta('.review.is-mine')) === 1, `${await conta('.review.is-mine')}`);
+check('a nota do clube aparece no boletim',
+  (await texto('.score-hero')).includes('9,0'), await texto('.score-hero'));
+check('o tempo de jogo volta do servidor e vira média',
+  (await texto('.score-time')).includes('12 h'), await texto('.score-time'));
+check('o boletim diz de quantas pessoas que jogaram as resenhas vieram',
+  /\d+ RESENHAS? DE \d+/.test(await texto('.score-hero')), await texto('.score-hero'));
+check('a completude vira porcentagem escrita, e não só cor',
+  (await texto('.completion-legend')).includes('PLATINADO'), await texto('.completion-legend'));
+check('a ação da resenha passa a ser editar a minha',
+  (await ev(`document.querySelector('.sheet-actions .secondary-action').textContent.trim()`))
+    .includes('Editar minha resenha'));
+
+// --- a mesa: corrigir o elenco de um jogo sem tocar no sorteio ---
+
+const vencedorAntesDaMesa = await ev(`document.querySelector('#synced-title')?.textContent?.trim()`);
+await ev(`document.querySelector('.sheet-aside').click()`);
+await sleep(800);
+check('a mesa abre na mesma ficha, sem empilhar outro modal',
+  (await conta('[aria-modal="true"]')) === 1 && (await conta('.seats')) > 0);
+
+const naMesaAntes = await conta('.seat:not(.is-off)');
+check('a mesa lista quem jogou', naMesaAntes > 0, `${naMesaAntes}`);
+check('quem já resenhou não tem saída pela mesa',
+  (await ev(`(() => {
+    const linhas = [...document.querySelectorAll('.seat:not(.is-off)')];
+    const minha = linhas.find((l) => l.innerText.includes('Teste de Ponta a Ponta'));
+    return minha ? !minha.querySelector('.seat-out') : 'sem a minha linha';
+  })()`)) === true);
+
+const podeTirar = await conta('.seat:not(.is-off) .seat-out');
+if (podeTirar) {
+  await ev(`document.querySelector('.seat:not(.is-off) .seat-out').click()`);
+  await sleep(3500);
+  check('tirar alguém da mesa devolve à própria mesa, e a lista encolhe',
+    (await conta('.seats')) > 0 && (await conta('.seat:not(.is-off)')) === naMesaAntes - 1,
+    `${naMesaAntes} -> ${await conta('.seat:not(.is-off)')}`);
+
+  await ev(`document.querySelector('.seat.is-off .seat-in').click()`);
+  await sleep(3500);
+  check('pôr de volta devolve a mesa ao tamanho de antes',
+    (await conta('.seat:not(.is-off)')) === naMesaAntes,
+    `${await conta('.seat:not(.is-off)')} para ${naMesaAntes}`);
+}
+
+await ev(`document.querySelector('#sheet-back').click()`);
+await sleep(700);
+check('voltar da mesa cai na ficha, e não fecha tudo',
+  !!(await ev(`!!document.querySelector('.sheet-actions')`)));
+
+await ev(`document.querySelector('#sheet-close').click()`);
+await sleep(900);
+check('a ficha fecha', !(await ev(`!!document.querySelector('[role="dialog"]')`)));
+check('corrigir a mesa não mexeu no vencedor do giro',
+  (await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)) === vencedorAntesDaMesa,
+  `${vencedorAntesDaMesa} -> ${await ev(`document.querySelector('#synced-title')?.textContent?.trim()`)}`);
+check('o registro mostra o jogo e a nota do clube numa linha',
+  (await ev(`[...document.querySelectorAll('.cell-note')].some((c) => c.textContent.includes(${JSON.stringify(marca)}) && c.textContent.includes('· 9,0'))`)) === true);
+check('o palco mostra a nota do clube ao lado do jogo',
+  (await texto('.note-sticker')).includes(marca) && (await texto('.note-sticker')).includes('9,0'),
+  await texto('.note-sticker'));
 check('o foco volta para um controle, não para o corpo da página',
   (await ev(`document.activeElement?.tagName`)) !== 'BODY',
   String(await ev(`document.activeElement?.className || document.activeElement?.tagName`)));
 check('nenhum erro na tela', (await ev(`document.querySelector('.synced-error')?.textContent ?? ''`)) === '');
 
-// Reescrever: o log é append-only, então a segunda etiqueta vira revisão.
-await ev(`document.querySelector('.note-edit').click()`);
+// Reescrever a própria resenha: o log é append-only, então a segunda vira revisão e a
+// primeira sai da conta sem sair do registro.
+await ev(`document.querySelector('.note-sticker').click()`);
 await sleep(900);
-await digitar('note-title', marca + ' II');
+await ev(`document.querySelector('.sheet-actions .secondary-action').click()`);
+await sleep(700);
+check('a resenha reabre no que já estava gravado',
+  (await ev(`document.querySelector('#nota-final-9').checked`)) === true);
+await ev(`document.querySelector('#nota-final-6').click()`);
+await sleep(200);
 await salvar();
-await sleep(3200);
-check('reescrever mantém a etiqueta e marca a revisão',
-  (await texto('.note-sticker')).includes(marca + ' II'), await texto('.note-sticker'));
+await sleep(3500);
+check('reescrever a própria resenha refaz a nota do clube',
+  (await texto('.score-hero')).includes('6,0'), await texto('.score-hero'));
+check('continua havendo uma resenha minha só',
+  (await conta('.review')) === 1, `${await conta('.review')}`);
+
+await ev(`document.querySelector('#sheet-close').click()`);
+await sleep(900);
 
 // --- a gaveta da coleção e a cápsula de cada pessoa ---
 
@@ -232,9 +359,36 @@ check('o álbum carrega', (await ev(`document.querySelector('#album-title')?.tex
 
 const cartoes = await conta('.album-card');
 check('o álbum mostra uma cápsula por giro', cartoes === girosNoRegistro, `${cartoes} para ${girosNoRegistro} giros`);
-check('a etiqueta gravada na máquina aparece no álbum',
-  (await ev(`document.body.innerText.includes(${JSON.stringify(marca + ' II')})`)) === true);
+check('o jogo escrito na máquina aparece no álbum',
+  (await ev(`document.body.innerText.includes(${JSON.stringify(marca)})`)) === true);
+check('o cartão do álbum mostra a nota do clube',
+  (await ev(`[...document.querySelectorAll('.album-score')].some((e) => e.innerText.includes('6,0'))`)) === true);
+check('o boletim do álbum resume o clube inteiro',
+  (await texto('.album-stats')).includes('NOTA DO CLUBE'), await texto('.album-stats'));
 check('há um chip por pessoa que já saiu', (await conta('.people-chip')) > 1);
+
+// A ordem da parede: por padrão o registro, e qualquer outra fura as rodadas de propósito.
+check('a parede abre na ordem do registro, com régua de rodada',
+  (await texto('.round-rule')).includes('RODADA'), await texto('.round-rule'));
+check('o seletor de ordem oferece a nota, cada critério e o tempo',
+  (await conta('.sort-options button')) === 8, `${await conta('.sort-options button')}`);
+
+const ordemDeAntes = await ev(`[...document.querySelectorAll('.album-title')].map((t) => t.textContent.trim())`);
+await ev(`[...document.querySelectorAll('.sort-options button')].find((b) => b.textContent.trim() === 'Nota do clube').click()`);
+await sleep(700);
+check('ordenar por nota desmancha as rodadas e reordena a parede',
+  (await texto('.round-rule')).includes('NOTA DO CLUBE') &&
+  (await conta('.round-rule')) === 1 &&
+  JSON.stringify(await ev(`[...document.querySelectorAll('.album-title')].map((t) => t.textContent.trim())`))
+    !== JSON.stringify(ordemDeAntes),
+  await texto('.round-rule'));
+check('a parede ordenada continua com todos os cartões',
+  (await conta('.album-card')) === cartoes, `${await conta('.album-card')} de ${cartoes}`);
+
+await ev(`[...document.querySelectorAll('.sort-options button')].find((b) => b.textContent.trim() === 'Rodada').click()`);
+await sleep(700);
+check('voltar para a rodada devolve as réguas',
+  (await conta('.round-rule')) >= 1 && (await texto('.round-rule')).includes('RODADA'));
 
 const antesDoFiltro = await conta('.album-card');
 await ev(`document.querySelectorAll('.people-chip')[1].click()`);
@@ -255,23 +409,67 @@ const abriuRetro = await ev(`(() => {
   alvo.click();
   return alvo.getAttribute('aria-label');
 })()`);
-check('o cartão mais antigo abre a bancada', typeof abriuRetro === 'string' && abriuRetro.includes('cápsula'), String(abriuRetro));
+check('o cartão mais antigo abre a ficha',
+  typeof abriuRetro === 'string' && abriuRetro.includes('ficha'), String(abriuRetro));
 await sleep(900);
+// Pelo álbum vale a mesma separação: a ficha abre para ler, escrever é a decisão seguinte.
+await ev(`document.querySelector('.sheet-actions .note-cancel').click()`);
+await sleep(700);
 await digitar('note-title', retro);
 await salvar();
 await sleep(3200);
-check('o giro antigo fica etiquetado pelo álbum',
+check('o giro antigo ganha o jogo pelo álbum',
   (await ev(`document.body.innerText.includes(${JSON.stringify(retro)})`)) === true);
+
+// E a resenha retroativa também: quem jogou há um ano ainda pode dar a nota dele. O
+// cartão mais antigo é o mais resenhado do grupo semeado, então o que se prova aqui é que
+// a minha entra na conta que já existia — não que ela vire a conta inteira.
+const resenhasAntes = Number(await ev(`(() => {
+  const c = [...document.querySelectorAll('.album-card')];
+  const texto = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/);
+  return texto ? texto[1] : 0;
+})()`));
+
+await ev(`document.querySelector('.sheet-actions .secondary-action').click()`);
+await sleep(700);
+await ev(`document.querySelector('#nota-final-4').click()`);
+await sleep(200);
+await ev(`document.querySelectorAll('input[name="completude"]')[2].click()`);
+await sleep(200);
+await salvar();
+await sleep(3500);
+
+check('o giro antigo aceita resenha pelo álbum',
+  (await texto('.reviews')).includes('Teste de Ponta a Ponta') &&
+  (await conta('.review.is-mine')) === 1,
+  await texto('.reviews'));
+check('a minha resenha entra na conta que já existia, sem virar a conta inteira',
+  (await ev(`document.querySelector('.score-hero b').textContent.trim()`)) !== '4,0' &&
+  Number(await ev(`document.querySelector('.score-hero').innerText.match(/(\\d+) RESENHAS?/)[1]`))
+    === resenhasAntes + 1,
+  `${resenhasAntes} -> ${await texto('.score-hero')}`);
+await ev(`document.querySelector('#sheet-close').click()`);
+await sleep(700);
 
 // Retirar devolve o cartão ao estado em branco, e a retirada fica no registro.
 const brancosAntes = await conta('.album-card.is-blank');
 await ev(`(() => { const c = [...document.querySelectorAll('.album-card')]; c[c.length - 1].click(); })()`);
 await sleep(900);
+await ev(`document.querySelector('.sheet-actions .note-cancel').click()`);
+await sleep(700);
 await ev(`document.querySelector('.note-remove').click()`);
-await sleep(3200);
-check('retirar devolve a cápsula ao estado sem etiqueta',
+await sleep(3500);
+check('retirar o jogo devolve a cápsula ao estado sem jogo escrito',
   (await conta('.album-card.is-blank')) === brancosAntes + 1,
   `${brancosAntes} -> ${await conta('.album-card.is-blank')}`);
+check('retirar o jogo não apagou as resenhas dele',
+  Number(await ev(`(() => {
+    const c = [...document.querySelectorAll('.album-card')];
+    const achado = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/);
+    return achado ? achado[1] : 0;
+  })()`)) === resenhasAntes + 1);
+await ev(`document.querySelector('#sheet-close').click()`);
+await sleep(700);
 
 // --- a ida e volta entre as duas páginas ---
 

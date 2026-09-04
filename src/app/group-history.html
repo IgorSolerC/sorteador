@@ -34,31 +34,39 @@
       <h1 id="album-title">O álbum</h1>
       <p class="album-lede">
         @if (spins().length) {
-          Toda cápsula que já saiu da máquina de <strong>{{ snap.name }}</strong>, com a
-          etiqueta colada nela. Abra qualquer uma para escrever o que o clube jogou.
+          Todo jogo que a máquina de <strong>{{ snap.name }}</strong> já entregou, com a nota
+          que o clube deu. Abra qualquer um para ler as resenhas ou escrever a sua.
         } @else {
-          O álbum de <strong>{{ snap.name }}</strong> guarda cada cápsula que a máquina
-          entregar, com a etiqueta do que o clube jogou. Ele começa no primeiro giro.
+          O álbum de <strong>{{ snap.name }}</strong> guarda cada jogo que a máquina
+          entregar, com a nota do clube e as resenhas. Ele começa no primeiro giro.
         }
       </p>
     </div>
 
     <dl class="serial-grid album-stats">
       <div>
-        <dt>Cápsulas</dt>
-        <dd>{{ spins().length }}</dd>
+        <dt>Nota do clube</dt>
+        <dd class="is-score">{{ albumStats().score }}</dd>
       </div>
       <div>
-        <dt>Etiquetadas</dt>
+        <dt>Platinado</dt>
+        <dd class="is-score">{{ albumStats().platinado }}%</dd>
+      </div>
+      <div>
+        <dt>Jogos com nota</dt>
+        <dd>{{ albumStats().jogos }} / {{ spins().length }}</dd>
+      </div>
+      <div>
+        <dt>Resenhas</dt>
+        <dd>{{ albumStats().resenhas }}</dd>
+      </div>
+      <div>
+        <dt>Com jogo escrito</dt>
         <dd>{{ labelled() }} / {{ spins().length }}</dd>
       </div>
       <div>
         <dt>Rodadas</dt>
         <dd>{{ snap.state.round }}</dd>
-      </div>
-      <div>
-        <dt>Já saíram</dt>
-        <dd>{{ winners().length }}</dd>
       </div>
     </dl>
   </section>
@@ -102,8 +110,8 @@
       </ul>
       <p class="album-filter-state" role="status">
         @if (focused(); as pessoa) {
-          Mostrando as {{ visibleCount() }} de <strong>{{ pessoa.name }}</strong>,
-          {{ pessoa.labelled }} com etiqueta.
+          Mostrando os {{ visibleCount() }} de <strong>{{ pessoa.name }}</strong>,
+          {{ pessoa.labelled }} com jogo escrito.
         } @else {
           Mostrando o álbum inteiro.
         }
@@ -113,9 +121,27 @@
 
   <section class="album-wall" aria-labelledby="album-title">
     @if (visibleCount()) {
-      @for (section of rounds(); track section.round) {
+      <!-- Ordenar é uma decisão de leitura, não de conteúdo: ela fica em texto, sem o
+           amarelo de estado, para não disputar com o filtro de pessoa logo acima. -->
+      <div class="album-sort">
+        <h2 id="album-sort-label">Ordenar por</h2>
+        <div class="sort-options" role="group" aria-labelledby="album-sort-label">
+          @for (option of SORTS; track option.key) {
+            <button
+              type="button"
+              [class.is-on]="sort() === option.key"
+              [attr.aria-pressed]="sort() === option.key"
+              (click)="orderBy(option.key)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @for (section of rounds(); track section.label) {
         <h2 class="round-rule">
-          <span>Rodada {{ section.round }}</span>
+          <span>{{ section.label }}</span>
           <b>{{ section.spins.length }}{{ section.spins.length === 1 ? ' cápsula' : ' cápsulas' }}</b>
         </h2>
         <ol class="album-grid">
@@ -128,10 +154,11 @@
                 [style.--tilt]="tiltFor(spin.index)"
                 [style.--capsule]="colorOf(spin)"
                 [style.--capsule-ink]="inkOf(spin)"
-                (click)="openNote(spin, $event)"
+                (click)="openSheet(spin, $event)"
                 [attr.aria-label]="
-                  (spin.note ? 'Editar a etiqueta de ' : 'Etiquetar a cápsula de ') +
-                  spin.winnerName + ', cápsula ' + (spin.index + 1)
+                  'Abrir a ficha de ' + (spin.note ? spin.note.title : 'uma cápsula sem jogo') +
+                  ', que saiu para ' + spin.winnerName +
+                  (averageOf(spin) ? ', nota do clube ' + averageOf(spin) : ', ainda sem nota')
                 "
               >
                 <span class="album-card-head">
@@ -146,26 +173,71 @@
 
                 @if (spin.note; as note) {
                   <span class="album-title">{{ note.title }}</span>
-                  @if (note.subtitle) {
-                    <span class="album-subtitle">{{ note.subtitle }}</span>
-                  }
-                  @if (note.description) {
-                    <span class="album-description">{{ note.description }}</span>
-                  }
-                  <span class="album-meta">
-                    {{ note.actor ? 'etiquetada por ' + note.actor : 'etiqueta sem assinatura' }}
-                    @if (note.revision > 1) {
-                      · reescrita {{ note.revision }}×
-                    }
-                  </span>
                 } @else {
-                  <span class="album-title album-title-blank">Sem etiqueta</span>
-                  <span class="album-description">
-                    Ninguém anotou o que o clube jogou nesta. Abra para escrever.
-                  </span>
-                  @if (spin.actor) {
-                    <span class="album-meta">girada por {{ spin.actor }}</span>
+                  <span class="album-title album-title-blank">Sem jogo escrito</span>
+                }
+
+                @if (scoresOf(spin); as conta) {
+                  @if (conta.count) {
+                    <span [class]="'album-score is-' + toneOf(spin)">
+                      <b>{{ averageOf(spin) }}</b>
+                      <span>
+                        Nota do clube
+                        <br />{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }}
+                        de {{ spin.seated.length }}
+                      </span>
+                    </span>
+
+                    @if (criteriaOf(spin); as medias) {
+                      @if (medias.length || hoursOf(spin)) {
+                        <span class="album-criteria">
+                          @for (media of medias; track media.label) {
+                            <span>{{ media.label }} <b>{{ media.score }}</b></span>
+                          }
+                          @if (hoursOf(spin); as tempo) {
+                            <span>Tempo <b>{{ tempo }}</b></span>
+                          }
+                        </span>
+                      }
+                    }
+
+                    <span class="completion">
+                      <span class="completion-bar" aria-hidden="true">
+                        @if (shareOf(spin).platinado) {
+                          <i class="is-platinado" [style.width.%]="shareOf(spin).platinado"></i>
+                        }
+                        @if (shareOf(spin).finalizado) {
+                          <i class="is-finalizado" [style.width.%]="shareOf(spin).finalizado"></i>
+                        }
+                        @if (shareOf(spin).incompleto) {
+                          <i class="is-incompleto" [style.width.%]="shareOf(spin).incompleto"></i>
+                        }
+                      </span>
+                      <span class="completion-legend">
+                        @for (option of STATUSES; track option) {
+                          @if (shareOf(spin)[option]) {
+                            <span [class]="'is-' + option">
+                              {{ STATUS_LABELS[option] }} <b>{{ shareOf(spin)[option] }}%</b>
+                            </span>
+                          }
+                        }
+                      </span>
+                    </span>
+                  } @else if (spin.note) {
+                    <!-- Num cartão sem jogo escrito, dizer que não há nota é dizer duas
+                         vezes a mesma ausência. Só o jogo escrito e sem resenha precisa. -->
+                    <span class="album-score is-empty">
+                      Sem nota · ninguém resenhou ainda
+                    </span>
                   }
+                }
+
+                @if (spin.note?.description; as descricao) {
+                  <span class="album-description">{{ descricao }}</span>
+                }
+
+                @if (!spin.note) {
+                  <span class="album-meta">Abra para escrever o jogo</span>
                 }
               </button>
             </li>
@@ -192,8 +264,9 @@
   <footer class="album-foot">
     <span>O álbum</span>
     <p>
-      As etiquetas ficam no mesmo registro dos giros: nada aqui pode ser apagado, só
-      reescrito — e cada versão anterior continua guardada.
+      Os jogos e as resenhas ficam no mesmo registro dos giros: nada aqui pode ser apagado,
+      só reescrito — e cada versão anterior continua guardada. A nota do clube nunca é
+      gravada: ela é recontada a partir das resenhas toda vez que esta página abre.
     </p>
   </footer>
 } @else {
@@ -214,14 +287,21 @@
 }
 
 @if (editingSpin(); as spin) {
-  <app-note-editor
+  <app-game-sheet
     [spin]="spin"
+    [face]="sheetFace()"
     [capsule]="editingColor()"
     [capsuleEmoji]="editingEmoji()"
+    [author]="author()"
+    [members]="everyone()"
     [saving]="savingNote()"
     [error]="noteError()"
-    (commit)="commitNote($event)"
-    (remove)="removeNote()"
+    (showFace)="showFace($event)"
+    (commitNote)="commitNote($event)"
+    (removeNote)="removeNote()"
+    (commitReview)="commitReview($event)"
+    (removeReview)="removeReview()"
+    (commitSeat)="commitSeat($event)"
     (dismiss)="closeNote()"
   />
 }

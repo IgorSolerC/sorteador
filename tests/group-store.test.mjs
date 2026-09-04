@@ -5,7 +5,7 @@ import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 
 import { GroupStore, UsageBlockedError, memoryLogCache } from '../tmpjs/src/app/group-store.js';
 import { UsageGuard } from '../tmpjs/src/app/usage-guard.js';
-import { activeMembers, noteSummary } from '../tmpjs/src/app/group-log.js';
+import { activeMembers, spinScores, spinSummary } from '../tmpjs/src/app/group-log.js';
 
 /**
  * Integração de verdade: a camada de dados contra o Firestore com as rules publicadas,
@@ -201,7 +201,7 @@ await it('etiqueta um giro e a etiqueta volta do log', async () => {
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Click The Button!', description: 'Nota final 8/10' }, 'Igor');
+  await store.annotateSpin(id, 0, { title: 'Click The Button!', description: 'Nota final 8/10' }, 'Igor');
 
   const snap = await store.load(id);
   assert.equal(snap.state.lastSpin.note.title, 'Click The Button!');
@@ -222,7 +222,7 @@ await it('outro aparelho lê a etiqueta pelo delta, sem reler o log inteiro', as
   await outro.store.load(id);
   const antes = outro.guard.snapshot().reads;
 
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Overcooked', description: '' });
+  await store.annotateSpin(id, 0, { title: 'Overcooked', description: '' });
   const snap = await outro.store.load(id);
 
   assert.equal(snap.state.spins[0].note.title, 'Overcooked');
@@ -237,8 +237,8 @@ await it('reescrever a etiqueta é outro evento, e a última vale', async () => 
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris', description: 'Nota 7/10' }, 'Ana');
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris Effect', description: 'Nota 9/10' }, 'Breno');
+  await store.annotateSpin(id, 0, { title: 'Tetris', description: 'Nota 7/10' }, 'Ana');
+  await store.annotateSpin(id, 0, { title: 'Tetris Effect', description: 'Nota 9/10' }, 'Breno');
 
   const snap = await store.load(id);
   assert.equal(snap.state.spins[0].note.title, 'Tetris Effect');
@@ -254,7 +254,7 @@ await it('retirar a etiqueta é gravá-la em branco', async () => {
   await store.addMember(id, 'Ana');
   await store.addMember(id, 'Breno');
   await store.spin(id);
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Tetris', description: '' });
+  await store.annotateSpin(id, 0, { title: 'Tetris', description: '' });
   await store.clearSpinNote(id, 0);
 
   const snap = await store.load(id);
@@ -268,7 +268,7 @@ await it('texto longo com emoji atravessa as rules em vez de ser recusado', asyn
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(id, 0, { subtitle: '', title: '🎮'.repeat(200), description: '🕹️'.repeat(600) });
+  await store.annotateSpin(id, 0, { title: '🎮'.repeat(200), description: '🕹️'.repeat(600) });
 
   const snap = await store.load(id);
   // As rules medem em unidades UTF-16; o cliente corta na mesma medida, sem partir emoji.
@@ -286,7 +286,7 @@ await it('etiquetar não gasta a espera do próximo giro', async () => {
   await store.spin(id);
   const antes = (await store.load(id)).lastSpinAt;
 
-  await store.annotateSpin(id, 0, { subtitle: '', title: 'Pico Park', description: '' });
+  await store.annotateSpin(id, 0, { title: 'Pico Park', description: '' });
 
   assert.equal((await store.load(id)).lastSpinAt, antes);
 });
@@ -296,28 +296,176 @@ await it('etiquetar um giro que não existe é recusado pelo servidor', async ()
   const id = await store.createGroup('Clube');
   await store.addMember(id, 'Ana');
 
-  await assert.rejects(() => store.annotateSpin(id, 99, { subtitle: '', title: 'Fantasma', description: '' }));
+  await assert.rejects(() => store.annotateSpin(id, 99, { title: 'Fantasma', description: '' }));
   await assert.rejects(() => store.annotateSpin(id, -1, { title: 'Fantasma', description: '' }));
 });
 
-for (const r of results) {
-  console.log(`${r.ok ? '  ok  ' : ' FAIL '} ${r.name}`);
-  if (!r.ok) console.log(`        ${r.error?.message?.split('\n')[0] ?? r.error}`);
-}
-await it('o subtítulo atravessa as rules e volta no resumo', async () => {
+await it('a nota do clube entra no resumo de uma linha, derivada das resenhas', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  await store.annotateSpin(id, 0, { title: 'Overcooked', description: 'Empatou' }, 'Igor');
+
+  assert.equal(spinSummary((await store.load(id)).state.lastSpin), 'Overcooked');
+
+  await store.reviewSpin(id, 0, { score: 8, status: 'finalizado' }, 'Ana');
+  await store.reviewSpin(id, 0, { score: 9, status: 'platinado' }, 'Breno');
+
+  const snap = await store.load(id);
+  assert.equal(spinSummary(snap.state.lastSpin), 'Overcooked · 8,5');
+});
+
+// --- a resenha de cada pessoa, contra o servidor de verdade ---
+
+await it('grava a resenha inteira e ela volta do log', async () => {
   const { store } = novaLoja(FOLGADO);
   const id = await store.createGroup('Clube');
   await store.addMember(id, 'Ana');
   await store.addMember(id, 'Breno');
   await store.spin(id);
 
-  await store.annotateSpin(
-    id, 0, { title: 'Overcooked', subtitle: 'Nota 8/10', description: 'Empatou' }, 'Igor',
-  );
+  await store.reviewSpin(id, 0, {
+    score: 9,
+    criteria: { diversao: 10, dificuldade: 3, historia: 5, qualidade: 9, jogabilidade: 8 },
+    status: 'platinado',
+    text: 'Melhor coop que já jogamos.',
+  }, 'Ana');
+
+  const resenha = (await store.load(id)).state.spins[0].reviews[0];
+  assert.equal(resenha.author, 'Ana');
+  assert.equal(resenha.score, 9);
+  assert.equal(resenha.status, 'platinado');
+  assert.equal(resenha.text, 'Melhor coop que já jogamos.');
+  assert.deepEqual(resenha.criteria, {
+    diversao: 10, dificuldade: 3, historia: 5, qualidade: 9, jogabilidade: 8,
+  });
+});
+
+await it('a resenha mínima é nota final e completude', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, { score: 6, status: 'incompleto' }, 'Ana');
+
+  const resenha = (await store.load(id)).state.spins[0].reviews[0];
+  assert.deepEqual(resenha.criteria, {});
+  assert.equal(resenha.text, '');
+});
+
+await it('uma resenha por pessoa: a segunda reescreve a primeira', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, { score: 5, status: 'incompleto' }, 'Ana');
+  await store.reviewSpin(id, 0, { score: 9, status: 'platinado' }, 'Ana');
+  await store.reviewSpin(id, 0, { score: 7, status: 'finalizado' }, 'Breno');
+
+  const spin = (await store.load(id)).state.spins[0];
+  assert.equal(spin.reviews.length, 2);
+  assert.equal(spin.reviews[0].score, 9);
+  assert.equal(spin.reviews[0].revision, 2);
+  // Nada foi reescrito no servidor: as três escritas continuam no log.
+  assert.equal(spin.reviews.map((r) => r.author).join(','), 'Ana,Breno');
+});
+
+await it('a nota do clube é derivada, e nenhum campo dela é gravado', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, { score: 8, criteria: { diversao: 10 }, status: 'platinado' }, 'Ana');
+  await store.reviewSpin(id, 0, { score: 6, status: 'incompleto' }, 'Breno');
+
+  const conta = spinScores((await store.load(id)).state.spins[0]);
+  assert.equal(conta.count, 2);
+  assert.equal(conta.score, 7);
+  // Só quem avaliou diversão entra na média de diversão.
+  assert.deepEqual(conta.criteria.diversao, { average: 10, count: 1 });
+  assert.deepEqual(conta.completion, { platinado: 1, finalizado: 0, incompleto: 1 });
+});
+
+await it('retirar a própria resenha a tira da conta, e a retirada fica no log', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, { score: 8, status: 'finalizado' }, 'Ana');
+  await store.withdrawReview(id, 0, 'Ana');
 
   const snap = await store.load(id);
-  assert.equal(snap.state.lastSpin.note.subtitle, 'Nota 8/10');
-  assert.equal(noteSummary(snap.state.lastSpin.note), 'Overcooked ● Nota 8/10');
+  assert.equal(snap.state.spins[0].reviews.length, 0);
+  assert.equal(snap.logVersion, 5);
+});
+
+await it('retirar o jogo não apaga as resenhas dele', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  await store.annotateSpin(id, 0, { title: 'Tetris', description: '' });
+  await store.reviewSpin(id, 0, { score: 8, status: 'finalizado' }, 'Ana');
+
+  await store.clearSpinNote(id, 0);
+
+  const spin = (await store.load(id)).state.spins[0];
+  assert.equal(spin.note, null);
+  assert.equal(spin.reviews.length, 1);
+});
+
+await it('resenhar não gasta a espera do próximo giro', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  const antes = (await store.load(id)).lastSpinAt;
+
+  await store.reviewSpin(id, 0, { score: 8, status: 'finalizado' }, 'Ana');
+
+  assert.equal((await store.load(id)).lastSpinAt, antes);
+});
+
+await it('o servidor recusa nota fora da régua, e o cliente nem tenta', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 11, status: 'finalizado' }, 'Ana'));
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 7.5, status: 'finalizado' }, 'Ana'));
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 8, status: 'zerado' }, 'Ana'));
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 8, status: 'finalizado' }, ''));
+  await assert.rejects(() => store.reviewSpin(id, 99, { score: 8, status: 'finalizado' }, 'Ana'));
+
+  assert.equal((await store.load(id)).state.spins[0].reviews.length, 0);
+});
+
+await it('critério fora da régua é descartado sem levar a resenha junto', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, {
+    score: 8, criteria: { diversao: 9, dificuldade: 99 }, status: 'finalizado',
+  }, 'Ana');
+
+  assert.deepEqual((await store.load(id)).state.spins[0].reviews[0].criteria, { diversao: 9 });
 });
 
 await it('pinta uma cápsula e a cor volta do log', async () => {
@@ -414,6 +562,110 @@ await it('pintar não muda o vencedor de giro nenhum', async () => {
 
   assert.deepEqual((await store.load(id)).state.spins.map((s) => s.winnerName), antes);
 });
+
+await it('o tempo de jogo vai e volta do log, e é opcional', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, { score: 9, status: 'platinado', hours: 24 }, 'Ana');
+  await store.reviewSpin(id, 0, { score: 7, status: 'finalizado' }, 'Breno');
+
+  const giro = (await store.load(id)).state.spins[0];
+  assert.equal(giro.reviews.find((r) => r.author === 'Ana').hours, 24);
+  assert.equal(giro.reviews.find((r) => r.author === 'Breno').hours, null);
+  assert.deepEqual(spinScores(giro).hours, { average: 24, count: 1 });
+});
+
+await it('um tempo de jogo quebrado ou fora da faixa não chega a sair do cliente', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 9, status: 'platinado', hours: 2.5 }, 'Ana'));
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 9, status: 'platinado', hours: 0 }, 'Ana'));
+  await assert.rejects(() => store.reviewSpin(id, 0, { score: 9, status: 'platinado', hours: 99999 }, 'Ana'));
+  assert.equal((await store.load(id)).state.spins[0].reviews.length, 0);
+});
+
+// --- a mesa de um jogo, contra o servidor de verdade ---
+
+await it('a mesa começa igual ao globo do giro e aceita correção nos dois sentidos', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  const membros = activeMembers((await store.load(id)).state);
+  const breno = membros.find((m) => m.name === 'Breno');
+  assert.deepEqual((await store.load(id)).state.spins[0].seated.map((s) => s.name),
+    ['Ana', 'Breno']);
+
+  await store.seatSpin(id, 0, breno.id, false, 'Ana');
+  assert.deepEqual((await store.load(id)).state.spins[0].seated.map((s) => s.name), ['Ana']);
+
+  await store.seatSpin(id, 0, breno.id, true, 'Ana');
+  assert.deepEqual((await store.load(id)).state.spins[0].seated.map((s) => s.name),
+    ['Ana', 'Breno']);
+});
+
+await it('corrigir a mesa não muda o vencedor, o globo nem o bolo do giro', async () => {
+  // O globo daquele giro é a entrada do sorteio. Se a mesa o alcançasse, o vencedor de um
+  // giro de meses atrás mudaria com uma escrita, e nada aqui seria reproduzível.
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  const antes = (await store.load(id)).state;
+  const membros = activeMembers(antes);
+  for (const membro of membros) await store.seatSpin(id, 0, membro.id, false, 'Ana');
+  const depois = (await store.load(id)).state;
+
+  assert.equal(depois.spins[0].winnerId, antes.spins[0].winnerId);
+  assert.deepEqual(depois.spins[0].eligible, antes.spins[0].eligible);
+  assert.deepEqual(depois.pool, antes.pool);
+  assert.equal(depois.round, antes.round);
+});
+
+await it('quem resenhou continua na mesa mesmo tirado dela', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  const breno = activeMembers((await store.load(id)).state).find((m) => m.name === 'Breno');
+  await store.reviewSpin(id, 0, { score: 7, status: 'finalizado' }, 'Breno');
+  await store.seatSpin(id, 0, breno.id, false, 'Ana');
+
+  const giro = (await store.load(id)).state.spins[0];
+  assert.ok(giro.seated.some((s) => s.name === 'Breno'));
+  assert.ok(giro.reviews.length <= giro.seated.length);
+});
+
+await it('uma cadeira sem pessoa e um giro inválido não chegam a sair do cliente', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await assert.rejects(() => store.seatSpin(id, 0, '  ', true, 'Ana'));
+  await assert.rejects(() => store.seatSpin(id, -1, 'x', true, 'Ana'));
+  assert.equal((await store.load(id)).state.spins[0].seated.length, 2);
+});
+
+for (const r of results) {
+  console.log(`${r.ok ? '  ok  ' : ' FAIL '} ${r.name}`);
+  if (!r.ok) console.log(`        ${r.error?.message?.split('\n')[0] ?? r.error}`);
+}
 
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} integrações verificadas`);

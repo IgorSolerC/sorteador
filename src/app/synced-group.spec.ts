@@ -1,7 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
-import { GroupEvent, GroupMember, SpinRecord, memberId, replay } from './group-log';
+import {
+  GroupEvent,
+  GroupMember,
+  ReviewCriterion,
+  ReviewStatus,
+  SpinRecord,
+  memberId,
+  replay,
+} from './group-log';
 import { GroupSnapshot } from './group-store';
 import { Identity } from './identity';
 import { capsuleColor } from './palette';
@@ -84,7 +92,7 @@ class FakeStore {
   async annotateSpin(
     _id: string,
     spinIndex: number,
-    note: { title: string; subtitle: string; description: string },
+    note: { title: string; description: string },
   ) {
     this.calls.push(`note:${spinIndex}:${note.title}`);
     if (this.failWith) throw this.failWith;
@@ -92,9 +100,53 @@ class FakeStore {
       type: 'spin_annotated',
       at: (this.clock += 1000),
       spinIndex,
-      subtitle: note.subtitle,
       title: note.title,
       description: note.description,
+    });
+  }
+
+  async reviewSpin(
+    _id: string,
+    spinIndex: number,
+    review: {
+      score: number;
+      criteria?: Partial<Record<ReviewCriterion, number>>;
+      status: ReviewStatus;
+      hours?: number | null;
+      text?: string;
+    },
+    actor: string,
+  ) {
+    this.calls.push(`review:${spinIndex}:${actor}:${review.score}:${review.status}`);
+    if (this.failWith) throw this.failWith;
+    this.events.push({
+      type: 'spin_reviewed',
+      at: (this.clock += 1000),
+      spinIndex,
+      actor,
+      score: review.score,
+      criteria: review.criteria ?? {},
+      status: review.status,
+      hours: review.hours ?? null,
+      text: review.text ?? '',
+      withdrawn: false,
+    });
+  }
+
+  async withdrawReview(_id: string, spinIndex: number, actor: string) {
+    this.calls.push(`unreview:${spinIndex}:${actor}`);
+    if (this.failWith) throw this.failWith;
+    this.events.push({
+      type: 'spin_reviewed',
+      at: (this.clock += 1000),
+      spinIndex,
+      actor,
+      score: null,
+      criteria: {},
+      status: null,
+      hours: null,
+      text: '',
+      withdrawn: true,
     });
   }
 
@@ -440,11 +492,20 @@ describe('etiqueta do giro', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   type Bancada = {
-    openNote(spin: SpinRecord, event?: Event): void;
+    openSheet(spin: SpinRecord, event?: Event): void;
+    showFace(face: 'ficha' | 'resenha' | 'jogo'): void;
     closeNote(): void;
-    commitNote(draft: { title: string; subtitle: string; description: string }): Promise<void>;
+    commitNote(draft: { title: string; description: string }): Promise<void>;
     removeNote(): Promise<void>;
+    commitReview(draft: {
+      score: number | null;
+      criteria: Partial<Record<ReviewCriterion, number>>;
+      status: ReviewStatus | null;
+      text: string;
+    }): Promise<void>;
+    removeReview(): Promise<void>;
     noteError: () => string;
+    sheetFace: () => 'ficha' | 'resenha' | 'jogo';
     editingSpin: () => SpinRecord | null;
   };
 
@@ -458,7 +519,7 @@ describe('etiqueta do giro', () => {
     const branco = (fixture.nativeElement as HTMLElement).querySelector('.note-sticker.is-blank');
 
     expect(branco).not.toBeNull();
-    expect(branco?.textContent).toContain('Etiquetar este giro');
+    expect(branco?.textContent).toContain('Escrever o jogo desta cápsula');
     fixture.destroy();
   });
 
@@ -466,7 +527,7 @@ describe('etiqueta do giro', () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1);
     store.events.push({
       type: 'spin_annotated', at: Date.now(), spinIndex: 0,
-      subtitle: '', title: 'Click The Button!', description: 'Nota final 8/10', actor: 'Igor',
+      title: 'Click The Button!', description: 'Nota final 8/10', actor: 'Igor',
     });
     const fixture = await render(store);
     const texto = (fixture.nativeElement as HTMLElement).querySelector('.note-sticker')?.textContent ?? '';
@@ -482,12 +543,16 @@ describe('etiqueta do giro', () => {
     const fixture = await render(store);
     const app = bancada(fixture);
 
-    app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ subtitle: '', title: 'Overcooked', description: 'Nota 9/10' });
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('jogo');
+    await app.commitNote({ title: 'Overcooked', description: 'Nota 9/10' });
     fixture.detectChanges();
 
     expect(store.calls).toContain('note:0:Overcooked');
-    expect(app.editingSpin()).toBeNull();
+    // Salvar o jogo devolve à ficha, e não à página: o passo seguinte natural é escrever
+    // a resenha dele, e fechar tudo obrigaria a achar a mesma cápsula de novo.
+    expect(app.editingSpin()).not.toBeNull();
+    expect(app.sheetFace()).toBe('ficha');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Overcooked');
     fixture.destroy();
   });
@@ -497,8 +562,8 @@ describe('etiqueta do giro', () => {
     const fixture = await render(store);
     const app = bancada(fixture);
 
-    app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ subtitle: '', title: 'O primeiro de todos', description: '' });
+    app.openSheet(spinsOf(store)[0]);
+    await app.commitNote({ title: 'O primeiro de todos', description: '' });
 
     expect(store.calls).toContain('note:0:O primeiro de todos');
     expect(replay(GRUPO, store.events).spins[0].note?.title).toBe('O primeiro de todos');
@@ -511,11 +576,12 @@ describe('etiqueta do giro', () => {
     const fixture = await render(store);
     const app = bancada(fixture);
 
-    app.openNote(spinsOf(store)[0]);
-    await app.commitNote({ subtitle: '', title: '', description: 'Só a descrição' });
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('jogo');
+    await app.commitNote({ title: '', description: 'Só a descrição' });
 
     expect(store.calls.some((c) => c.startsWith('note:'))).toBe(false);
-    expect(app.noteError()).toContain('título');
+    expect(app.noteError()).toContain('nome ao jogo');
     expect(app.editingSpin()).not.toBeNull();
     fixture.destroy();
   });
@@ -523,12 +589,12 @@ describe('etiqueta do giro', () => {
   it('retirar grava a etiqueta em branco', async () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1);
     store.events.push({
-      type: 'spin_annotated', at: Date.now(), spinIndex: 0, subtitle: '', title: 'Tetris', description: '',
+      type: 'spin_annotated', at: Date.now(), spinIndex: 0, title: 'Tetris', description: '',
     });
     const fixture = await render(store);
     const app = bancada(fixture);
 
-    app.openNote(spinsOf(store)[0]);
+    app.openSheet(spinsOf(store)[0]);
     await app.removeNote();
 
     expect(store.calls).toContain('note:0:');
@@ -555,18 +621,134 @@ describe('etiqueta do giro', () => {
     const fixture = await render(store);
     const app = bancada(fixture);
 
-    app.openNote(spinsOf(store)[0]);
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('jogo');
     store.failWith = { code: 'permission-denied' };
-    await app.commitNote({ subtitle: '', title: 'Pico Park', description: '' });
+    await app.commitNote({ title: 'Pico Park', description: '' });
     fixture.detectChanges();
 
-    // A bancada não fecha: fechá-la levaria embora o texto digitado. Que o rascunho
-    // sobrevive é propriedade do editor, e está provado em `note-editor.spec.ts`.
+    // A face não volta: voltar levaria embora o texto digitado, e o erro tem que aparecer
+    // ao lado dos campos que o causaram.
     expect(app.editingSpin()).not.toBeNull();
+    expect(app.sheetFace()).toBe('jogo');
     expect((fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]')).not.toBeNull();
     expect(app.noteError()).toContain('recusou');
     expect((fixture.nativeElement as HTMLElement).querySelector('.field-error')?.textContent)
       .toContain('recusou');
+    fixture.destroy();
+  });
+});
+
+describe('a resenha de cada pessoa', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  type Bancada = {
+    openSheet(spin: SpinRecord, event?: Event): void;
+    showFace(face: 'ficha' | 'resenha' | 'jogo'): void;
+    commitReview(draft: {
+      score: number | null;
+      criteria: Partial<Record<ReviewCriterion, number>>;
+      status: ReviewStatus | null;
+      text: string;
+    }): Promise<void>;
+    removeReview(): Promise<void>;
+    noteError: () => string;
+    sheetFace: () => 'ficha' | 'resenha' | 'jogo';
+    editingSpin: () => SpinRecord | null;
+  };
+
+  const bancada = (fixture: { componentInstance: unknown }) =>
+    fixture.componentInstance as unknown as Bancada;
+  const spinsOf = (store: FakeStore) => replay(GRUPO, store.events).spins;
+
+  const rascunho = (over: Record<string, unknown> = {}) => ({
+    score: 8,
+    criteria: {},
+    status: 'finalizado' as ReviewStatus,
+    text: '',
+    ...over,
+  }) as never;
+
+  it('grava a resenha assinada por quem está com o app aberto', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('resenha');
+    await app.commitReview(rascunho({ score: 9, status: 'platinado', criteria: { diversao: 10 } }));
+    fixture.detectChanges();
+
+    expect(store.calls.some((c) => c.startsWith('review:0:'))).toBe(true);
+    const resenhas = replay(GRUPO, store.events).spins[0].reviews;
+    expect(resenhas).toHaveLength(1);
+    expect(resenhas[0].score).toBe(9);
+    expect(resenhas[0].status).toBe('platinado');
+    expect(resenhas[0].criteria).toEqual({ diversao: 10 });
+    // Gravar devolve à ficha, que é onde a nota do clube acabou de mudar.
+    expect(app.sheetFace()).toBe('ficha');
+    fixture.destroy();
+  });
+
+  it('sem nota final, a resenha nem chega à rede', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('resenha');
+    await app.commitReview(rascunho({ score: null }));
+
+    expect(store.calls.some((c) => c.startsWith('review:'))).toBe(false);
+    expect(app.noteError()).toContain('nota final');
+    expect(app.sheetFace()).toBe('resenha');
+    fixture.destroy();
+  });
+
+  it('sem completude, a resenha nem chega à rede', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('resenha');
+    await app.commitReview(rascunho({ status: null }));
+
+    expect(store.calls.some((c) => c.startsWith('review:'))).toBe(false);
+    expect(app.noteError()).toContain('terminou');
+    fixture.destroy();
+  });
+
+  it('retirar a própria resenha a tira da conta do clube', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('resenha');
+    await app.commitReview(rascunho({ score: 7 }));
+    await app.removeReview();
+
+    expect(store.calls.some((c) => c.startsWith('unreview:0:'))).toBe(true);
+    expect(replay(GRUPO, store.events).spins[0].reviews).toHaveLength(0);
+    fixture.destroy();
+  });
+
+  it('a nota do clube aparece no registro depois da primeira resenha', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1);
+    store.events.push({
+      type: 'spin_annotated', at: Date.now(), spinIndex: 0, title: 'Tetris', description: '',
+    });
+    const fixture = await render(store);
+    const app = bancada(fixture);
+
+    app.openSheet(spinsOf(store)[0]);
+    app.showFace('resenha');
+    await app.commitReview(rascunho({ score: 6 }));
+    fixture.detectChanges();
+
+    const celula = (fixture.nativeElement as HTMLElement).querySelector('.cell-note');
+    expect(celula?.textContent).toContain('Tetris · 6,0');
     fixture.destroy();
   });
 });

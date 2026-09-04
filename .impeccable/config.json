@@ -13,6 +13,12 @@
         "rule": "design-system-font-size",
         "value": "40px",
         "createdAt": "2026-09-04T15:04:54.934Z"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "2px",
+        "createdAt": "2026-09-04T19:40:33.702Z",
+        "reason": "Raio de marca de medicao impressa (regua de criterio, barra de completude, quadradinho da legenda): documentado como o token rounded.rule no DESIGN.md. 4px numa faixa de 6px de altura fecha em pilula e vira indicador de dashboard. Decidido pelo assistente nesta rodada, nao confirmado pelo usuario."
       }
     ]
   }

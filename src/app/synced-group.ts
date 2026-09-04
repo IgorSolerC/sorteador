@@ -1,5 +1,15 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, WritableSignal, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  WritableSignal,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 
 import {
   GroupMember,
@@ -7,11 +17,16 @@ import {
   MIN_MEMBERS,
   SpinRecord,
   activeMembers,
+  formatScore,
   membersById,
-  noteSummary,
   poolMembers,
+  spinScores,
+  ScoreTone,
+  scoreTone,
+  SpinSeat,
+  spinSummary,
 } from './group-log';
-import { GroupSnapshot, GroupStore, SPIN_COOLDOWN_MS, UsageBlockedError } from './group-store';
+import { GroupSnapshot, GroupStore, UsageBlockedError } from './group-store';
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
 import { rememberGroup } from './recent-groups';
 import { Machine, MachinePerson } from './machine';
@@ -19,8 +34,8 @@ import { capsuleColor, capsuleColorName, capsuleInk, capsuleTextOnEnamel } from 
 import { Confetti } from './confetti';
 import { Identity } from './identity';
 import { trapFocusWithin } from './focus-trap';
-import { NoteBench } from './note-bench';
-import { NoteEditor } from './note-editor';
+import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
+import { GameSheet } from './game-sheet';
 import { CapsuleStyle, RosterBench } from './roster-bench';
 import { normalizeName, participantKey } from './naming';
 
@@ -35,7 +50,7 @@ import { normalizeName, participantKey } from './naming';
  */
 @Component({
   selector: 'app-synced-group',
-  imports: [CommonModule, Machine, NoteEditor, RosterBench, Confetti],
+  imports: [CommonModule, Machine, GameSheet, RosterBench, Confetti],
   templateUrl: './synced-group.html',
 })
 export class SyncedGroup {
@@ -78,17 +93,43 @@ export class SyncedGroup {
   private sceneToken = 0;
   private greeted = false;
 
-  /** A bancada de etiquetas, a mesma que o álbum abre sobre os mesmos giros. */
-  private readonly bench = new NoteBench(
+  /** A ficha do jogo, a mesma que o álbum abre sobre os mesmos giros. */
+  private readonly bench = new GameBench(
     this.document,
-    (spinIndex, note) =>
-      this.store
-        .annotateSpin(this.groupId(), spinIndex, note, this.author())
-        .then(() => this.reload(this.groupId())),
+    {
+      annotate: (spinIndex, note) =>
+        this.store
+          .annotateSpin(this.groupId(), spinIndex, note, this.author())
+          .then(() => this.reload(this.groupId())),
+      review: (spinIndex, draft) =>
+        this.store
+          .reviewSpin(
+            this.groupId(),
+            spinIndex,
+            {
+              score: draft.score!,
+              criteria: draft.criteria,
+              status: draft.status!,
+              hours: draft.hours,
+              text: draft.text,
+            },
+            this.author(),
+          )
+          .then(() => this.reload(this.groupId())),
+      withdraw: (spinIndex) =>
+        this.store
+          .withdrawReview(this.groupId(), spinIndex, this.author())
+          .then(() => this.reload(this.groupId())),
+      seat: (spinIndex, memberId, seated) =>
+        this.store
+          .seatSpin(this.groupId(), spinIndex, memberId, seated, this.author())
+          .then(() => this.reload(this.groupId())),
+    },
     (error) => this.explain(error),
   );
 
   protected readonly editingSpinIndex = this.bench.spinIndex;
+  protected readonly sheetFace = this.bench.face;
   protected readonly noteError = this.bench.error;
   protected readonly savingNote = this.bench.saving;
 
@@ -104,12 +145,21 @@ export class SyncedGroup {
       if (untracked(this.snapshot)?.groupId !== id) this.snapshot.set(null);
       void this.reload(id);
     });
-    window.setInterval(() => this.now.set(Date.now()), 1000);
-    this.document.addEventListener('visibilitychange', () => {
+    // O relógio da espera entre giros, e a recarga de quem volta para a aba. Os dois são
+    // desligados na destruição: ir para o álbum e voltar deixava para trás um relógio e um
+    // ouvinte de uma máquina que não está mais na tela — e cada visita à aba fazia todos os
+    // fantasmas recarregarem o grupo, gastando leituras do orçamento do aparelho.
+    const clock = window.setInterval(() => this.now.set(Date.now()), 1000);
+    const wake = () => {
       const parado = Date.now() - this.lastLoadedAt() > REFRESH_MIN_INTERVAL_MS;
       if (this.document.visibilityState === 'visible' && parado && !this.busy()) {
         void this.reload(this.groupId());
       }
+    };
+    this.document.addEventListener('visibilitychange', wake);
+    inject(DestroyRef).onDestroy(() => {
+      window.clearInterval(clock);
+      this.document.removeEventListener('visibilitychange', wake);
     });
   }
 
@@ -166,6 +216,15 @@ export class SyncedGroup {
   protected readonly members = computed<readonly GroupMember[]>(() => {
     const snap = this.snapshot();
     return snap ? activeMembers(snap.state) : [];
+  });
+
+  /**
+   * Todo mundo que o grupo já teve. A mesa de um giro de um ano atrás pode precisar de
+   * quem saiu do clube depois, então aqui não vale só quem está ativo hoje.
+   */
+  protected readonly everyone = computed<readonly GroupMember[]>(() => {
+    const snap = this.snapshot();
+    return snap ? [...membersById(snap.state).values()] : [];
   });
 
   protected readonly pool = computed<readonly GroupMember[]>(() => {
@@ -286,35 +345,59 @@ export class SyncedGroup {
 
   // --- a etiqueta: o que o clube jogou, colado na cápsula que saiu ---
 
-  /** Abre a bancada para um giro, seja o de agora ou um de um ano atrás. */
-  protected openNote(spin: SpinRecord, event?: Event): void {
+  /** Abre a ficha de um giro, seja o de agora ou um de um ano atrás. Ela abre para ler. */
+  protected openSheet(spin: SpinRecord, event?: Event): void {
     this.bench.open(spin, event);
+  }
+
+  protected showFace(face: SheetFace): void {
+    this.bench.show(face);
   }
 
   protected closeNote(): void {
     this.bench.close();
   }
 
-  protected async commitNote(draft: {
-    title: string;
-    subtitle: string;
-    description: string;
-  }): Promise<void> {
-    const spin = this.editingSpin();
-    if (!spin) return;
-    const message = await this.bench.commit(spin, draft);
-    if (message) this.showNotice(message);
+  protected async commitNote(draft: NoteDraft): Promise<void> {
+    await this.afterBench((spin) => this.bench.commitNote(spin, draft));
   }
 
   protected async removeNote(): Promise<void> {
+    await this.afterBench((spin) => this.bench.removeNote(spin));
+  }
+
+  protected async commitReview(draft: ReviewDraft): Promise<void> {
+    await this.afterBench((spin) => this.bench.commitReview(spin, draft));
+  }
+
+  protected async removeReview(): Promise<void> {
+    await this.afterBench((spin) => this.bench.removeReview(spin));
+  }
+
+  protected async commitSeat(change: { seat: SpinSeat; seated: boolean }): Promise<void> {
+    await this.afterBench((spin) => this.bench.commitSeat(spin, change.seat, change.seated));
+  }
+
+  private async afterBench(operation: (spin: SpinRecord) => Promise<string | null>): Promise<void> {
     const spin = this.editingSpin();
     if (!spin) return;
-    const message = await this.bench.remove(spin);
+    const message = await operation(spin);
     if (message) this.showNotice(message);
   }
 
   protected summaryOf(spin: SpinRecord): string {
-    return noteSummary(spin.note);
+    return spinSummary(spin);
+  }
+
+  /** A nota do clube num giro, já formatada. Vazio quando ninguém resenhou. */
+  protected summaryScore(spin: SpinRecord): string {
+    const score = spinScores(spin).score;
+    return score === null ? '' : formatScore(score);
+  }
+
+  /** O temperamento dessa nota, o mesmo da ficha e do álbum. */
+  protected toneOf(spin: SpinRecord): ScoreTone {
+    return scoreTone(spinScores(spin).score);
   }
 
   // --- o giro ---
@@ -533,7 +616,6 @@ export class SyncedGroup {
     window.setTimeout(() => this.notice.set(''), 5500);
   }
 
-  protected readonly SPIN_COOLDOWN_S = SPIN_COOLDOWN_MS / 1000;
 }
 
 const REFRESH_MIN_INTERVAL_MS = 20_000;

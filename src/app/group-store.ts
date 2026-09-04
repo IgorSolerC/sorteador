@@ -18,8 +18,14 @@ import {
   GroupEvent,
   GroupState,
   MAX_NOTE_DESCRIPTION,
-  MAX_NOTE_SUBTITLE,
   MAX_NOTE_TITLE,
+  MAX_HOURS,
+  MAX_REVIEW_TEXT,
+  MAX_SCORE,
+  REVIEW_CRITERIA,
+  REVIEW_STATUSES,
+  ReviewCriterion,
+  ReviewStatus,
   emojiText,
   noteText,
   replay,
@@ -180,7 +186,7 @@ export class GroupStore {
   annotateSpin(
     groupId: string,
     spinIndex: number,
-    note: { title: string; subtitle: string; description: string },
+    note: { title: string; description: string },
     actor = '',
   ): Promise<void> {
     if (!Number.isInteger(spinIndex) || spinIndex < 0) {
@@ -192,7 +198,6 @@ export class GroupStore {
         tipo: 'spin_annotated',
         giro: spinIndex,
         titulo: noteText(note.title, MAX_NOTE_TITLE, { singleLine: true }),
-        subtitulo: noteText(note.subtitle, MAX_NOTE_SUBTITLE, { singleLine: true }),
         descricao: noteText(note.description, MAX_NOTE_DESCRIPTION),
       },
       {},
@@ -202,7 +207,111 @@ export class GroupStore {
 
   /** Retirar a etiqueta é escrevê-la em branco; a retirada também fica no registro. */
   clearSpinNote(groupId: string, spinIndex: number, actor = ''): Promise<void> {
-    return this.annotateSpin(groupId, spinIndex, { title: '', subtitle: '', description: '' }, actor);
+    return this.annotateSpin(groupId, spinIndex, { title: '', description: '' }, actor);
+  }
+
+  /**
+   * Grava (ou reescreve) a resenha de UMA pessoa sobre o jogo daquele giro. A assinatura é
+   * obrigatória e é ela que identifica a resenha: sem nome não há de quem ela seja, e
+   * ninguém conseguiria editá-la depois. Como tudo aqui, reescrever é outro evento.
+   */
+  reviewSpin(
+    groupId: string,
+    spinIndex: number,
+    review: {
+      score: number;
+      criteria?: Partial<Record<ReviewCriterion, number | null>>;
+      status: ReviewStatus;
+      hours?: number | null;
+      text?: string;
+    },
+    actor: string,
+  ): Promise<void> {
+    if (!Number.isInteger(spinIndex) || spinIndex < 0) {
+      return Promise.reject(new Error(`Índice de giro inválido: ${spinIndex}.`));
+    }
+    if (!actor.trim()) {
+      return Promise.reject(new Error('Uma resenha precisa de assinatura.'));
+    }
+    if (!isScore(review.score)) {
+      return Promise.reject(new Error(`Nota final inválida: ${review.score}.`));
+    }
+    if (!REVIEW_STATUSES.includes(review.status)) {
+      return Promise.reject(new Error(`Status de completude inválido: ${review.status}.`));
+    }
+    // Horas é opcional: ausente é "não contei". Presente, tem que ser um inteiro de
+    // verdade — meia hora não muda a conversa e as rules só sabem validar inteiro.
+    const horas = review.hours ?? null;
+    if (horas !== null
+      && (!Number.isInteger(horas) || horas < 1 || horas > MAX_HOURS)) {
+      return Promise.reject(new Error(`Tempo de jogo inválido: ${horas}.`));
+    }
+
+    // Critério sem nota não vai como `null`: ele simplesmente não vai. Chave ausente é
+    // "não avaliei", e é assim que a média de cada critério mantém o próprio denominador.
+    const notas: Record<string, number> = {};
+    for (const criterion of REVIEW_CRITERIA) {
+      const nota = review.criteria?.[criterion];
+      if (isScore(nota)) notas[criterion] = nota;
+    }
+
+    const texto = noteText(review.text ?? '', MAX_REVIEW_TEXT);
+    return this.append(
+      groupId,
+      {
+        tipo: 'spin_reviewed',
+        giro: spinIndex,
+        nota: review.score,
+        status: review.status,
+        ...(horas === null ? {} : { horas }),
+        ...notas,
+        ...(texto ? { texto } : {}),
+      },
+      {},
+      actor,
+    );
+  }
+
+  /** Retirar a própria resenha. A retirada é um evento como qualquer outro. */
+  withdrawReview(groupId: string, spinIndex: number, actor: string): Promise<void> {
+    if (!Number.isInteger(spinIndex) || spinIndex < 0) {
+      return Promise.reject(new Error(`Índice de giro inválido: ${spinIndex}.`));
+    }
+    if (!actor.trim()) {
+      return Promise.reject(new Error('Uma resenha precisa de assinatura.'));
+    }
+    return this.append(
+      groupId,
+      { tipo: 'spin_reviewed', giro: spinIndex, retirada: true },
+      {},
+      actor,
+    );
+  }
+
+  /**
+   * Põe ou tira alguém da mesa daquele jogo. Corrige o elenco, nunca o sorteio: o globo
+   * do giro é imutável e é dele que o vencedor sai, então nada aqui pode mudar quem
+   * ganhou, quem já saiu na rodada ou quem ainda falta.
+   */
+  seatSpin(
+    groupId: string,
+    spinIndex: number,
+    memberId: string,
+    seated: boolean,
+    actor = '',
+  ): Promise<void> {
+    if (!Number.isInteger(spinIndex) || spinIndex < 0) {
+      return Promise.reject(new Error(`Índice de giro inválido: ${spinIndex}.`));
+    }
+    if (!memberId.trim()) {
+      return Promise.reject(new Error('Uma cadeira precisa de uma pessoa.'));
+    }
+    return this.append(
+      groupId,
+      { tipo: 'spin_seated', giro: spinIndex, memberId, mesa: seated === true },
+      {},
+      actor,
+    );
   }
 
   static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
@@ -324,6 +433,19 @@ function toMillis(value: unknown): number | null {
   return typeof candidate?.toMillis === 'function' ? candidate.toMillis() : null;
 }
 
+function isScore(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= MAX_SCORE;
+}
+
+function toCriteria(data: Record<string, unknown>): Partial<Record<ReviewCriterion, number>> {
+  const criteria: Partial<Record<ReviewCriterion, number>> = {};
+  for (const criterion of REVIEW_CRITERIA) {
+    const value = data[criterion];
+    if (typeof value === 'number') criteria[criterion] = value;
+  }
+  return criteria;
+}
+
 function toEvent(data: Record<string, unknown>): GroupEvent | null {
   const at = toMillis(data['em']);
   if (at === null) return null;
@@ -353,15 +475,46 @@ function toEvent(data: Record<string, unknown>): GroupEvent | null {
     case 'spin':
       return { type: 'spin', at, actor };
     case 'spin_annotated':
+      // `subtitulo` existe em eventos gravados antes de setembro de 2026 e não é mais
+      // lido: o lugar dele na tela virou a nota média, derivada das resenhas. O texto
+      // antigo continua no log — apagá-lo faria a contagem local nunca fechar com
+      // `versaoLog` — e simplesmente não chega ao replay.
       return typeof data['giro'] === 'number'
         ? {
             type: 'spin_annotated',
             at,
             spinIndex: data['giro'],
             title: typeof data['titulo'] === 'string' ? data['titulo'] : '',
-            subtitle: typeof data['subtitulo'] === 'string' ? data['subtitulo'] : '',
             description: typeof data['descricao'] === 'string' ? data['descricao'] : '',
             actor,
+          }
+        : null;
+    case 'spin_seated':
+      return typeof data['giro'] === 'number' && typeof data['memberId'] === 'string'
+        ? {
+            type: 'spin_seated',
+            at,
+            spinIndex: data['giro'],
+            memberId: data['memberId'],
+            seated: data['mesa'] === true,
+            actor,
+          }
+        : null;
+    case 'spin_reviewed':
+      // A rule exige `autor` numa resenha, então um evento sem ele não existe no servidor.
+      // A guarda aqui é a mesma das outras: o que não forma um evento não vira um.
+      return typeof data['giro'] === 'number' && actor
+        ? {
+            type: 'spin_reviewed',
+            at,
+            spinIndex: data['giro'],
+            actor,
+            score: typeof data['nota'] === 'number' ? data['nota'] : null,
+            criteria: toCriteria(data),
+            status: typeof data['status'] === 'string' ? (data['status'] as ReviewStatus) : null,
+            hours: typeof data['horas'] === 'number' ? data['horas'] : null,
+            text: typeof data['texto'] === 'string' ? data['texto'] : '',
+            withdrawn: data['retirada'] === true,
           }
         : null;
     default:

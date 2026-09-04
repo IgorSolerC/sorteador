@@ -1,16 +1,25 @@
 import {
   activeMembers,
   canSpin,
+  completionShare,
+  criterionText,
+  difficultyLabel,
+  formatHours,
   emojiText,
   emptyState,
+  formatScore,
   GroupEvent,
   MAX_EMOJI,
-  MAX_NOTE_SUBTITLE,
+  MAX_REVIEW_TEXT,
   memberId,
-  noteSummary,
   poolMembers,
   replay,
+  ReviewCriterion,
+  ReviewStatus,
+  scoreTone,
+  spinScores,
   spinsOfRound,
+  spinSummary,
 } from './group-log';
 import { isColorIndex } from './palette';
 
@@ -322,9 +331,8 @@ describe('etiqueta do giro', () => {
     title: string,
     description = '',
     actor?: string,
-    subtitle = '',
   ): GroupEvent {
-    return { type: 'spin_annotated', at: at(), spinIndex, title, subtitle, description, actor };
+    return { type: 'spin_annotated', at: at(), spinIndex, title, description, actor };
   }
 
   const dupla = () => seed(['Ana', 'Breno']);
@@ -334,7 +342,6 @@ describe('etiqueta do giro', () => {
 
     expect(state.lastSpin!.note).toEqual({
       title: 'Click The Button!',
-      subtitle: '',
       description: 'Nota final 8/10',
       at: expect.any(Number),
       actor: undefined,
@@ -548,66 +555,463 @@ describe('a cápsula de cada pessoa', () => {
 });
 
 describe('o resumo de uma linha', () => {
-  it('junta título e subtítulo com o marcador', () => {
+  const jogo = (titulo: string): GroupEvent[] => [
+    ...seed(['Ana', 'Breno']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: titulo, description: '' },
+  ];
+
+  it('sem resenha, o resumo é o título do jogo sozinho', () => {
+    const state = replay(GRUPO, jogo('Overcooked'));
+    expect(spinSummary(state.spins[0])).toBe('Overcooked');
+  });
+
+  it('com resenha, o marcador traz a nota do clube', () => {
     const state = replay(GRUPO, [
-      ...seed(['Ana', 'Breno']),
-      spin(),
-      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: 'Nota 8/10', description: '' },
+      ...jogo('Overcooked'),
+      review(0, 'Ana', { score: 8 }),
+      review(0, 'Breno', { score: 9 }),
     ]);
-    expect(noteSummary(state.spins[0].note)).toBe('Overcooked ● Nota 8/10');
+    expect(spinSummary(state.spins[0])).toBe('Overcooked · 8,5');
   });
 
-  it('sem subtítulo, o resumo é o título sozinho', () => {
+  it('sem etiqueta não há resumo, mesmo com resenha', () => {
+    // O resumo é do jogo. Uma resenha de um giro sem jogo escrito não tem o que resumir.
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), spin(), review(0, 'Ana', { score: 8 })]);
+    expect(spinSummary(state.spins[0])).toBe('');
+    expect(spinSummary(null)).toBe('');
+  });
+
+  it('a nota sai com uma casa e vírgula, porque a tela fala português', () => {
+    expect(formatScore(8)).toBe('8,0');
+    expect(formatScore(8.25)).toBe('8,3');
+    expect(formatScore(10)).toBe('10,0');
+  });
+
+  it('título e descrição em branco retiram a etiqueta', () => {
     const state = replay(GRUPO, [
-      ...seed(['Ana', 'Breno']),
-      spin(),
-      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: '', description: '' },
-    ]);
-    expect(noteSummary(state.spins[0].note)).toBe('Overcooked');
-  });
-
-  it('sem etiqueta, não há resumo', () => {
-    expect(noteSummary(null)).toBe('');
-  });
-
-  it('só um subtítulo já é etiqueta, e o giro deixa de estar em branco', () => {
-    // Quem escreve só o placar não deve receber a etiqueta de volta em branco.
-    const state = replay(GRUPO, [
-      ...seed(['Ana', 'Breno']),
-      spin(),
-      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', subtitle: 'Nota 8/10', description: '' },
-    ]);
-    expect(state.spins[0].note).not.toBeNull();
-    expect(state.spins[0].note!.subtitle).toBe('Nota 8/10');
-  });
-
-  it('título, subtítulo e descrição em branco retiram a etiqueta', () => {
-    const state = replay(GRUPO, [
-      ...seed(['Ana', 'Breno']),
-      spin(),
-      { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked', subtitle: 'Nota 8/10', description: '' },
-      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', subtitle: '', description: '' },
+      ...jogo('Overcooked'),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', description: '' },
     ]);
     expect(state.spins[0].note).toBeNull();
   });
+});
 
-  it('o subtítulo é uma linha só, cortada na medida do servidor', () => {
+function review(
+  spinIndex: number,
+  actor: string,
+  {
+    score = 8,
+    criteria = {},
+    status = 'finalizado',
+    hours = null,
+    text = '',
+    withdrawn = false,
+  }: {
+    score?: number | null;
+    criteria?: Partial<Record<ReviewCriterion, number>>;
+    status?: ReviewStatus | null;
+    hours?: number | null;
+    text?: string;
+    withdrawn?: boolean;
+  } = {},
+): GroupEvent {
+  return {
+    type: 'spin_reviewed',
+    at: at(),
+    spinIndex,
+    actor,
+    score,
+    criteria,
+    status,
+    hours,
+    text,
+    withdrawn,
+  };
+}
+
+describe('a resenha de cada pessoa', () => {
+  const jogo = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+  ];
+
+  it('guarda a resenha inteira de quem escreveu', () => {
     const state = replay(GRUPO, [
-      ...seed(['Ana', 'Breno']),
-      spin(),
+      ...jogo(),
+      review(0, 'Ana', {
+        score: 9,
+        criteria: { diversao: 10, dificuldade: 4 },
+        status: 'platinado',
+        hours: 12,
+        text: 'Melhor coop que já jogamos.',
+      }),
+    ]);
+
+    expect(state.spins[0].reviews).toEqual([
       {
-        type: 'spin_annotated',
-        at: at(),
-        spinIndex: 0,
-        title: 'Overcooked',
-        subtitle: `  Nota\n8/10  ${'x'.repeat(200)}`,
-        description: '',
+        author: 'Ana',
+        authorKey: 'ana',
+        score: 9,
+        criteria: { diversao: 10, dificuldade: 4 },
+        status: 'platinado',
+        hours: 12,
+        text: 'Melhor coop que já jogamos.',
+        at: expect.any(Number),
+        revision: 1,
       },
     ]);
-    const subtitulo = state.spins[0].note!.subtitle;
+  });
 
-    expect(subtitulo.length).toBeLessThanOrEqual(MAX_NOTE_SUBTITLE);
-    expect(subtitulo).not.toContain('\n');
-    expect(subtitulo.startsWith('Nota 8/10')).toBe(true);
+  it('uma resenha por pessoa: reescrever substitui a própria e marca a revisão', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 7 }),
+      review(0, 'Ana', { score: 9 }),
+    ]);
+
+    expect(state.spins[0].reviews).toHaveLength(1);
+    expect(state.spins[0].reviews[0].score).toBe(9);
+    expect(state.spins[0].reviews[0].revision).toBe(2);
+  });
+
+  it('reescrever não empurra a pessoa para o fim da lista', () => {
+    // A parede não pode se remexer entre duas visitas só porque alguém corrigiu a nota.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 7 }),
+      review(0, 'Breno', { score: 6 }),
+      review(0, 'Ana', { score: 9 }),
+    ]);
+    expect(state.spins[0].reviews.map((r) => r.author)).toEqual(['Ana', 'Breno']);
+  });
+
+  it('a mesma pessoa escrita de outro jeito continua sendo a mesma', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 7 }),
+      review(0, '  ANA  ', { score: 10 }),
+    ]);
+    expect(state.spins[0].reviews).toHaveLength(1);
+    expect(state.spins[0].reviews[0].score).toBe(10);
+  });
+
+  it('retirar a própria resenha a tira da conta, e a retirada fica no log', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 7 }),
+      review(0, 'Breno', { score: 9 }),
+      review(0, 'Ana', { withdrawn: true }),
+    ]);
+
+    expect(state.spins[0].reviews.map((r) => r.author)).toEqual(['Breno']);
+    expect(spinScores(state.spins[0]).score).toBe(9);
+  });
+
+  it('resenha sem assinatura não existe', () => {
+    const state = replay(GRUPO, [...jogo(), review(0, '   ', { score: 9 })]);
+    expect(state.spins[0].reviews).toHaveLength(0);
+  });
+
+  it('sem nota final ou sem status, não há resenha', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: null }),
+      review(0, 'Breno', { status: null }),
+    ]);
+    expect(state.spins[0].reviews).toHaveLength(0);
+  });
+
+  it('nota fora da régua de onze casas é descartada', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 11 }),
+      review(0, 'Breno', { score: -1 }),
+      review(0, 'Cecília', { score: 7.5 }),
+    ]);
+    expect(state.spins[0].reviews).toHaveLength(0);
+  });
+
+  it('critério fora da régua é descartado sem levar a resenha junto', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8, criteria: { diversao: 9, dificuldade: 99 } }),
+    ]);
+    expect(state.spins[0].reviews[0].criteria).toEqual({ diversao: 9 });
+  });
+
+  it('o texto livre é cortado na medida do servidor', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8, text: 'a'.repeat(MAX_REVIEW_TEXT + 50) }),
+    ]);
+    expect(state.spins[0].reviews[0].text.length).toBeLessThanOrEqual(MAX_REVIEW_TEXT);
+  });
+
+  it('resenhar um giro que não existe não faz nada', () => {
+    const state = replay(GRUPO, [...jogo(), review(9, 'Ana', { score: 8 })]);
+    expect(state.spins[0].reviews).toHaveLength(0);
+  });
+
+  it('retirar a etiqueta do jogo não apaga as resenhas', () => {
+    // São objetos diferentes: o jogo é um só, as opiniões sobre ele são muitas.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8 }),
+      { type: 'spin_annotated', at: at(), spinIndex: 0, title: '', description: '' },
+    ]);
+    expect(state.spins[0].note).toBeNull();
+    expect(state.spins[0].reviews).toHaveLength(1);
+  });
+});
+
+describe('a conta do clube sobre um jogo', () => {
+  const jogo = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+  ];
+
+  it('sem resenha nenhuma, não há nota — e nada finge que há', () => {
+    const scores = spinScores(replay(GRUPO, jogo()).spins[0]);
+    expect(scores.count).toBe(0);
+    expect(scores.score).toBeNull();
+    expect(scores.criteria).toEqual({});
+    expect(scores.completion).toEqual({ platinado: 0, finalizado: 0, incompleto: 0 });
+  });
+
+  it('a nota do jogo é a média das notas finais', () => {
+    const scores = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8 }),
+      review(0, 'Breno', { score: 9 }),
+      review(0, 'Cecília', { score: 10 }),
+    ]).spins[0]);
+
+    expect(scores.count).toBe(3);
+    expect(scores.score).toBeCloseTo(9);
+  });
+
+  it('cada critério tem o próprio denominador', () => {
+    // Quem não avaliou dificuldade não entra na média de dificuldade. Somar zero por
+    // ausência inventaria uma nota que ninguém deu.
+    const scores = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8, criteria: { diversao: 10, dificuldade: 2 } }),
+      review(0, 'Breno', { score: 9, criteria: { diversao: 8 } }),
+    ]).spins[0]);
+
+    expect(scores.criteria.diversao).toEqual({ average: 9, count: 2 });
+    expect(scores.criteria.dificuldade).toEqual({ average: 2, count: 1 });
+    expect(scores.criteria.historia).toBeUndefined();
+  });
+
+  it('conta quantas pessoas terminaram de cada jeito', () => {
+    const scores = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8, status: 'platinado' }),
+      review(0, 'Breno', { score: 9, status: 'incompleto' }),
+      review(0, 'Cecília', { score: 7, status: 'platinado' }),
+    ]).spins[0]);
+
+    expect(scores.completion).toEqual({ platinado: 2, finalizado: 0, incompleto: 1 });
+  });
+
+  it('a barra de completude sempre fecha em 100%', () => {
+    // Três fatias arredondadas para baixo somam 99 e deixam uma fresta na barra.
+    const scores = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 8, status: 'platinado' }),
+      review(0, 'Breno', { score: 9, status: 'finalizado' }),
+      review(0, 'Cecília', { score: 7, status: 'incompleto' }),
+    ]).spins[0]);
+    const share = completionShare(scores);
+
+    expect(share.platinado + share.finalizado + share.incompleto).toBe(100);
+    expect(share.platinado).toBe(34);
+  });
+
+  it('sem resenha nenhuma, quem jogou inteiro conta como incompleto', () => {
+    // O denominador é quem jogou, e ninguém terminou nada ainda. A barra nem chega a ser
+    // desenhada nesse estado — a ficha e o cartão mostram "ninguém resenhou ainda" —, mas
+    // a conta precisa ser a mesma dos outros casos para não ter duas regras.
+    const share = completionShare(spinScores(replay(GRUPO, jogo()).spins[0]));
+    expect(share).toEqual({ platinado: 0, finalizado: 0, incompleto: 100 });
+  });
+
+  it('quem jogou e não escreveu entra como incompleto', () => {
+    // Uma pessoa que zerou o jogo antes de os outros começarem não faz o clube inteiro
+    // aparecer como "100% finalizado".
+    const share = completionShare(spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 9, status: 'finalizado' }),
+    ]).spins[0]));
+
+    expect(share).toEqual({ platinado: 0, finalizado: 33, incompleto: 67 });
+  });
+});
+
+describe('em que tinta uma nota é impressa', () => {
+  it('8 é a primeira nota em ciano, e 7,9 ainda não é', () => {
+    expect(scoreTone(8)).toBe('high');
+    expect(scoreTone(10)).toBe('high');
+    expect(scoreTone(7.9)).toBe('mid');
+  });
+
+  it('2 é a última nota em vermelho, e 2,1 já é laranja', () => {
+    expect(scoreTone(2)).toBe('worst');
+    expect(scoreTone(0)).toBe('worst');
+    expect(scoreTone(2.1)).toBe('low');
+    expect(scoreTone(4)).toBe('low');
+    expect(scoreTone(4.1)).toBe('mid');
+  });
+
+  it('sem nota nenhuma, não há tinta a escolher', () => {
+    expect(scoreTone(null)).toBe('mid');
+    expect(scoreTone(undefined)).toBe('mid');
+  });
+});
+
+describe('a dificuldade em palavra', () => {
+  it('cada degrau tem o nome que o clube usa', () => {
+    expect(difficultyLabel(0)).toBe('Nenhuma');
+    expect(difficultyLabel(2)).toBe('Fácil');
+    expect(difficultyLabel(5)).toBe('Médio');
+    expect(difficultyLabel(8)).toBe('Difícil');
+    expect(difficultyLabel(10)).toBe('Impossível');
+  });
+
+  it('a média cai entre dois degraus e nomeia o vizinho mais perto', () => {
+    // Fácil (2) com Difícil (8) dá 5, que é exatamente Médio.
+    expect(difficultyLabel(5)).toBe('Médio');
+    expect(difficultyLabel(7)).toBe('Difícil');
+    expect(difficultyLabel(1.5)).toBe('Fácil');
+    expect(difficultyLabel(9.5)).toBe('Impossível');
+    // Bem no meio de dois degraus, o nome fica no mais fácil: um empate não é motivo
+    // para o clube dizer que o jogo é mais difícil do que metade dele achou.
+    expect(difficultyLabel(6.5)).toBe('Médio');
+  });
+
+  it('só a dificuldade responde por palavra; o resto continua em nota', () => {
+    expect(criterionText('dificuldade', 8)).toBe('Difícil');
+    expect(criterionText('dificuldade', 7.5, true)).toBe('Difícil');
+    expect(criterionText('diversao', 9)).toBe('9');
+    expect(criterionText('diversao', 8.5, true)).toBe('8,5');
+  });
+});
+
+describe('a mesa de um jogo', () => {
+  const mesa = (spinIndex: number, name: string, seated: boolean): GroupEvent => ({
+    type: 'spin_seated',
+    at: at(),
+    spinIndex,
+    memberId: memberId(GRUPO, name),
+    seated,
+  });
+
+  const jogo = (): GroupEvent[] => [...seed(['Ana', 'Breno', 'Cecília']), spin()];
+
+  it('começa igual ao globo daquele giro', () => {
+    const state = replay(GRUPO, jogo());
+    expect(state.spins[0].seated.map((seat) => seat.name)).toEqual(['Ana', 'Breno', 'Cecília']);
+  });
+
+  it('perde quem não apareceu e ganha quem chegou depois', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      mesa(0, 'Breno', false),
+      ...[add('Davi')],
+      mesa(0, 'Davi', true),
+    ]);
+    expect(state.spins[0].seated.map((seat) => seat.name)).toEqual(['Ana', 'Cecília', 'Davi']);
+  });
+
+  it('corrigir a mesa não mexe no sorteio: nem no vencedor, nem no globo, nem no bolo', () => {
+    const semMesa = replay(GRUPO, jogo());
+    const comMesa = replay(GRUPO, [...jogo(), mesa(0, 'Ana', false), mesa(0, 'Breno', false)]);
+
+    // O globo daquele giro é a entrada do sorteio. Se a mesa pudesse tocá-lo, o vencedor
+    // de um giro de meses atrás mudaria com uma escrita.
+    expect(comMesa.spins[0].winnerId).toBe(semMesa.spins[0].winnerId);
+    expect(comMesa.spins[0].eligible).toEqual(semMesa.spins[0].eligible);
+    expect(comMesa.pool).toEqual(semMesa.pool);
+    expect(comMesa.round).toBe(semMesa.round);
+  });
+
+  it('quem resenhou volta para a mesa mesmo depois de ser tirado dela', () => {
+    // Sem isto a conta viraria "3 resenhas de 2", e o denominador mentiria.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Breno', { score: 7 }),
+      mesa(0, 'Breno', false),
+    ]);
+    const nomes = state.spins[0].seated.map((seat) => seat.name);
+
+    expect(nomes).toContain('Breno');
+    expect(state.spins[0].reviews.length).toBeLessThanOrEqual(state.spins[0].seated.length);
+  });
+
+  it('quem assinou uma resenha sem ser do grupo senta assim mesmo, e sem cápsula', () => {
+    const state = replay(GRUPO, [...jogo(), review(0, 'Convidada', { score: 6 })]);
+    const visita = state.spins[0].seated.find((seat) => seat.name === 'Convidada');
+
+    expect(visita).toBeDefined();
+    expect(visita!.memberId).toBe('');
+  });
+
+  it('uma correção que aponta para quem o log não conhece não senta ninguém', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      { type: 'spin_seated', at: at(), spinIndex: 0, memberId: 'forjado', seated: true },
+    ]);
+    expect(state.spins[0].seated.length).toBe(3);
+  });
+
+  it('a mesa de um giro que ainda não existe é ignorada', () => {
+    const state = replay(GRUPO, [...jogo(), mesa(4, 'Ana', false)]);
+    expect(state.spins[0].seated.length).toBe(3);
+  });
+});
+
+describe('o tempo de jogo', () => {
+  const jogo = (): GroupEvent[] => [...seed(['Ana', 'Breno', 'Cecília']), spin()];
+
+  it('a média só conta quem disse quanto tempo levou', () => {
+    // Somar zero por ausência inventaria um jogo de dez horas em quem não contou.
+    const conta = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 9, hours: 10 }),
+      review(0, 'Breno', { score: 8, hours: 20 }),
+      review(0, 'Cecília', { score: 7 }),
+    ]).spins[0]);
+
+    expect(conta.hours).toEqual({ average: 15, count: 2 });
+  });
+
+  it('sem ninguém contando, não há tempo a mostrar', () => {
+    const conta = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 9 }),
+    ]).spins[0]);
+
+    expect(conta.hours).toBeNull();
+  });
+
+  it('meia hora, zero hora e hora demais não entram na conta', () => {
+    const conta = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', { score: 9, hours: 2.5 }),
+      review(0, 'Breno', { score: 8, hours: 0 }),
+      review(0, 'Cecília', { score: 7, hours: 99_999 }),
+    ]).spins[0]);
+
+    expect(conta.hours).toBeNull();
+  });
+
+  it('a hora inteira aparece inteira, e a quebrada com uma casa', () => {
+    expect(formatHours(12)).toBe('12 h');
+    expect(formatHours(12.333333)).toBe('12,3 h');
+    expect(formatHours(3.75)).toBe('3,8 h');
   });
 });

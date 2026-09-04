@@ -1,0 +1,568 @@
+<div class="sheet-scrim" (click)="close()"></div>
+<div
+  class="sheet-card"
+  id="sheet-card"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="sheet-title"
+  aria-describedby="sheet-serial"
+  (keydown.escape)="escape()"
+  (keydown.tab)="trapFocus($event)"
+>
+  <button
+    id="sheet-close"
+    class="roster-close"
+    type="button"
+    (click)="close()"
+    [disabled]="saving()"
+    aria-label="Fechar a ficha"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+  </button>
+
+  <p class="sheet-serial" id="sheet-serial">
+    Cápsula {{ spin().index + 1 }} · Rodada {{ spin().round }} ·
+    {{ spin().at | date: 'dd/MM/yy HH:mm' }}
+  </p>
+
+  <h2 id="sheet-title">
+    <span class="sheet-capsule" aria-hidden="true" [style.--capsule]="capsule()"
+          [style.--capsule-ink]="capsuleInk()">
+      {{ capsuleEmoji() || spin().winnerName.slice(0, 1).toUpperCase() }}
+    </span>
+    @if (spin().note; as note) {
+      {{ note.title }}
+    } @else {
+      <span class="sheet-title-blank">Sem jogo escrito</span>
+    }
+  </h2>
+  <p class="sheet-winner">A cápsula saiu para <strong>{{ spin().winnerName }}</strong>.</p>
+
+  @switch (face()) {
+
+    <!-- ======================= A FICHA: o boletim do clube ======================= -->
+    @case ('ficha') {
+      @if (scores(); as conta) {
+        @if (conta.count) {
+          <div class="scoreboard">
+            <div class="score-heads">
+              <p [class]="'score-hero is-' + heroTone()">
+                <b>{{ average() }}</b>
+                <span>
+                  Nota do clube
+                  <br />{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }}
+                  de {{ seats().length }}
+                </span>
+              </p>
+
+              @if (conta.hours; as tempo) {
+                <p class="score-time">
+                  <b>{{ time(tempo.average) }}</b>
+                  <span>
+                    Tempo de jogo
+                    <br />{{ tempo.count }}{{ tempo.count === 1 ? ' contou' : ' contaram' }}
+                  </span>
+                </p>
+              }
+            </div>
+
+            @if (criteriaAverages().length) {
+              <dl class="score-rules">
+                @for (row of criteriaAverages(); track row.criterion) {
+                  <div>
+                    <dt>{{ row.label }}</dt>
+                    <dd>
+                      <span [class]="ruleClass(row.criterion, row.average)" aria-hidden="true">
+                        <i [style.width]="reach(row.average)"></i>
+                      </span>
+                      <b>{{ reads(row.criterion, row.average) }}</b>
+                      <small>{{ row.count }}{{ row.count === 1 ? ' voto' : ' votos' }}</small>
+                    </dd>
+                  </div>
+                }
+              </dl>
+            }
+
+            <div class="completion">
+              <span class="completion-bar" aria-hidden="true">
+                @if (share().platinado) {
+                  <i class="is-platinado" [style.width.%]="share().platinado"></i>
+                }
+                @if (share().finalizado) {
+                  <i class="is-finalizado" [style.width.%]="share().finalizado"></i>
+                }
+                @if (share().incompleto) {
+                  <i class="is-incompleto" [style.width.%]="share().incompleto"></i>
+                }
+              </span>
+              <p class="completion-legend">
+                @for (option of STATUSES; track option) {
+                  <span [class]="'is-' + option" [class.is-zero]="!share()[option]">
+                    {{ STATUS_LABELS[option] }} <b>{{ share()[option] }}%</b>
+                  </span>
+                }
+              </p>
+              @if (conta.pending) {
+                <p class="completion-note">
+                  A conta é sobre quem jogou, e não só sobre quem escreveu:
+                  {{ conta.pending }}{{ conta.pending === 1 ? ' pessoa ainda não resenhou' :
+                  ' pessoas ainda não resenharam' }} e {{ conta.pending === 1 ? 'entra' :
+                  'entram' }} como incompleto.
+                </p>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="score-empty">
+            Ninguém resenhou este jogo ainda. A nota do clube aparece assim que a primeira
+            resenha for escrita.
+          </p>
+        }
+      }
+
+      @if (spin().note?.description; as descricao) {
+        <p class="sheet-description">{{ descricao }}</p>
+      }
+
+      <div class="sheet-actions">
+        <button class="secondary-action" type="button" (click)="go('resenha')">
+          {{ mine() ? 'Editar minha resenha' : 'Escrever minha resenha' }}
+        </button>
+        <button class="note-cancel" type="button" (click)="go('jogo')">
+          {{ spin().note ? 'Editar o jogo' : 'Escrever o jogo' }}
+        </button>
+        <!-- A mesa é uma nota de rodapé da ficha, e não uma terceira decisão: ela quase
+             nunca precisa ser mexida, e quando precisa é para corrigir o elenco. -->
+        <button class="sheet-aside" type="button" (click)="go('mesa')">
+          A mesa · {{ seats().length }}{{ seats().length === 1 ? ' pessoa' : ' pessoas' }}
+        </button>
+      </div>
+
+      @if (reviews().length) {
+        <h3 class="reviews-title">
+          As resenhas
+          <b>{{ reviews().length }}</b>
+        </h3>
+        <ul class="reviews">
+          @for (review of reviews(); track review.authorKey) {
+            <li class="review" [class.is-mine]="review.authorKey === mine()?.authorKey">
+              <p class="review-head">
+                <span class="capsule-mark" aria-hidden="true"
+                      [style.--capsule]="reviewerColor(review)"
+                      [style.--capsule-ink]="reviewerInk(review)">
+                  {{ initials(review.author) }}
+                </span>
+                <span class="review-who">
+                  <strong>{{ review.author }}</strong>
+                  <small>
+                    {{ review.at | date: 'dd/MM/yy' }}
+                    @if (review.hours) {
+                      · {{ time(review.hours) }}
+                    }
+                    @if (review.revision > 1) {
+                      · reescrita {{ review.revision }}×
+                    }
+                  </small>
+                </span>
+                <b [class]="'review-score is-' + tone(review.score)">{{ review.score }}</b>
+                <span [class]="'review-status is-' + review.status">
+                  {{ STATUS_LABELS[review.status] }}
+                </span>
+              </p>
+
+              @if (criteriaOf(review); as notas) {
+                @if (notas.length) {
+                  <p class="review-criteria">
+                    @for (nota of notas; track nota.label) {
+                      <span>{{ nota.label }} <b>{{ nota.value }}</b></span>
+                    }
+                  </p>
+                }
+              }
+
+              @if (review.text) {
+                <p class="review-text">{{ review.text }}</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+
+    <!-- ======================= MINHA RESENHA ======================= -->
+    @case ('resenha') {
+      <p class="sheet-face">Minha resenha</p>
+
+      <form class="sheet-form" (ngSubmit)="submitReview()" novalidate>
+        <!-- A resenha tem duas metades, e a folha diz qual é qual: o que ela cobra, e o
+             que ela aceita. Antes cada campo carregava o próprio selo de "obrigatória" ou
+             "opcional", e em dois lugares diferentes — colado no rótulo nas réguas, na
+             borda oposta nos campos. A exigência é da metade, não do campo, e se diz uma
+             vez; `aria-required` a leva a quem não vê o cabeçalho. -->
+        <div class="form-band">
+          <p class="band-title">O que a resenha cobra</p>
+
+          <div class="form-field">
+            <span class="field-label" id="rotulo-nota">Nota final</span>
+            <div class="score-ticks" role="radiogroup" aria-labelledby="rotulo-nota"
+                 aria-required="true">
+              @for (tick of TICKS; track tick) {
+                <label [class]="'score-tick is-' + tone(tick)" [class.is-on]="score() === tick">
+                  <input
+                    type="radio"
+                    name="notaFinal"
+                    [id]="'nota-final-' + tick"
+                    [checked]="score() === tick"
+                    (change)="score.set(tick)"
+                  />
+                  <span>{{ tick }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="form-field">
+            <span class="field-label" id="rotulo-completude">Como você terminou</span>
+            <div class="status-choices" role="radiogroup" aria-labelledby="rotulo-completude"
+                 aria-required="true">
+              @for (option of STATUSES; track option) {
+                <label [class]="'status-choice is-' + option" [class.is-on]="status() === option">
+                  <input
+                    type="radio"
+                    name="completude"
+                    [checked]="status() === option"
+                    (change)="status.set(option)"
+                  />
+                  <span>{{ STATUS_LABELS[option] }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-band is-optional">
+          <p class="band-title">O resto, se você quiser</p>
+
+          <!-- O tempo é digitado, e não escolhido numa régua: ele fica sozinho no alto da
+               metade, antes do bloco de escalas, para que a diferença de altura entre um
+               campo e uma régua leia como "outra coisa" e não como desalinho. -->
+          <div class="criterion-row">
+            <span class="criterion-label" id="rotulo-horas">Tempo de jogo</span>
+            <span class="hours-field">
+              <input
+                id="review-hours"
+                name="reviewHours"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                [attr.max]="MAX_HOURS"
+                step="1"
+                placeholder="—"
+                aria-labelledby="rotulo-horas"
+                [ngModel]="hours()"
+                (ngModelChange)="hours.set($event)"
+              />
+              <span>horas</span>
+            </span>
+          </div>
+
+          <div class="criterion-rows">
+            @for (criterion of CRITERIA; track criterion) {
+              <div class="criterion-row">
+                <span class="criterion-label" [id]="'criterio-' + criterion">
+                  {{ CRITERION_LABELS[criterion] }}
+                </span>
+
+                @if (criterion === 'dificuldade') {
+                  <!-- Dificuldade não é elogio, e por isso não é uma régua de números:
+                       ninguém sabe a diferença entre 6 e 7 aqui. São cinco degraus com
+                       nome, desenhados como as réguas de cima para a fileira fechar. -->
+                  <div class="score-ticks is-compact is-named" role="radiogroup"
+                       [attr.aria-labelledby]="'criterio-' + criterion">
+                    <label class="score-tick is-none"
+                           [class.is-on]="criterionScore(criterion) === null">
+                      <input
+                        type="radio"
+                        [name]="criterion"
+                        [checked]="criterionScore(criterion) === null"
+                        (change)="setCriterion(criterion, null)"
+                      />
+                      <span aria-hidden="true">—</span>
+                      <span class="visually-hidden">não avaliei</span>
+                    </label>
+                    @for (level of LEVELS; track level.score) {
+                      <label class="score-tick"
+                             [class.is-on]="criterionScore(criterion) === level.score">
+                        <input
+                          type="radio"
+                          [name]="criterion"
+                          [checked]="criterionScore(criterion) === level.score"
+                          (change)="setCriterion(criterion, level.score)"
+                        />
+                        <span>{{ level.label }}</span>
+                      </label>
+                    }
+                  </div>
+                } @else {
+                  <div class="score-ticks is-compact" role="radiogroup"
+                       [attr.aria-labelledby]="'criterio-' + criterion">
+                    <label class="score-tick is-none"
+                           [class.is-on]="criterionScore(criterion) === null">
+                      <input
+                        type="radio"
+                        [name]="criterion"
+                        [checked]="criterionScore(criterion) === null"
+                        (change)="setCriterion(criterion, null)"
+                      />
+                      <span aria-hidden="true">—</span>
+                      <span class="visually-hidden">não avaliei</span>
+                    </label>
+                    @for (tick of TICKS; track tick) {
+                      <label [class]="'score-tick is-' + tone(tick)"
+                             [class.is-on]="criterionScore(criterion) === tick">
+                        <input
+                          type="radio"
+                          [name]="criterion"
+                          [checked]="criterionScore(criterion) === tick"
+                          (change)="setCriterion(criterion, tick)"
+                        />
+                        <span>{{ tick }}</span>
+                      </label>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <label class="form-field">
+            <span class="field-label">
+              O que você quiser dizer
+              <b [class.is-full]="text().length >= MAX_REVIEW_TEXT">
+                {{ text().length }}/{{ MAX_REVIEW_TEXT }}
+              </b>
+            </span>
+            <textarea
+              id="review-text"
+              name="reviewText"
+              rows="4"
+              [attr.maxlength]="MAX_REVIEW_TEXT"
+              placeholder="Ex.: Melhor coop que já jogamos. Trava um pouco em quatro pessoas."
+              [ngModel]="text()"
+              (ngModelChange)="text.set($event)"
+              (keydown.control.enter)="submitReview()"
+              (keydown.meta.enter)="submitReview()"
+            ></textarea>
+          </label>
+        </div>
+
+        @if (error()) {
+          <p class="field-error" role="alert">{{ error() }}</p>
+        }
+
+        <div class="note-actions">
+          <button class="secondary-action" type="submit" [disabled]="saving() || !draftReady()">
+            {{ saving() ? 'Guardando…' : mine() ? 'Salvar minha resenha' : 'Guardar minha resenha' }}
+          </button>
+          <button id="sheet-back" class="note-cancel" type="button" (click)="go('ficha')"
+                  [disabled]="saving()">
+            Voltar
+          </button>
+          @if (mine()) {
+            <button class="note-remove" type="button" (click)="askRemoveReview()"
+                    [disabled]="saving()">
+              Retirar a minha
+            </button>
+          }
+        </div>
+      </form>
+
+      <p class="sheet-history">
+        @if (mine(); as minha) {
+          Escrita por você em {{ minha.at | date: 'dd/MM/yy HH:mm' }}. Reescrever é gravar
+          outra: a anterior continua no registro, e a nota do clube se refaz sozinha.
+        } @else {
+          Só a nota final e a completude são obrigatórias. A resenha é sua e você pode
+          reescrevê-la quando quiser — o registro guarda todas as versões.
+        }
+      </p>
+    }
+
+    <!-- ======================= A MESA ======================= -->
+    @case ('mesa') {
+      <p class="sheet-face">A mesa</p>
+
+      <p class="sheet-note">
+        Quem jogou este jogo. Ela começa igual ao globo do dia do giro e pode ser corrigida
+        — quem entrou no clube depois e jogou assim mesmo, quem estava no globo e não
+        apareceu. <strong>Corrigir aqui não muda o sorteio:</strong> o globo daquele giro é
+        imutável, e é dele que a cápsula saiu.
+      </p>
+
+      @if (error()) {
+        <p class="field-error" role="alert">{{ error() }}</p>
+      }
+
+      <ul class="seats">
+        @for (seat of seats(); track seat.key) {
+          <li class="seat">
+            <span class="capsule-mark" aria-hidden="true"
+                  [style.--capsule]="seatColor(seat)" [style.--capsule-ink]="seatInk(seat)">
+              {{ seatEmoji(seat) || initials(seat.name) }}
+            </span>
+            <span class="seat-who">
+              <strong>{{ seat.name }}</strong>
+              @if (seatReview(seat); as resenha) {
+                <small>resenhou · nota {{ resenha.score }}</small>
+              } @else {
+                <small>ainda sem resenha</small>
+              }
+            </span>
+            <!-- Quem já escreveu não tem como sair daqui: sem isto a conta viraria
+                 "6 resenhas de 5". A saída dela é retirar a própria resenha, e a linha
+                 abaixo da lista diz isso uma vez em vez de uma vez por pessoa. -->
+            @if (!seatReview(seat)) {
+              <button class="seat-out" type="button" (click)="setSeat(seat, false)"
+                      [disabled]="saving()">
+                Tirar da mesa
+              </button>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (reviews().length) {
+        <p class="seats-foot">
+          Quem já resenhou não sai da mesa: para sair, é preciso retirar a resenha.
+        </p>
+      }
+
+      @if (away().length) {
+        <h3 class="seats-title">Quem não estava</h3>
+        <ul class="seats">
+          @for (seat of away(); track seat.key) {
+            <li class="seat is-off">
+              <span class="capsule-mark" aria-hidden="true"
+                    [style.--capsule]="seatColor(seat)" [style.--capsule-ink]="seatInk(seat)">
+                {{ seatEmoji(seat) || initials(seat.name) }}
+              </span>
+              <span class="seat-who"><strong>{{ seat.name }}</strong></span>
+              <button class="seat-in" type="button" (click)="setSeat(seat, true)"
+                      [disabled]="saving()">
+                Pôr na mesa
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="note-actions">
+        <button id="sheet-back" class="note-cancel" type="button" (click)="go('ficha')"
+                [disabled]="saving()">
+          Voltar
+        </button>
+      </div>
+    }
+
+    <!-- ======================= O JOGO ======================= -->
+    @case ('jogo') {
+      <p class="sheet-face">O jogo</p>
+
+      <form class="sheet-form" (ngSubmit)="submitNote()" novalidate>
+        <label class="note-field">
+          <span class="field-label">
+            Nome do jogo
+            <b [class.is-full]="title().length >= MAX_NOTE_TITLE">
+              {{ title().length }}/{{ MAX_NOTE_TITLE }}
+            </b>
+          </span>
+          <input
+            id="note-title"
+            name="noteTitle"
+            type="text"
+            autocomplete="off"
+            [attr.maxlength]="MAX_NOTE_TITLE"
+            placeholder="Ex.: Overcooked 2"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            [attr.aria-invalid]="error() ? 'true' : null"
+          />
+        </label>
+
+        <!-- A nota média ocupa o lugar onde o subtítulo ficava, e é o oposto dele: não se
+             escreve, se recebe. Ela sai das resenhas e nunca é gravada em campo nenhum. -->
+        <div [class]="'note-average is-' + heroTone()">
+          <span class="field-label">
+            Nota média
+            <b>somente leitura</b>
+          </span>
+          <p>
+            @if (average(); as nota) {
+              <b>{{ nota }}</b>
+              <span>
+                de {{ scores().count }}{{ scores().count === 1 ? ' resenha' : ' resenhas' }}
+                do clube
+              </span>
+            } @else {
+              <span>Ela aparece assim que alguém resenhar este jogo.</span>
+            }
+          </p>
+        </div>
+
+        <label class="note-field">
+          <span class="field-label">
+            Descrição
+            <b [class.is-full]="description().length >= MAX_NOTE_DESCRIPTION">
+              {{ description().length }}/{{ MAX_NOTE_DESCRIPTION }}
+            </b>
+          </span>
+          <textarea
+            id="note-description"
+            name="noteDescription"
+            rows="3"
+            [attr.maxlength]="MAX_NOTE_DESCRIPTION"
+            placeholder="Ex.: Cooperativo de cozinha. Jogamos em cinco, com a expansão do Ano Novo."
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            (keydown.control.enter)="submitNote()"
+            (keydown.meta.enter)="submitNote()"
+          ></textarea>
+        </label>
+
+        @if (error()) {
+          <p class="field-error" role="alert">{{ error() }}</p>
+        }
+
+        <div class="note-actions">
+          <button class="secondary-action" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Salvando…' : spin().note ? 'Salvar o jogo' : 'Escrever o jogo' }}
+          </button>
+          <button id="sheet-back" class="note-cancel" type="button" (click)="go('ficha')"
+                  [disabled]="saving()">
+            Voltar
+          </button>
+          @if (spin().note) {
+            <button class="note-remove" type="button" (click)="askRemoveNote()"
+                    [disabled]="saving()">
+              Retirar o jogo
+            </button>
+          }
+        </div>
+      </form>
+
+      <p class="sheet-history">
+        @if (spin().note; as note) {
+          @if (note.revision > 1) {
+            Reescrito {{ note.revision }} vezes.
+          }
+          A última foi {{ note.actor ? 'de ' + note.actor : 'sem assinatura' }}, em
+          {{ note.at | date: 'dd/MM/yy HH:mm' }}. O jogo é de todo mundo, e retirá-lo não
+          apaga resenha nenhuma.
+        } @else {
+          O jogo é compartilhado: quem tem o link escreve e reescreve. Ele descreve o giro
+          e nunca muda o vencedor.
+        }
+      </p>
+    }
+  }
+</div>

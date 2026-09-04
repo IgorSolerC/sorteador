@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GROUP_STORE } from './firebase-app';
-import { GroupEvent, replay } from './group-log';
+import { GroupEvent, ReviewCriterion, ReviewStatus, replay } from './group-log';
 import { GroupSnapshot } from './group-store';
 import { GroupHistory } from './group-history';
 
@@ -23,9 +23,24 @@ class FakeStore {
     return this;
   }
 
-  label(spinIndex: number, title: string, description = '', actor = 'Bia', subtitle = '') {
+  label(spinIndex: number, title: string, description = '', actor = 'Bia') {
     this.events.push({
-      type: 'spin_annotated', at: (this.clock += 1000), spinIndex, title, subtitle, description, actor,
+      type: 'spin_annotated', at: (this.clock += 1000), spinIndex, title, description, actor,
+    });
+    return this;
+  }
+
+  review(
+    spinIndex: number,
+    actor: string,
+    score: number,
+    status: ReviewStatus = 'finalizado',
+    extra: { criteria?: Partial<Record<ReviewCriterion, number>>; hours?: number } = {},
+  ) {
+    this.events.push({
+      type: 'spin_reviewed', at: (this.clock += 1000), spinIndex, actor,
+      score, criteria: extra.criteria ?? {}, status, hours: extra.hours ?? null,
+      text: '', withdrawn: false,
     });
     return this;
   }
@@ -46,11 +61,11 @@ class FakeStore {
   async annotateSpin(
     _id: string,
     spinIndex: number,
-    note: { title: string; subtitle: string; description: string },
+    note: { title: string; description: string },
   ) {
     this.calls.push(`note:${spinIndex}:${note.title}`);
     if (this.failWith) throw this.failWith;
-    this.label(spinIndex, note.title, note.description, '', note.subtitle);
+    this.label(spinIndex, note.title, note.description, '');
   }
 }
 
@@ -105,11 +120,17 @@ describe('o álbum', () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1)
       .label(0, 'Click The Button!', 'Nota final 8/10', 'Igor');
     const fixture = await render(store);
-    const cartao = el(fixture).querySelector('.album-card')!.textContent ?? '';
+    const botao = el(fixture).querySelector('.album-card')!;
+    const cartao = botao.textContent ?? '';
 
     expect(cartao).toContain('Click The Button!');
     expect(cartao).toContain('Nota final 8/10');
-    expect(cartao).toContain('etiquetada por Igor');
+    // O nome de quem ganhou está no alto do cartão, em 1.42rem. Repeti-lo em miúdo no
+    // rodapé era a mesma informação duas vezes; para quem não vê o cartão, ele continua
+    // no nome acessível do botão, que é o que o leitor de tela anuncia.
+    expect(cartao).toContain('Breno');
+    expect(cartao).not.toContain('saiu para');
+    expect(botao.getAttribute('aria-label')).toContain('saiu para Breno');
     fixture.destroy();
   });
 
@@ -118,7 +139,7 @@ describe('o álbum', () => {
     const cartao = el(fixture).querySelector('.album-card')!;
 
     expect(cartao.classList.contains('is-blank')).toBe(true);
-    expect(cartao.textContent).toContain('Sem etiqueta');
+    expect(cartao.textContent).toContain('Sem jogo escrito');
     fixture.destroy();
   });
 
@@ -147,7 +168,7 @@ describe('o álbum', () => {
     const esperado = estado.spins.filter((spin) => spin.winnerName.startsWith(nome)).length;
     expect(el(fixture).querySelectorAll('.album-card').length).toBe(esperado);
     expect(chips[1].getAttribute('aria-pressed')).toBe('true');
-    expect(el(fixture).querySelector('.album-filter-state')?.textContent).toContain('Mostrando as');
+    expect(el(fixture).querySelector('.album-filter-state')?.textContent).toContain('Mostrando os');
     fixture.destroy();
   });
 
@@ -183,12 +204,12 @@ describe('o álbum', () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 3);
     const fixture = await render(store);
     const app = fixture.componentInstance as unknown as {
-      openNote(spin: { index: number }): void;
-      commitNote(draft: { title: string; subtitle: string; description: string }): Promise<void>;
+      openSheet(spin: { index: number }): void;
+      commitNote(draft: { title: string; description: string }): Promise<void>;
     };
 
-    app.openNote({ index: 0 } as never);
-    await app.commitNote({ subtitle: '', title: 'O primeiro de todos', description: '' });
+    app.openSheet({ index: 0 } as never);
+    await app.commitNote({ title: 'O primeiro de todos', description: '' });
     fixture.detectChanges();
 
     expect(store.calls).toContain('note:0:O primeiro de todos');
@@ -225,6 +246,95 @@ describe('o álbum', () => {
 
     const cores = app.winners().map((w) => w.color);
     expect(new Set(cores).size).toBe(cores.length);
+    fixture.destroy();
+  });
+});
+
+describe('as quatro tintas da nota no álbum', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('o cartão de um jogo amado sai em ciano e o de um jogo ruim em laranja', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 2)
+      .label(0, 'Overcooked 2').review(0, 'Ana', 10).review(0, 'Breno', 9)
+      .label(1, 'Corrida de Bocha 3').review(1, 'Ana', 3).review(1, 'Breno', 4);
+    const fixture = await render(store);
+    // A parede vai do giro mais novo para o mais antigo.
+    const notas = [...el(fixture).querySelectorAll('.album-score')];
+
+    expect(notas[0].classList.contains('is-low')).toBe(true);
+    expect(notas[1].classList.contains('is-high')).toBe(true);
+    fixture.destroy();
+  });
+
+  it('um jogo mediano fica em tinta, e é isso que faz os outros dois serem vistos', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1)
+      .label(0, 'Pico Park').review(0, 'Ana', 6).review(0, 'Breno', 7);
+    const fixture = await render(store);
+    const nota = el(fixture).querySelector('.album-score')!;
+
+    expect(nota.classList.contains('is-mid')).toBe(true);
+    expect(nota.textContent).toContain('6,5');
+    fixture.destroy();
+  });
+
+  it('a cápsula sem jogo escrito não repete que também não tem nota', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
+    const cartao = el(fixture).querySelector('.album-card')!;
+
+    expect(cartao.querySelector('.album-score')).toBeNull();
+    expect(cartao.textContent).toContain('Abra para escrever o jogo');
+    fixture.destroy();
+  });
+});
+
+describe('a ordem da parede', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  const wall = () => new FakeStore().seed(['Ana', 'Breno'], 3)
+    .label(0, 'Primeiro').review(0, 'Ana', 5, 'finalizado', { criteria: { historia: 9 }, hours: 30 })
+    .label(1, 'Segundo').review(1, 'Ana', 9, 'finalizado', { criteria: { historia: 2 }, hours: 4 })
+    .label(2, 'Terceiro').review(2, 'Ana', 7, 'finalizado', { criteria: { historia: 5 } });
+
+  const titulos = (fixture: Awaited<ReturnType<typeof render>>) =>
+    [...el(fixture).querySelectorAll('.album-title')].map((t) => t.textContent?.trim());
+
+  it('o padrão é a ordem do registro, e ela mantém as réguas de rodada', async () => {
+    const fixture = await render(wall());
+    expect(el(fixture).querySelector('.round-rule')!.textContent).toContain('Rodada');
+    fixture.destroy();
+  });
+
+  it('ordenar por nota do clube põe o mais bem votado na frente', async () => {
+    const fixture = await render(wall());
+    (el(fixture).querySelectorAll('.sort-options button')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(titulos(fixture)).toEqual(['Segundo', 'Terceiro', 'Primeiro']);
+    // Uma ordem por medida fura as rodadas: ela existe para comparar jogos de meses
+    // diferentes, e uma régua por cartão não separaria nada.
+    expect(el(fixture).querySelector('.round-rule')!.textContent).toContain('Por nota do clube');
+    fixture.destroy();
+  });
+
+  it('ordenar por um critério usa a média daquele critério, e não a nota final', async () => {
+    const fixture = await render(wall());
+    const historia = [...el(fixture).querySelectorAll('.sort-options button')]
+      .find((b) => b.textContent?.trim() === 'História') as HTMLButtonElement;
+    historia.click();
+    fixture.detectChanges();
+
+    expect(titulos(fixture)).toEqual(['Primeiro', 'Terceiro', 'Segundo']);
+    fixture.destroy();
+  });
+
+  it('ordenar por tempo joga para o fim quem ninguém cronometrou', async () => {
+    const fixture = await render(wall());
+    const tempo = [...el(fixture).querySelectorAll('.sort-options button')]
+      .find((b) => b.textContent?.trim() === 'Tempo de jogo') as HTMLButtonElement;
+    tempo.click();
+    fixture.detectChanges();
+
+    expect(titulos(fixture)).toEqual(['Primeiro', 'Segundo', 'Terceiro']);
     fixture.destroy();
   });
 });

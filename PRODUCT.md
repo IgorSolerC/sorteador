@@ -52,12 +52,25 @@ O que continua sendo contrato:
   continua sendo dela depois que ela sai do grupo.
 - Girar, com confirmação, e ver a entrega encenada. Reencená-la a qualquer momento clicando
   no globo, sem que isso grave nada nem mude o resultado.
-- Etiquetar qualquer giro — o de agora ou um antigo — com título, subtítulo e descrição do
-  que foi jogado, editáveis por quem tem o link e com o rastro de quem escreveu. Onde só cabe
-  uma linha, título e subtítulo viram `TÍTULO ● SUBTÍTULO`. A etiqueta descreve o giro e
-  nunca altera o resultado.
+- Escrever o **jogo** de qualquer giro — o de agora ou um de um ano atrás — com nome e
+  descrição. O jogo é de todo mundo: quem tem o link escreve e reescreve, e o rastro de quem
+  escreveu fica. Ele descreve o giro e nunca altera o resultado.
+- Escrever uma **resenha por pessoa** sobre esse jogo, com nota final (0 a 10) e completude
+  (platinado, finalizado, incompleto) obrigatórias, e — se ela quiser — tempo de jogo em
+  horas, notas de diversão, história, qualidade e jogabilidade, um grau de dificuldade entre
+  cinco degraus com nome, e texto livre. Reescrever é gravar outra; retirar é gravar a
+  retirada. Todas as versões continuam no registro.
+- Mostrar a conta do clube sobre um jogo — nota média, média de cada critério, tempo médio e
+  a porcentagem de platinado, finalizado e incompleto. **Nada disso é gravado**: é recontado
+  a partir das resenhas toda vez que a página abre.
+- Corrigir a **mesa** de um giro: quem realmente jogou aquele jogo. Ela começa igual ao globo
+  do dia e aceita quem entrou no clube depois, ou perde quem não apareceu. É o denominador de
+  "X resenhas de Y", e quem jogou e ainda não escreveu conta como incompleto. **Corrigir a
+  mesa nunca toca no sorteio**: o globo daquele giro é imutável, e é dele que o vencedor sai.
 - Reunir num álbum todas as cápsulas já entregues por um grupo, agrupadas por rodada e
-  filtráveis por pessoa, com a etiqueta de cada uma.
+  filtráveis por pessoa, com o boletim de cada uma — e reordená-lo por nota do clube, por
+  qualquer critério ou por tempo de jogo, quando a pergunta é comparar jogos de meses
+  diferentes em vez de ler a linha do tempo.
 - Funcionar sem conta, sem senha e sem custo de hospedagem, no plano gratuito do Firebase,
   com um guarda de uso por aparelho que para a máquina antes de a cota chegar perto da parede.
 - Nomes duplicados, vazios ou compostos apenas por espaços não são aceitos.
@@ -76,6 +89,10 @@ Não há marca, logotipo, imagens, depoimentos ou dados reais fornecidos. A inte
 - Quem faz algo assina o que fez. Um registro anônimo não conta história ao clube.
 - A administração é uma tarefa ocasional e não deve ocupar a página que se visita todo dia.
 - A identidade visual de uma pessoa pertence a ela, e é a mesma em toda parte do produto.
+- Toda conta do clube é derivada do registro e recontada na tela. Um número gravável é um
+  número que alguém escreve à mão.
+- Quem descreve o jogo não decide nada: jogo, resenha e mesa descrevem um giro e nunca
+  entram nele.
 
 ## Accessibility & Inclusion
 

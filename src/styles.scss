@@ -9,11 +9,13 @@
   --chrome: #e3eaf2; --chrome-dim: #93a6be; --sky: #bccde6;
   --paper: #faf6ec; --paper-quiet: #f0e9d9; --ink: #16233a; --ink-quiet: #5b6779;
   --white: #ffffff; --field: #ffffff; --yellow: #ffc53d; --live: #ffc53d;
+  --score-high: #0b6f7d; --score-high-lit: #3fbccb; --score-low: #a8481a; --score-worst: #ae1f16;
   --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --remove-ink: #6d5560; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
   --line: rgba(200, 220, 255, .17); --line-strong: rgba(200, 220, 255, .34); --line-paper: rgba(22, 35, 58, .18);
   --display: 'Fredoka Variable', 'Trebuchet MS', sans-serif;
   --mono: 'Martian Mono', ui-monospace, monospace;
   --body: 'Atkinson Hyperlegible', sans-serif;
+  --spark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0c.7 6.8 4.5 10.6 12 12-7.5 1.4-11.3 5.2-12 12-.7-6.8-4.5-10.6-12-12C7.5 10.6 11.3 6.8 12 0Z'/%3E%3C/svg%3E");
   --spin: 4.3s cubic-bezier(.12, .72, .12, 1);
   color-scheme: dark; font-family: var(--body); font-synthesis: none; text-rendering: optimizeLegibility;
 }
@@ -137,7 +139,6 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .serial-grid div { display: grid; gap: .34rem; padding: .85rem .9rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .serial-grid dt { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .serial-grid dd { margin: 0; color: var(--white); font-family: var(--mono); font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.serial-grid .month-value::first-letter { text-transform: uppercase; }
 
 /* ---- The chart: every month is a cell, packed edge to edge ---- */
 .chart-section { padding: clamp(4.5rem, 8vw, 7rem) 5vw clamp(3rem, 5vw, 4rem); background: var(--enamel-deep); border-bottom: 1px solid var(--line); }
@@ -148,7 +149,8 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); margin: 0; padding: 0; border-top: 2px solid var(--line-strong); list-style: none; }
 .chart-cell { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; }
 .cell-tick { position: absolute; top: 0; left: 0; width: 1px; height: 13px; background: var(--line-strong); }
-.cell-capsule { width: 1.55rem; height: 1.1rem; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }
+.cell-head { display: flex; align-items: center; gap: .55rem; }
+.cell-capsule { width: 1.55rem; height: 1.1rem; flex: none; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }
 .cell-month { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .chart-cell strong { font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }
 .cell-status { color: var(--live); font-size: .74rem; font-weight: 700; }
@@ -183,12 +185,11 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .create-form .primary-action { justify-self: start; }
 .create-progress { margin: 0; color: var(--sky); font-family: var(--mono); font-size: .74rem; }
 .create-note { max-width: 46ch; margin-top: 1.8rem; padding-top: 1.1rem; border-top: 1px solid var(--line); color: var(--sky); font-size: .82rem; line-height: 1.5; }
-.empty-stage .secondary-action, .roster-intro a.secondary-action { display: inline-flex; align-items: center; text-decoration: none; }
+.empty-stage .secondary-action { display: inline-flex; align-items: center; text-decoration: none; }
 .log-freshness { display: flex; align-items: center; gap: .75rem; margin: .9rem 0 0; }
 .log-freshness span { color: var(--sky); font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; }
 .refresh-button { min-height: 44px; padding: .55rem 1rem; background: transparent; color: var(--chrome); border: 1px solid var(--line-strong); border-radius: 999px; font-size: .82rem; font-weight: 700; }
 .refresh-button:hover:not(:disabled) { background: rgba(200, 220, 255, .09); }
-.author-field { margin-bottom: 1.6rem; }
 .cell-actor { color: var(--sky); font-size: .74rem; }
 .confirm-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
 .confirm-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(30rem, calc(100vw - 2.4rem)); padding: 1.7rem 1.6rem 1.5rem; background: var(--enamel-raised); border: 1px solid var(--line-strong); border-radius: 16px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
@@ -201,41 +202,289 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 /* ---- A etiqueta: papel colado na cápsula que já saiu ---- */
 /* O papel volta aqui porque escrever uma etiqueta é administrar, e porque a etiqueta
    é literalmente papel: o mesmo material do adesivo do mês, colado sobre o esmalte. */
-.note-sticker { position: relative; display: block; width: min(100%, 33rem); margin: 2.2rem 0 0; padding: 1.15rem 3.6rem 1rem 1.3rem; background: var(--paper); border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); color: var(--ink); text-align: left; transform: rotate(-.9deg); }
+.note-sticker { position: relative; display: block; width: min(100%, 33rem); margin: 2.2rem 0 0; padding: 1.15rem 3.6rem 1rem 1.3rem; background: var(--paper); border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(6, 14, 28, .45); color: var(--ink); text-align: left; transform: rotate(-.9deg); transition: transform .16s ease, background .16s ease, box-shadow .16s ease; }
+/* A etiqueta inteira é o controle que abre a ficha, então ela descola do esmalte no hover
+   — o mesmo gesto do cartão do álbum, e não um "Editar" escondido no rodapé dela. */
+.note-sticker:hover { box-shadow: 0 18px 34px rgba(6, 14, 28, .5); transform: rotate(-.9deg) translateY(-2px); }
+.note-sticker:active { box-shadow: 0 6px 14px rgba(6, 14, 28, .4); transform: rotate(-.9deg) translateY(1px); }
+.note-score { display: flex; align-items: center; gap: .7rem; margin-top: .7rem; }
+.note-score b { color: var(--ink); font-family: var(--display); font-size: 2.4rem; font-weight: 600; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.note-score > span { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; line-height: 1.6; letter-spacing: .08em; text-transform: uppercase; }
+.note-score.is-empty { display: block; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.note-open { flex: none; color: var(--ink); font-family: var(--body); font-size: .82rem; font-weight: 700; letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
+.note-sticker:hover .note-open { color: var(--field-focus); }
 .note-chip { position: absolute; top: 1.2rem; right: 1.3rem; width: 1.55rem; height: 1.1rem; background: var(--capsule); border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }
 .note-serial { display: block; margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .note-title { display: block; margin: .5rem 0 0; color: var(--ink); font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1.18; letter-spacing: -.03em; overflow-wrap: anywhere; }
 .note-description { display: block; max-width: 46ch; margin: .5rem 0 0; color: var(--ink-quiet); font-size: .92rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
 .note-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .55rem 0 0; padding-top: .35rem; border-top: 1px solid var(--line-paper); color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.note-edit { min-height: 44px; flex: none; padding: 0 .2rem; background: transparent; border: 0; color: var(--ink); font-family: var(--body); font-size: .82rem; font-weight: 700; letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
-.note-edit:hover { color: var(--field-focus); }
 
 /* A etiqueta em branco é um objeto, não um botão de "adicionar": papel ainda não escrito. */
-.note-sticker.is-blank { background: var(--paper-quiet); box-shadow: 0 8px 20px rgba(6, 14, 28, .34); transition: transform .16s ease, background .16s ease, box-shadow .16s ease; }
+.note-sticker.is-blank { background: var(--paper-quiet); box-shadow: 0 8px 20px rgba(6, 14, 28, .34); }
 .note-sticker.is-blank::after { content: ''; position: absolute; inset: 6px; border: 1.5px dashed rgba(22, 35, 58, .3); border-radius: 4px; pointer-events: none; }
-.note-sticker.is-blank:hover { background: var(--paper); box-shadow: 0 15px 30px rgba(6, 14, 28, .48); transform: rotate(-.9deg) translateY(-2px); }
-.note-sticker.is-blank:active { box-shadow: 0 6px 14px rgba(6, 14, 28, .4); transform: rotate(-.9deg) translateY(1px); }
+.note-sticker.is-blank:hover { background: var(--paper); box-shadow: 0 15px 30px rgba(6, 14, 28, .48); }
 .note-sticker.is-blank .note-description { margin-bottom: .15rem; }
 
-/* ---- A bancada: onde a etiqueta é escrita ---- */
-.note-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
-.note-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(34rem, calc(100vw - 2.4rem)); max-height: calc(100svh - 2.4rem); overflow-y: auto; padding: 1.7rem 1.7rem 1.5rem; background: var(--paper); color: var(--ink); border-radius: 12px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
-.note-card::after { content: ''; position: absolute; right: 1rem; bottom: 1rem; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
-.note-card-serial { margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.note-card h2 { display: flex; align-items: center; gap: .75rem; margin: .7rem 0 0; color: var(--ink); font-size: 2.4rem; line-height: 1; overflow-wrap: anywhere; }
-.note-card-capsule { width: 2.4rem; height: 2.4rem; flex: none; display: grid; place-items: center; padding-bottom: .7rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -.75rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); color: var(--capsule-ink); font-size: .82rem; }
+/* ---- A ficha do jogo: três faces no mesmo papel ---- */
+.sheet-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
+.sheet-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(42rem, calc(100vw - 2.4rem)); max-height: calc(100svh - 2.4rem); overflow-y: auto; padding: 1.7rem 1.7rem 1.5rem; background: var(--paper); color: var(--ink); border-radius: 12px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
+/* A marca de registro do impressor, no canto — a mesma da gaveta da coleção. */
+.sheet-card::after { content: ''; position: absolute; right: 1rem; bottom: 1rem; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
+.sheet-serial { margin: 0; padding-right: 3rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.sheet-card h2 { display: flex; align-items: center; gap: .75rem; margin: .7rem 0 0; color: var(--ink); font-size: 2.4rem; line-height: 1.05; overflow-wrap: anywhere; }
+.sheet-title-blank { color: var(--ink-quiet); }
+.sheet-capsule { width: 2.4rem; height: 2.4rem; flex: none; display: grid; place-items: center; padding-bottom: .7rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -.75rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); color: var(--capsule-ink); font-size: .82rem; }
+.sheet-winner { margin: .55rem 0 0; color: var(--ink-quiet); font-size: .82rem; }
+.sheet-winner strong { color: var(--ink); }
+/* Em qual das três faces se está. Ela não substitui o título: ancora quem entrou nela. */
+.sheet-face { margin: 1.5rem 0 0; padding-top: .8rem; border-top: 2px solid var(--line-paper); color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.sheet-description { max-width: 56ch; margin: 1.2rem 0 0; color: var(--ink-quiet); font-size: .92rem; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.sheet-form { display: grid; gap: 2.2rem; margin-top: 1.4rem; }
+.sheet-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.1rem; margin-top: 1.5rem; }
+.sheet-history { max-width: 52ch; margin: 1.4rem 0 0; padding: 1rem 1.9rem 0 0; border-top: 1px solid var(--line-paper); color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
+
+/* ---- As quatro tintas da nota: a única cor do papel que não pertence a uma pessoa ----
+
+   Toda cor deste produto é de alguém — a cápsula que ela mesma escolheu. A nota é a
+   exceção, e ela precisa ser justificada: uma parede de boletins em tinta preta não diz,
+   de longe, qual jogo o clube amou e qual ele suportou.
+
+   São quatro tintas, e a faixa é a mesma em toda parte. De 8 para cima, ciano com faísca:
+   é um feito, e platinar usa a mesma tinta porque platina é metal frio, não ouro. De 2
+   para baixo, vermelho. Entre 2 e 4, laranja. O miolo fica em tinta preta, e é ele que faz
+   os extremos serem vistos — se toda nota tivesse cor, nenhuma teria.
+
+   A cor nunca é a informação: o número está escrito ao lado, do mesmo tamanho de sempre.
+   Ela vive só no papel; sobre o esmalte a cor continua sendo das pessoas. */
+.score-hero.is-high b, .album-score.is-high b, .note-score.is-high b, .note-average.is-high p b, .review-score.is-high { color: var(--score-high); }
+.score-hero.is-low b, .album-score.is-low b, .note-score.is-low b, .note-average.is-low p b, .review-score.is-low { color: var(--score-low); }
+.score-hero.is-worst b, .album-score.is-worst b, .note-score.is-worst b, .note-average.is-worst p b, .review-score.is-worst { color: var(--score-worst); }
+
+/* Duas faíscas de tamanhos diferentes, à esquerda e no alto do número — nunca à direita,
+   onde elas cairiam por cima do rótulo. Uma faísca só lê como erro de impressão. */
+.score-hero.is-high b, .album-score.is-high b, .note-score.is-high b, .note-average.is-high p b { position: relative; }
+.score-hero.is-high b::before, .album-score.is-high b::before, .note-score.is-high b::before, .note-average.is-high p b::before,
+.score-hero.is-high b::after, .album-score.is-high b::after, .note-score.is-high b::after, .note-average.is-high p b::after {
+  content: ''; position: absolute; background: var(--score-high);
+  -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat;
+}
+.score-hero.is-high b::before, .album-score.is-high b::before, .note-score.is-high b::before, .note-average.is-high p b::before { top: -.14em; left: -.22em; width: .3em; height: .3em; }
+.score-hero.is-high b::after, .album-score.is-high b::after, .note-score.is-high b::after, .note-average.is-high p b::after { top: -.02em; right: -.18em; width: .18em; height: .18em; opacity: .72; }
+
+/* Descolar a figurinha da parede acende a faísca dela. É transição de estado, presa ao
+   gesto de quem está olhando — a Regra do Momento Único continua valendo. */
+.album-score.is-high b::before, .album-score.is-high b::after { transition: transform .3s ease, opacity .3s ease; }
+.album-card:hover .album-score.is-high b::before, .album-card:focus-visible .album-score.is-high b::before { transform: rotate(45deg) scale(1.18); }
+.album-card:hover .album-score.is-high b::after, .album-card:focus-visible .album-score.is-high b::after { transform: rotate(-30deg) scale(1.3); opacity: 1; }
+
+/* A régua de um critério herda a mesma tinta: é onde ela rende mais, porque quatro filetes
+   lado a lado dizem num relance em que o jogo foi bem e em que foi mal. Dificuldade fica
+   de fora — ela não é elogio, e por isso nem sequer é uma régua no formulário. */
+.score-rule.is-high i { background: var(--score-high); }
+.score-rule.is-low i { background: var(--score-low); }
+.score-rule.is-worst i { background: var(--score-worst); }
+/* Dificuldade não enche a régua: ela marca um ponto nela. O traço cruza o trilho por
+   cima e por baixo, como marca de medição, e é o que diz que ali não há nota a bater. */
+.score-rule.is-flat i { top: -4px; bottom: -4px; background: linear-gradient(var(--ink), var(--ink)) right center / 3px 100% no-repeat; border-radius: 0; }
+
+/* ---- O boletim: a conta que o clube fez, nunca um número gravado ---- */
+.scoreboard { margin-top: 1.5rem; padding: 1.2rem 1.25rem 1.1rem; background: var(--paper-quiet); border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line-paper); }
+/* Duas medidas no alto do boletim: a nota e o tempo. Elas quebram em duas linhas antes de
+   encolher — o número é a coisa que se lê de longe, e diminuí-lo perderia o boletim. */
+.score-heads { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2.4rem; }
+.score-hero { display: flex; align-items: center; gap: .9rem; margin: 0; }
+.score-time { display: flex; align-items: center; gap: .9rem; margin: 0; }
+.score-time b { color: var(--ink); font-family: var(--display); font-size: 2.4rem; font-weight: 600; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.score-time > span { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; line-height: 1.7; letter-spacing: .1em; text-transform: uppercase; }
+.score-hero b { color: var(--ink); font-family: var(--display); font-size: clamp(3rem, 11vw, 4.2rem); font-weight: 600; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.score-hero > span { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; line-height: 1.7; letter-spacing: .1em; text-transform: uppercase; }
+.score-empty { max-width: 48ch; margin: 1.5rem 0 0; padding: 1rem 1.15rem; background: var(--paper-quiet); border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line-paper); color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
+
+/* A régua de cada critério. A entrada é discreta (onze casas), a média é contínua — ela
+   cai entre duas casas, e é por isso que aqui ela é um filete e não um quadrado aceso. */
+.score-rules { display: grid; gap: .55rem; margin: 1.15rem 0 0; }
+.score-rules > div { display: grid; grid-template-columns: minmax(5.5rem, 8rem) 1fr; align-items: center; gap: .85rem; }
+.score-rules dt { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.score-rules dd { display: flex; align-items: center; gap: .7rem; margin: 0; }
+.score-rule { position: relative; flex: 1; min-width: 0; height: 6px; background: rgba(22, 35, 58, .13); border-radius: 2px; }
+.score-rule i { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 2px; }
+.score-rules dd b { min-width: 2.6ch; color: var(--ink); font-family: var(--mono); font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.score-rules dd small { flex: none; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; }
+
+/* A completude é impressa, não colorida: cheio, meio-tom e hachura. A cor sozinha nunca
+   diz nada aqui — cada fatia vem com a palavra e a porcentagem ao lado. */
+.completion { display: grid; gap: .6rem; margin-top: 1.15rem; }
+.completion-bar { display: flex; height: 12px; overflow: hidden; background: rgba(22, 35, 58, .1); border-radius: 2px; }
+.completion-bar i { display: block; }
+/* Platinar é o feito raro do clube, e é o único status que ganha tinta — a mesma dos
+   jogos de 8 para cima, porque é o mesmo tipo de coisa. Um brilho atravessado dá o metal.
+   Finalizar é o esperado e fica em meio-tom; incompleto continua hachurado, porque não
+   terminar não é demérito nenhum. */
+.completion-bar .is-platinado { background: linear-gradient(112deg, var(--score-high) 0 34%, var(--score-high-lit) 46% 56%, var(--score-high) 68% 100%); }
+.completion-bar .is-finalizado { background: color-mix(in srgb, var(--ink) 42%, var(--paper)); }
+.completion-bar .is-incompleto { background: repeating-linear-gradient(-45deg, rgba(22, 35, 58, .4) 0 2px, transparent 2px 5px); }
+.completion-legend { display: flex; flex-wrap: wrap; gap: .3rem .95rem; margin: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.completion-legend span { display: inline-flex; align-items: center; gap: .38rem; }
+.completion-legend span::before { content: ''; width: .62rem; height: .62rem; flex: none; border-radius: 2px; }
+.completion-legend .is-platinado { color: var(--score-high); }
+.completion-legend .is-platinado b { color: var(--score-high); }
+.completion-legend .is-platinado::before { width: .8rem; height: .8rem; background: var(--score-high); -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat; }
+/* Sem ninguém platinando, a tinta sai: uma faísca ao lado de "0%" promete o que não houve. */
+.completion-legend .is-platinado.is-zero, .completion-legend .is-platinado.is-zero b { color: var(--ink-quiet); }
+.completion-legend .is-platinado.is-zero::before { background: var(--ink-quiet); }
+.completion-legend .is-finalizado::before { background: color-mix(in srgb, var(--ink) 42%, var(--paper)); }
+.completion-legend .is-incompleto::before { background: repeating-linear-gradient(-45deg, rgba(22, 35, 58, .4) 0 2px, transparent 2px 5px); box-shadow: inset 0 0 0 1px rgba(22, 35, 58, .3); }
+.completion-legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
+/* A barra é sobre quem jogou, e não sobre quem escreveu. Sem esta linha, "50% incompleto"
+   num jogo com uma resenha só pareceria erro de conta. */
+.completion-note { max-width: 52ch; margin: 0; color: var(--ink-quiet); font-size: .82rem; line-height: 1.5; }
+
+/* ---- A mesa: quem jogou, que é o denominador de "X resenhas de Y" ----
+
+   Ela é uma nota de rodapé da ficha, e a entrada para ela também é: um rótulo de série
+   empurrado para a direita da fileira de ações, longe das duas decisões de verdade. Uma
+   correção de elenco acontece uma vez a cada muitos meses, e não pode disputar espaço com
+   escrever a resenha. */
+.sheet-aside { min-height: 44px; margin-left: auto; padding: 0 .2rem; background: transparent; border: 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-decoration: underline; text-underline-offset: .3em; text-decoration-thickness: 1px; }
+.sheet-aside:hover { color: var(--ink); }
+.sheet-note { max-width: 56ch; margin: 1.1rem 0 0; color: var(--ink-quiet); font-size: .92rem; line-height: 1.6; }
+.sheet-note strong { color: var(--ink); }
+
+.seats { display: grid; gap: .3rem; margin: 1.2rem 0 0; padding: 0; list-style: none; }
+.seats-title { margin: 1.8rem 0 0; padding-top: .8rem; border-top: 2px solid var(--line-paper); color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.seat { min-height: 56px; display: flex; align-items: center; gap: .85rem; padding: .5rem .6rem; border-radius: 4px; }
+.seat:nth-child(odd) { background: var(--paper-quiet); }
+/* Quem não estava fica com a cápsula apagada: a lista de baixo é um convite, não um elenco. */
+.seat.is-off .capsule-mark { opacity: .5; }
+.seat .capsule-mark { width: 2.1rem; height: 2.1rem; padding-bottom: .6rem; box-shadow: inset 0 -.65rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); font-size: .74rem; }
+.seat-who { flex: 1; min-width: 0; display: grid; gap: .1rem; }
+.seat-who strong { color: var(--ink); font-size: .95rem; overflow-wrap: anywhere; }
+.seat-who small { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.seat-out, .seat-in { min-height: 44px; flex: none; padding: 0 .8rem; background: transparent; border: 0; border-radius: 999px; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.seat-out { color: var(--remove-ink); }
+.seat-out:hover:not(:disabled) { background: color-mix(in srgb, var(--field-error) 9%, transparent); color: var(--field-error-ink); }
+.seat-in { color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-paper); }
+.seat-in:hover:not(:disabled) { background: var(--ink); color: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); }
+/* Dito uma vez abaixo da lista, e não uma vez por pessoa: numa mesa em que todo mundo
+   resenhou, um selo por linha seria a mesma frase repetida seis vezes. */
+.seats-foot { max-width: 52ch; margin: .8rem 0 0; color: var(--ink-quiet); font-size: .82rem; line-height: 1.5; }
+
+/* ---- As resenhas: o que cada um achou, uma por pessoa ---- */
+.reviews-title { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 1.8rem 0 .9rem; padding-top: .8rem; border-top: 2px solid var(--line-paper); color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.reviews-title b { color: var(--ink-quiet); font-variant-numeric: tabular-nums; }
+.reviews { display: grid; gap: .8rem; margin: 0; padding: 0; list-style: none; }
+.review { padding: .85rem .95rem; background: var(--paper-quiet); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-paper); }
+/* A minha é a única que eu posso reescrever, então ela se distingue — com um filete, não
+   com uma cor de estado que competiria com as cápsulas das pessoas. */
+.review.is-mine { box-shadow: inset 0 0 0 1px var(--line-paper), inset 3px 0 0 var(--ink); }
+.review-head { display: flex; align-items: center; gap: .65rem; margin: 0; }
+.review-who { display: grid; gap: .1rem; min-width: 0; flex: 1; }
+.review-who strong { color: var(--ink); font-size: .92rem; overflow-wrap: anywhere; }
+.review-who small { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; }
+.review-score { flex: none; color: var(--ink); font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.review-status { flex: none; display: inline-flex; align-items: center; gap: .32rem; padding: .28rem .55rem; border-radius: 999px; color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.review-status.is-platinado { background: var(--score-high); color: var(--paper); }
+/* A faísca vem antes da palavra, não no lugar dela: o selo continua legível em cinza. */
+.review-status.is-platinado::before { content: ''; width: .68rem; height: .68rem; flex: none; background: currentColor; -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat; }
+.review-status.is-finalizado { background: color-mix(in srgb, var(--ink) 20%, transparent); }
+.review-status.is-incompleto { box-shadow: inset 0 0 0 1.5px rgba(22, 35, 58, .3); color: var(--ink-quiet); }
+.review-criteria { display: flex; flex-wrap: wrap; gap: .25rem .85rem; margin: .7rem 0 0; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.review-criteria b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.review-text { max-width: 56ch; margin: .6rem 0 0; color: var(--ink); font-size: .92rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* ---- A ficha de avaliação: duas metades e uma régua impressa ----
+
+   A resenha pede duas coisas e aceita mais seis. Antes as oito chegavam como oito blocos
+   de peso igual, cada um repetindo por conta própria se era obrigatório — e a cadência
+   plana fazia a nota final, que é a única coisa que a resenha cobra, parecer mais um
+   campo. Agora são duas faixas: o que ela cobra, com o controle em largura cheia e o
+   rótulo por cima; e o que ela aceita, em fileiras rotuladas à esquerda, mais baixas e
+   mais juntas. A hairline entre as duas é a frase inteira. */
+.form-band { display: grid; gap: 1.4rem; min-width: 0; }
+.form-band.is-optional { padding-top: 1.4rem; border-top: 2px solid var(--line-paper); }
+/* A faixa se anuncia numa frase, e não num rótulo: "MINHA RESENHA" logo acima já é um
+   rótulo em mono caixa alta, e dois seguidos leem como a mesma coisa dita duas vezes. Três
+   vozes em vez de duas — a face em mono, a faixa em corpo, o campo em mono miúdo. */
+.band-title { margin: 0; color: var(--ink); font-size: .92rem; line-height: 1.3; }
+.form-band.is-optional .band-title { color: var(--ink-quiet); }
+.form-field { display: grid; gap: .55rem; min-width: 0; }
+/* As cinco escalas são um bloco só, e por isso respiram menos entre si do que entre elas
+   e o que vem antes: proximidade é o que diz que as cinco são a mesma pergunta. */
+.criterion-rows { display: grid; gap: .35rem; }
+.score-ticks { display: flex; gap: 2px; min-width: 0; }
+/* Cada casa é um alvo de 44px de altura. A largura encolhe com a tela, como numa régua
+   impressa; o que não pode encolher é o quanto o dedo tem para acertar na vertical. */
+.score-tick { position: relative; flex: 1; min-width: 0; min-height: 48px; display: grid; place-items: center; background: var(--field); box-shadow: inset 0 0 0 1.5px var(--field-line); color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.score-tick:first-child { border-radius: 8px 0 0 8px; }
+.score-tick:last-child { border-radius: 0 8px 8px 0; }
+.score-tick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.score-tick span { pointer-events: none; }
+.score-tick:hover { background: var(--paper-quiet); color: var(--ink); }
+.score-tick.is-on { background: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--paper); }
+/* A casa marcada assume a tinta da própria nota, e é aqui que ela se aprende: quem marca 9
+   vê o ciano acender e quem marca 1 vê o vermelho, com a mesma tinta que o boletim vai usar
+   depois. A casa não marcada continua branca — a régua só fala quando é lida. */
+.score-tick.is-high.is-on { background: var(--score-high); box-shadow: inset 0 0 0 1.5px var(--score-high); }
+.score-tick.is-low.is-on { background: var(--score-low); box-shadow: inset 0 0 0 1.5px var(--score-low); }
+.score-tick.is-worst.is-on { background: var(--score-worst); box-shadow: inset 0 0 0 1.5px var(--score-worst); }
+.score-tick.is-none { color: var(--ink-quiet); }
+/* Marcada, ela troca a tinta junto com o fundo. Sem isto ficava tinta silenciosa sobre
+   fundo silencioso — o traço do "não avaliei" sumia exatamente quando estava escolhido. */
+.score-tick.is-none.is-on { background: var(--ink-quiet); box-shadow: inset 0 0 0 1.5px var(--ink-quiet); color: var(--paper); }
+.score-tick:has(input:focus-visible) { outline: 3px solid var(--field-focus); outline-offset: 2px; z-index: 1; }
+/* A régua da nota final é uma decisão e tem 48px, a altura de campo deste sistema; as
+   opcionais ficam nos 44px do alvo mínimo. A diferença de altura é a hierarquia. */
+.score-ticks.is-compact .score-tick { min-height: 44px; font-size: .55rem; }
+/* Os cinco degraus da dificuldade são uma régua com palavras no lugar dos números: mesma
+   fileira, mesmas pontas arredondadas, mesmo fio de 2px. Uma pílula por degrau quebraria
+   a coluna que as quatro réguas de cima formam. */
+.score-ticks.is-named .score-tick { flex: 1 1 auto; padding: 0 .55rem; font-size: .55rem; letter-spacing: .04em; }
+.score-ticks.is-named .score-tick.is-none { flex: 0 0 2.4rem; padding: 0; }
+
+.status-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.status-choice { position: relative; min-height: 48px; display: grid; place-items: center; padding: .5rem .4rem; background: var(--field); border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--field-line); color: var(--ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-align: center; text-transform: uppercase; cursor: pointer; }
+.status-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.status-choice span { pointer-events: none; }
+.status-choice:hover { background: var(--paper-quiet); }
+.status-choice.is-on { background: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--paper); }
+.status-choice span { display: inline-flex; align-items: center; gap: .32rem; }
+.status-choice.is-platinado span::before { content: ''; width: .68rem; height: .68rem; flex: none; background: currentColor; -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat; }
+.status-choice.is-platinado.is-on { background: var(--score-high); box-shadow: inset 0 0 0 1.5px var(--score-high); }
+.status-choice:has(input:focus-visible) { outline: 3px solid var(--field-focus); outline-offset: 2px; }
+
+.criteria-field { display: grid; gap: .75rem; }
+.criterion-row { display: grid; grid-template-columns: minmax(5.5rem, 7.5rem) 1fr; align-items: center; gap: .85rem; }
+.criterion-label { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+/* A nota média ocupa o lugar do antigo subtítulo e é o oposto dele: não se escreve, se
+   recebe. Por isso ela tem a moldura de um campo e nenhum cursor de texto. */
+/* Um campo de duas ou três casas não deve ter a largura de um campo de texto: a medida
+   do campo é a promessa do quanto cabe nele. A unidade fica ao lado, e não dentro. */
+.hours-field { display: flex; align-items: center; gap: .6rem; }
+.hours-field input { width: 6.5rem; min-height: 48px; padding: .78rem .95rem; background: var(--field); border: 1.5px solid var(--field-line); border-radius: 8px; color: var(--ink); font-family: var(--mono); font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hours-field input:focus-visible { outline: 3px solid var(--field-focus); outline-offset: 2px; }
+.hours-field > span { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.note-average { padding: .8rem .95rem; background: var(--paper-quiet); border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--line-paper); }
+.note-average .field-label { margin-bottom: .55rem; }
+.note-average p { display: flex; align-items: center; gap: .75rem; margin: 0; }
+.note-average p b { color: var(--ink); font-family: var(--display); font-size: 2.4rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.note-average p span { color: var(--ink-quiet); font-size: .82rem; line-height: 1.4; }
+
 .note-form { display: grid; gap: 1.15rem; margin-top: 1.6rem; }
 .note-field { display: block; }
-.note-field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.note-field-head b { flex: none; color: var(--ink-quiet); font-weight: 700; font-variant-numeric: tabular-nums; }
-.note-field-head b.is-full { color: var(--field-error-ink); }
+/* Um rótulo de campo, um desenho. Ele carrega o nome à esquerda e, quando há, a medida à
+   direita — e é sempre a mesma medida: o contador. Nada de selo de exigência aqui: isso é
+   propriedade da metade do formulário, e a metade se anuncia sozinha. */
+.field-label { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.note-field .field-label { margin-bottom: .55rem; }
+.field-label b { flex: none; color: var(--ink-quiet); font-weight: 700; font-variant-numeric: tabular-nums; }
+.field-label b.is-full { color: var(--field-error-ink); }
 .note-field input, .note-field textarea { width: 100%; display: block; }
 .note-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.1rem; margin-top: .25rem; }
 .note-cancel { min-height: 44px; background: transparent; border: 0; color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
 .note-remove { min-height: 44px; margin-left: auto; padding: 0 .7rem; background: transparent; border: 0; border-radius: 999px; color: var(--remove-ink); font-weight: 700; }
 .note-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--field-error) 9%, transparent); color: var(--field-error-ink); }
 /* A goteira à direita é a marca de registro do impressor: o texto não corre por baixo dela. */
-.note-card-history { max-width: 48ch; margin: 1.4rem 0 0; padding: 1rem 1.9rem 0 0; border-top: 1px solid var(--line-paper); color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
 
 /* ---- A célula do registro vira o modo de abrir a etiqueta ---- */
 .chart-cell:has(.cell-open) { padding: 0; }
@@ -245,9 +494,12 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .cell-open:hover .cell-note.is-blank { color: var(--chrome); text-decoration: none; }
 .cell-note { display: block; margin-top: .1rem; color: var(--white); font-family: var(--body); font-size: .82rem; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
 .cell-note.is-blank { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cell-reviews { color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .synced-error { max-width: 52ch; margin: 1.4rem 0 0; padding: .85rem 1rem; background: color-mix(in srgb, var(--field-error) 16%, transparent); border: 1px solid color-mix(in srgb, var(--error-light) 40%, transparent); border-radius: 8px; color: var(--error-light); font-size: .82rem; line-height: 1.5; }
 .usage-note { max-width: 52ch; padding: .85rem 1rem; background: var(--paper-quiet); border: 1px solid rgba(22, 35, 58, .22); border-radius: 8px; color: var(--note-ink) !important; font-size: .82rem !important; line-height: 1.5; }
-.usage-note.is-stopped { background: rgba(163, 18, 63, .1); border-color: rgba(163, 18, 63, .35); color: var(--field-error-ink) !important; }
+/* Fundo translúcido sobre o esmalte deixava tinta escura sobre azul-noite: 1.72:1 medido
+   pelo auditor. O aviso mais importante do produto era o menos legível dele. */
+.usage-note.is-stopped { background: color-mix(in srgb, var(--field-error) 12%, var(--paper)); border-color: rgba(163, 18, 63, .5); color: var(--field-error-ink) !important; }
 .share-field { margin-top: 1.1rem; }
 .share-field input { width: 100%; display: block; margin-top: .45rem; font-family: var(--mono); font-size: .74rem; }
 .roster-empty { padding: 3rem 0; color: var(--ink-quiet); }
@@ -307,8 +559,8 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
   .field-row { flex-direction: column; }
   .toast { right: .75rem; bottom: .75rem; max-width: calc(100vw - 1.5rem); }
   .note-sticker { padding: 1rem 3.2rem .9rem 1.05rem; transform: rotate(-.5deg); }
-  .note-sticker.is-blank:hover { transform: rotate(-.5deg) translateY(-2px); }
-  .note-sticker.is-blank:active { transform: rotate(-.5deg) translateY(1px); }
+  .note-sticker:hover { transform: rotate(-.5deg) translateY(-2px); }
+  .note-sticker:active { transform: rotate(-.5deg) translateY(1px); }
   .note-meta { align-items: flex-start; flex-direction: column; gap: .2rem; }
   .note-card { padding: 1.35rem 1.15rem 1.2rem; }
   .note-actions { gap: .8rem; }
@@ -329,6 +581,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .album-lede strong { color: var(--white); font-weight: 400; }
 /* Quatro valores em quatro colunas estreitas viravam 3 + 1 órfão; 2x2 fecha o bloco. */
 .album-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.album-stats dd.is-score { color: var(--white); font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
 .album-error { margin: 0 5vw 1.5rem; }
 .empty-stage .album-error { max-width: 46ch; margin: 1.4rem 0 0; }
 
@@ -346,10 +599,19 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .album-filter-state strong { color: var(--white); font-weight: 700; }
 
 .album-wall { padding: clamp(2.4rem, 5vw, 3.6rem) 5vw clamp(4rem, 8vw, 7rem); background: var(--enamel); }
+/* Ordenar é decisão de leitura, e por isso ela é texto: o amarelo já é o marcador do
+   filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. */
+.album-sort { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin-bottom: clamp(1.8rem, 3vw, 2.6rem); }
+.album-sort h2 { margin: 0; color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.sort-options { display: flex; flex-wrap: wrap; gap: 0 .35rem; }
+.sort-options button { min-height: 44px; padding: 0 .55rem; background: transparent; border: 0; color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: color .16s ease; }
+.sort-options button:hover { color: var(--white); }
+.sort-options button.is-on { color: var(--white); text-decoration: underline; text-underline-offset: .38em; text-decoration-thickness: 2px; }
 .round-rule { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: clamp(2.4rem, 5vw, 3.6rem) 0 1.5rem; padding-top: .7rem; border-top: 2px solid var(--line-strong); color: var(--white); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .round-rule:first-child { margin-top: 0; }
 .round-rule b { flex: none; color: var(--sky); font-variant-numeric: tabular-nums; }
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); gap: clamp(1.5rem, 2.6vw, 2.4rem); margin: 0; padding: 0; list-style: none; }
+.album-grid { align-items: start; }
 .album-grid > li { display: flex; }
 
 .album-card { position: relative; width: 100%; display: flex; flex-direction: column; gap: .4rem; padding: 1.15rem 1.25rem 1.05rem; background: var(--paper); color: var(--ink); border: 0; border-radius: 4px; box-shadow: 0 12px 26px rgba(4, 10, 22, .45); text-align: left; transform: rotate(var(--tilt, 0deg)); transition: transform .18s ease, box-shadow .18s ease; }
@@ -367,6 +629,15 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .album-perf { height: 3px; margin: .5rem 0 .35rem; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }
 .album-title { font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .album-title-blank { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+/* O cartão é um boletim: a nota do clube é a maior coisa nele depois do nome do jogo. */
+.album-score { display: flex; align-items: center; gap: .7rem; margin-top: .5rem; }
+.album-score b { color: var(--ink); font-family: var(--display); font-size: 2.7rem; font-weight: 600; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.album-score > span { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; line-height: 1.6; letter-spacing: .08em; text-transform: uppercase; }
+.album-score.is-empty { display: block; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.album-criteria { display: flex; flex-wrap: wrap; gap: .2rem .8rem; margin-top: .6rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.album-criteria b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.album-card .completion { margin-top: .75rem; }
+.album-card .completion-bar { height: 9px; }
 .album-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; color: var(--ink-quiet); font-size: .92rem; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
 .album-meta { margin-top: auto; padding-top: .6rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 
@@ -519,18 +790,17 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 /* ---- O subtítulo da etiqueta ---- */
 /* O resumo numa linha junta os dois com um marcador. Na etiqueta inteira eles se separam:
    o subtítulo é a legenda do título, não a continuação dele. */
-.note-subtitle { display: block; margin: .2rem 0 0; color: var(--note-ink); font-family: var(--mono); font-size: .74rem; font-weight: 700; letter-spacing: .04em; overflow-wrap: anywhere; }
-.album-subtitle { display: block; margin: .15rem 0 0; color: var(--note-ink); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .05em; overflow-wrap: anywhere; }
+
 /* O ensaio do resumo, montado enquanto se escreve. */
-.note-summary { display: flex; align-items: baseline; gap: .7rem; margin: -.3rem 0 0; padding: .6rem .8rem; background: var(--paper-quiet); border-radius: 8px; }
-.note-summary span { flex: none; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.note-summary b { min-width: 0; color: var(--ink); font-size: .82rem; font-weight: 700; overflow-wrap: anywhere; }
 
 /* ---- O confete: a última batida da entrega ---- */
 /* Fora do fluxo e sem eventos: passa por cima de tudo e não intercepta um clique sequer.
    `prefers-reduced-motion` o desliga no JS, e não aqui — encurtar não serve de nada. */
 app-confetti { display: contents; }
-.confetti { position: fixed; z-index: 40; inset: 0; pointer-events: none; }
+/* Absoluta, e não fixa: o confete fica onde caiu e rola com a página. Nasce sem tamanho
+   porque uma folha absoluta parada no fim do documento empurraria barra de rolagem; quem
+   a dimensiona e a assenta sobre a viewport de agora é `fire()`. */
+.confetti { position: absolute; z-index: 40; top: 0; left: 0; width: 0; height: 0; pointer-events: none; }
 
 @media (max-width: 980px) {
   .gate, .home-stage { grid-template-columns: 1fr; align-content: center; }
@@ -539,6 +809,15 @@ app-confetti { display: contents; }
   .home-stage { min-height: 0; }
 }
 @media (max-width: 620px) {
+  .sheet-card { padding: 1.4rem 1.1rem 1.2rem; }
+  .scoreboard { padding: 1rem 1rem .95rem; }
+  /* Rótulo em cima da régua: em 390px as duas colunas deixavam "Jogabilidade" em três
+     linhas e a régua com 60px de curso, que não mostra diferença nenhuma. */
+  .score-rules > div, .criterion-row { grid-template-columns: 1fr; gap: .3rem; }
+  /* Empilhadas, as cinco escalas precisam de mais ar ENTRE elas do que dentro delas: com
+     o mesmo intervalo nos dois lugares, o rótulo de uma cola na régua da anterior. */
+  .criterion-rows { gap: .9rem; }
+  .status-choices { grid-template-columns: 1fr; }
   .topbar { flex-wrap: wrap; padding-block: .6rem; }
   .topbar-actions { gap: .4rem; }
   .who-name { max-width: 8ch; }
@@ -568,7 +847,6 @@ app-confetti { display: contents; }
 .roster-close { position: absolute; top: .8rem; right: .8rem; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: transparent; border: 0; border-radius: 999px; color: var(--ink-quiet); }
 .roster-close:hover:not(:disabled) { background: var(--paper-quiet); color: var(--ink); }
 .roster-close svg { width: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
-.roster-card { position: fixed; }
 .roster-card > :is(p, h2):first-of-type { padding-right: 3rem; }
 
 /* O emoji mora na metade de cima da cápsula, que é a cúpula; a de baixo é a casca clara. */
