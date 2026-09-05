@@ -25,6 +25,8 @@ import {
   scoreTone,
   SpinSeat,
   spinSummary,
+  owesReview,
+  pendingReviews,
 } from './group-log';
 import { GroupSnapshot, GroupStore, UsageBlockedError } from './group-store';
 import { GROUP_STORE, USAGE_GUARD } from './firebase-app';
@@ -36,6 +38,8 @@ import { Identity } from './identity';
 import { trapFocusWithin } from './focus-trap';
 import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
 import { Notice } from './notice';
+import { MachineSound } from './machine-sound';
+import { Preferences } from './preferences';
 import { GameSheet } from './game-sheet';
 import { CapsuleStyle, RosterBench } from './roster-bench';
 import { normalizeName, participantKey } from './naming';
@@ -64,6 +68,8 @@ export class SyncedGroup {
   private readonly store = inject(GROUP_STORE);
   private readonly guard = inject(USAGE_GUARD);
   private readonly identity = inject(Identity);
+  private readonly preferences = inject(Preferences);
+  private readonly machineSound = inject(MachineSound);
 
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
@@ -127,6 +133,10 @@ export class SyncedGroup {
         this.store
           .seatSpin(this.groupId(), spinIndex, memberId, seated, this.author())
           .then(() => this.reload(this.groupId())),
+      react: (spinIndex, target, emoji, reacted) =>
+        this.store
+          .reactToReview(this.groupId(), spinIndex, target, emoji, reacted, this.author())
+          .then(() => this.reload(this.groupId())),
     },
     (error) => this.explain(error),
   );
@@ -164,6 +174,9 @@ export class SyncedGroup {
       window.clearInterval(clock);
       this.document.removeEventListener('visibilitychange', wake);
       this.toast.stop();
+      // Ir para o álbum no meio de uma entrega não pode deixar a catraca tocando sozinha
+      // numa tela que não existe mais.
+      this.machineSound.stop();
     });
   }
 
@@ -382,6 +395,18 @@ export class SyncedGroup {
     await this.afterBench((spin) => this.bench.commitSeat(spin, change.seat, change.seated));
   }
 
+  /**
+   * Reagir não avisa nada no rodapé: o resultado já está na fileira, embaixo do dedo. Um
+   * aviso por emoji encheria a tela de recados sobre a própria mão de quem os leu.
+   */
+  protected async commitReaction(
+    change: { target: string; emoji: string; reacted: boolean },
+  ): Promise<void> {
+    const spin = this.editingSpin();
+    if (!spin) return;
+    await this.bench.commitReaction(spin, change.target, change.emoji, change.reacted);
+  }
+
   private async afterBench(operation: (spin: SpinRecord) => Promise<string | null>): Promise<void> {
     const spin = this.editingSpin();
     if (!spin) return;
@@ -390,7 +415,45 @@ export class SyncedGroup {
   }
 
   protected summaryOf(spin: SpinRecord): string {
-    return spinSummary(spin);
+    return spinSummary(spin, this.sealed(spin));
+  }
+
+  // --- o modo cego e as resenhas que esta pessoa deve ---
+
+  protected readonly blind = this.preferences.blind;
+
+  /** A chave desta pessoa, a mesma que assina as resenhas dela. */
+  private readonly myKey = computed(() => participantKey(this.author()));
+
+  /**
+   * Se a nota do clube deste jogo fica lacrada para quem está olhando: só no modo cego, e
+   * só nos jogos que ela jogou e ainda não resenhou. Um jogo de antes de ela entrar no
+   * clube nunca lacra — não há nota dela para ancorar.
+   */
+  protected sealed(spin: SpinRecord): boolean {
+    return this.blind() && owesReview(spin, this.myKey());
+  }
+
+  /** Os jogos que esta pessoa jogou e ainda não resenhou, do mais recente para trás. */
+  protected readonly pending = computed(() => {
+    const state = this.snapshot()?.state;
+    return state ? pendingReviews(state, this.myKey()) : [];
+  });
+
+  /** Abrir a mais recente das pendências já na face de escrever: é o que ela veio fazer. */
+  protected openPending(event: Event): void {
+    const spin = this.pending()[0];
+    if (!spin) return;
+    this.bench.open(spin, event);
+    this.bench.show('resenha');
+  }
+
+  // --- o som da máquina ---
+
+  protected readonly soundOn = this.preferences.sound;
+
+  protected toggleSound(): void {
+    this.preferences.setSound(!this.soundOn());
   }
 
   /** A nota do clube num giro, já formatada. Vazio quando ninguém resenhou. */
@@ -438,7 +501,7 @@ export class SyncedGroup {
     try {
       await this.store.spin(this.groupId(), this.author());
       await this.reload(this.groupId(), { keepSpinning: true });
-      this.playScene();
+      this.playScene({ sound: true });
     } catch (error) {
       this.sceneToken += 1;
       this.isSpinning.set(false);
@@ -453,11 +516,18 @@ export class SyncedGroup {
    */
   protected replayScene(): void {
     if (this.isSpinning() || this.displayed().chosenIndex < 0) return;
-    this.playScene();
+    this.playScene({ sound: true });
   }
 
-  /** Toda encenação completa a entrega: se a cápsula tem emoji, ele cai como confete. */
-  private playScene(): void {
+  /**
+   * Toda encenação completa a entrega: se a cápsula tem emoji, ele cai como confete.
+   *
+   * `sound` só é verdadeiro quando houve um dedo — girar de verdade, ou clicar no globo
+   * para rever. A cena que abre sozinha ao carregar a página é muda de propósito: o
+   * navegador barraria o áudio sem gesto de todo jeito, e barulho que ninguém pediu é
+   * pior do que barulho nenhum.
+   */
+  private playScene({ sound = false } = {}): void {
     if (this.displayed().chosenIndex < 0) return;
     const restingTarget = this.targetRotation();
     const current = this.rotation();
@@ -473,6 +543,9 @@ export class SyncedGroup {
 
     this.isSpinning.set(true);
     this.revealed.set(false);
+    // O som usa a mesma duração da imagem: os tiques da catraca são agendados sobre a
+    // mesma curva do CSS, então eles freiam exatamente quando a roda freia.
+    if (sound) this.machineSound.spin(reducedMotion ? 0 : 4300);
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         // Uma aba em segundo plano estrangula o rAF, e o relógio abaixo pode já ter
@@ -490,6 +563,9 @@ export class SyncedGroup {
       this.isSpinning.set(false);
       this.revealed.set(true);
       this.celebration.update((tick) => tick + 1);
+      // A cúpula abre logo depois do baque, e é aí que o confete sai. As duas coisas são
+      // o mesmo instante, e o som acompanha a que se vê.
+      if (sound) window.setTimeout(() => this.machineSound.celebrate(), 730);
     }, reducedMotion ? 120 : 4300);
   }
 

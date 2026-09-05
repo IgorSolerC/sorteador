@@ -405,6 +405,26 @@ Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a 
 - **A cápsula que se monta:** um SVG de 220×220 com o poço em gradiente radial, a cúpula na cor da pessoa, o brilho especular na curva de cima, a casca translúcida, o lábio interno e a costura em cromo chapado. As iniciais aparecem dentro da cúpula conforme se digita, e a cor sai de um hash do próprio nome — quem digita o mesmo nome vê a mesma cápsula toda vez. Vazia, a cúpula é âmbar: a primeira tela do produto não devia ser cinza.
 - **Duas faces:** quem nunca entrou vê "Quem é **você?**" e um só botão. Quem está trocando vê "Quem está **na mesa?**" e ganha um "Continuar como estou" — só quem já está dentro tem para onde voltar.
 - **A costura é cromo chapado**, e não o degradê do aro da máquina: um `linearGradient` em caixa delimitadora de altura zero não pinta nada, e a linha simplesmente sumia.
+- **As cápsulas do grupo, quando há um grupo** (ver A Regra da Cápsula Oferecida): uma
+  fileira de comprimidos de 48px, cada um com a cápsula real da pessoa — a cor que ela
+  escolheu e o emoji que vira o confete dela — num disco de `2.1rem`. O disco é maior que
+  o comprimido do álbum de propósito: `1.15rem × .82rem` é pequeno demais para um símbolo
+  ser lido, e foi por isso que lá o emoji ficou do lado de fora.
+- **As preferências deste aparelho**, atrás de uma hairline, só para quem já entrou uma
+  vez (ver A Regra do Lacre). A primeira visita é uma pergunta só.
+
+#### Named Rules
+
+**A Regra da Cápsula Oferecida.** Num grupo, a porta **oferece antes de perguntar**: as
+cápsulas que já estão no globo vêm primeiro, e tocar numa delas é entrar. Digitar continua
+existindo — quem chegou agora não está na lista —, mas vira o caminho de baixo, um link em
+texto que abre o campo. O motivo é um defeito de verdade: digitar `Ana` onde o globo diz
+`Ana Paula` cria uma segunda pessoa em silêncio, porque a normalização de nomes é congelada
+e decide a identidade; o clube só descobre meses depois, com o álbum dividido ao meio.
+
+A porta **nunca espera pela rede**: ela desenha primeiro e as cápsulas entram quando
+chegarem. Cota estourada, grupo inexistente ou rede caída não trancam a entrada — sem
+lista, ela volta a ser o campo de texto que sempre foi.
 
 ### A Prateleira
 
@@ -450,6 +470,10 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
+- **A fileira de reações**, no pé de cada resenha: quatro emoji, `44px` de alvo e desenho
+  quase nenhum (ver A Regra das Quatro Reações).
+- **O lacre**, no lugar do boletim inteiro quando o modo cego está ligado e esta pessoa
+  ainda deve a resenha daquele jogo (ver A Regra do Lacre).
 - **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
   antigo subtítulo, e é o oposto dele: não se escreve, se recebe — e descrição.
 - **Face 4, a mesa:** quem jogou, com a saída para quem não resenhou e o convite para quem do
@@ -518,6 +542,29 @@ No boletim da ficha elas aparecem inteiras, atrás de um picote e com a faísca 
 ali o denominador delas é outro — só quem platinou pôde respondê-las — e lidas na mesma
 corrida das cinco de cima pareceriam critérios que metade do clube deixou em branco.
 
+**A Regra das Quatro Reações.** Reagir a uma resenha é dizer uma de quatro coisas — 😯 🔥 😭
+😂 — e nada mais. A lista é fechada **nas rules**, e não só na tela: um campo de emoji livre
+viraria uma segunda caixa de texto, e o produto já tem uma, assinada, que é a resenha.
+
+O desenho encolhe, o alvo não. Sem reação nenhuma o emoji fica sozinho e a `.38` de opacidade
+— um convite, não uma contagem. Quem já recebeu ganha a cápsula de papel com a contagem em
+mono tabular; a minha é a única com tinta cheia, e é a **tinta do papel**, nunca o amarelo de
+ação, que sobre papel viraria um botão pedindo para ser apertado de novo. A fileira aparece
+inteira mesmo vazia, porque ela também **é** o controle: uma fileira que só mostrasse o que
+já existe não teria onde a primeira pessoa apertar. E a ordem dos quatro é fixa — uma fileira
+que se reordena pela contagem faz o dedo errar o alvo entre duas visitas.
+
+**A Regra do Lacre.** No **modo cego** — desligado por padrão, ligado na porta —, a nota do
+clube fica lacrada exatamente nos jogos que esta pessoa **jogou e ainda não resenhou**: no
+boletim da ficha, no cartão do álbum e na linha do registro. Ler `9,2` antes de dar a própria
+nota move a própria nota, e o produto inteiro existe para que a conta do clube seja honesta.
+
+O lacre não é erro nem alerta: é uma escolha que a pessoa fez. Por isso não usa a tinta de
+erro nem a de alerta — é papel silencioso com o fio tracejado do que ainda não foi escrito, o
+mesmo da cápsula sem jogo. Ele traz as duas saídas: **escrever a minha** e **ver assim
+mesmo**, que vale só enquanto aquela ficha está aberta. E lacra só o que tem nota a ancorar:
+um jogo de antes de a pessoa entrar no clube nunca lacra.
+
 **A Regra do Denominador de Quem Jogou.** "X resenhas de Y" e a barra de completude são sobre
 quem **jogou**, e não sobre quem escreveu: quem está na mesa e ainda não resenhou entra como
 incompleto. Sem isso, uma pessoa que zerou o jogo antes de os outros começarem fazia o cartão
@@ -535,6 +582,41 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 - **Cartão:** a etiqueta de papel virou um boletim, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, a nota do clube em display `2.7rem` na tinta que ela merece, os cinco critérios de sempre e o tempo em mono — **as duas medidas da platina ficam de fora dele**, ver A Regra da Platina Perguntada —, a barra de completude com legenda, e a descrição cortada em quatro linhas. O cartão inteiro é o controle que abre a ficha. **O nome de quem ganhou não se repete no rodapé**: ele já está em `1.42rem` no alto, e dizê-lo de novo em mono miúdo era a mesma informação duas vezes — para quem não vê o cartão, ele continua no nome acessível do botão.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
 - **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM JOGO ESCRITO` em mono e nada mais. Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas vezes.
+
+- **Salvar como imagem:** um comprimido de plaqueta no alto da parede, com a linha que diz a
+  única coisa que a pessoa precisa saber antes de mandar a imagem a alguém (ver A Regra do
+  Pôster Sem Link).
+- **O recado do que ela deve:** quando esta pessoa jogou algo e não resenhou, uma plaqueta
+  em esmalte com a contagem, o nome do mais recente e a ação em amarelo — a única coisa a
+  fazer naquela tela. Ele aparece na máquina e no álbum, e some sozinho quando ela escreve.
+
+#### Named Rules
+
+**A Regra do Pôster Sem Link.** O álbum sai como PNG **desenhado**, e não fotografado: uma
+captura do DOM traria barra de rolagem, corte no lugar errado e a densidade de uma tela. O
+pôster é um objeto próprio, com a mesma paleta, as mesmas fontes e as mesmas quatro tintas da
+nota, montado na medida de uma imagem — e sai o que está na tela, porque quem filtrou os dez
+melhores quer a parede dos dez melhores.
+
+**O link do grupo nunca entra nele.** O link é a credencial: quem o tem, escreve. Uma imagem
+que o clube manda no grupo é pública para sempre, e uma URL ou um QR impressos nela seriam
+entregar a máquina a quem passasse os olhos. A linha ao lado do botão diz isso antes, não
+depois.
+
+**A Regra da Voz Convidada.** A máquina tem som — catraca, baque na bandeja e a cúpula
+abrindo —, sintetizado em Web Audio, sem um único arquivo: o projeto vive sem Storage, e um
+`.mp3` de catraca custaria mais bytes que o app inteiro.
+
+Ele **começa desligado**, e **nada toca sem um dedo**. A cena que abre sozinha ao carregar a
+página é muda: o navegador barraria o áudio sem gesto de todo jeito, e barulho que ninguém
+pediu é pior do que barulho nenhum. Só girar de verdade e clicar no globo para rever têm voz.
+O interruptor mora na **própria máquina**, num alvo redondo de 44px no cabeçalho, porque é
+ali que se liga e desliga no meio de uma noite — e o estado vem do desenho, riscado é mudo, e
+não só da cor.
+
+E os tiques da catraca são agendados sobre **a mesma curva do CSS** (`cubic-bezier(.12, .72,
+.12, 1)`, invertida): eles freiam quando a roda freia. Um tique regular sobre uma imagem que
+desacelera soa como outro objeto.
 
 ### Motion
 Existe um único momento autoral, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s`, a cúpula se abre em `1.5s` — e o que estava dentro sai.

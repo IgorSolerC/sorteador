@@ -81,6 +81,7 @@ service cloud.firestore {
               'diversao', 'dificuldade', 'historia', 'qualidade', 'jogabilidade',
               'dificuldadePlatina', 'diversaoPlatina',
               'mesa',
+              'alvo', 'reagiu',
             ])
             // O carimbo é do servidor, sempre. É a única entrada que o cliente não
             // escolhe, e é dela que o sorteio tira o resultado.
@@ -88,6 +89,7 @@ service cloud.firestore {
             && d.tipo in [
               'member_added', 'member_removed', 'member_styled',
               'spin', 'spin_annotated', 'spin_reviewed', 'spin_seated',
+              'review_reacted',
             ]
             && (!('autor' in d) || texto(d.autor, 60))
             && (d.tipo != 'member_added' || texto(d.nome, 60))
@@ -97,8 +99,11 @@ service cloud.firestore {
             && (d.tipo != 'spin_annotated' || anotacaoValida())
             && (d.tipo != 'spin_reviewed' || resenhaValida())
             && (d.tipo != 'spin_seated' || mesaValida())
-            && (d.tipo in ['spin_annotated', 'spin_reviewed', 'spin_seated'] || semCampoDeGiro())
+            && (d.tipo != 'review_reacted' || reacaoValida())
+            && (d.tipo in ['spin_annotated', 'spin_reviewed', 'spin_seated', 'review_reacted']
+                || semCampoDeGiro())
             && (d.tipo == 'spin_seated' || !('mesa' in d))
+            && (d.tipo == 'review_reacted' || (!('alvo' in d) && !('reagiu' in d)))
             // Nenhum evento carrega campo que não é dele. O replay já ignora o intruso, mas
             // o log é para sempre: o que entra nele não se reescreve nem se apaga, e um
             // evento que se contradiz fica contradizendo-se no registro pelos anos seguintes.
@@ -106,7 +111,11 @@ service cloud.firestore {
             && (d.tipo in ['member_removed', 'member_styled', 'spin_seated'] || !('memberId' in d))
             && (d.tipo == 'spin_annotated' || semCamposDeEtiqueta())
             && (d.tipo == 'spin_reviewed' || semCamposDeResenha())
-            && (d.tipo == 'member_styled' || semCamposDeEstilo())
+            && (d.tipo == 'member_styled' || !('cor' in d))
+            // O emoji tem dois donos: a cápsula que a pessoa pinta e a reação a uma
+            // resenha. São regras diferentes — um é livre até 16 unidades, o outro sai de
+            // uma lista de quatro —, e cada tipo valida o seu no lugar dele.
+            && (d.tipo in ['member_styled', 'review_reacted'] || !('emoji' in d))
             && (d.tipo == 'spin' || marcaDeGiroIntacta())
             && contadorAcompanha();
         }
@@ -209,6 +218,22 @@ service cloud.firestore {
             && d.mesa is bool;
         }
 
+        // Reagir é dizer uma de quatro coisas sobre a opinião de outra pessoa, e nada mais.
+        // A lista fechada é o que impede o campo de emoji virar uma segunda caixa de texto
+        // — o produto já tem uma, assinada, que é a resenha. `alvo` é a chave de quem
+        // escreveu a resenha reagida; sem assinatura ninguém desfaria a própria reação.
+        function reacaoValida() {
+          let d = request.resource.data;
+          return d.giro is int
+            && d.giro >= 0
+            && d.giro < grupoAntes().versaoLog
+            && texto(d.autor, 60)
+            && texto(d.alvo, 60)
+            && d.emoji in ['😯', '🔥', '😭', '😂']
+            && d.reagiu is bool
+            && !('cor' in d);
+        }
+
         // Toda nota é um inteiro de 0 a 10. A régua da ficha tem onze casas, e uma nota
         // fora dela envenenaria a média de um jogo para sempre — o log não se reescreve.
         function notaValida(valor) {
@@ -235,11 +260,6 @@ service cloud.firestore {
           let d = request.resource.data;
           return !('nota' in d) && !('status' in d) && !('texto' in d) && !('retirada' in d)
             && !('horas' in d) && semNotasDeCriterio();
-        }
-
-        function semCamposDeEstilo() {
-          let d = request.resource.data;
-          return !('cor' in d) && !('emoji' in d);
         }
 
         // Só um giro mexe no relógio do giro. Sem isto, anotar em rajada empurraria a

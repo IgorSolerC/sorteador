@@ -507,6 +507,51 @@ await it('quem troca de platinado para finalizado não deixa a platina gravada',
   assert.deepEqual(resenha.criteria, { diversao: 9 });
 });
 
+await it('a reação vai ao log, volta dela, e desligar também é gravar', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  await store.reviewSpin(id, 0, { score: 9, status: 'finalizado' }, 'Ana');
+
+  await store.reactToReview(id, 0, 'ana', '🔥', true, 'Breno');
+  let resenha = (await store.load(id)).state.spins[0].reviews[0];
+  assert.deepEqual(resenha.reactions, [{ emoji: '🔥', author: 'Breno', authorKey: 'breno' }]);
+
+  await store.reactToReview(id, 0, 'ana', '🔥', false, 'Breno');
+  resenha = (await store.load(id)).state.spins[0].reviews[0];
+  assert.deepEqual(resenha.reactions, []);
+});
+
+await it('reação sem assinatura, sem alvo ou fora da lista não sai do cliente', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await assert.rejects(() => store.reactToReview(id, 0, 'ana', '🔥', true, ''));
+  await assert.rejects(() => store.reactToReview(id, 0, '', '🔥', true, 'Breno'));
+  await assert.rejects(() => store.reactToReview(id, 0, 'ana', '💩', true, 'Breno'));
+  await assert.rejects(() => store.reactToReview(id, -1, 'ana', '🔥', true, 'Breno'));
+});
+
+await it('reagir não empurra a espera do próximo giro', async () => {
+  // Uma rajada de reações não pode adiar o giro do clube inteiro. Só um giro mexe naquele
+  // relógio, e a rule é quem garante — aqui se prova que o caminho normal não o toca.
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+  await store.reviewSpin(id, 0, { score: 9, status: 'finalizado' }, 'Ana');
+
+  const antes = (await store.load(id)).lastSpinAt;
+  await store.reactToReview(id, 0, 'ana', '😂', true, 'Breno');
+  assert.equal((await store.load(id)).lastSpinAt, antes);
+});
+
 await it('pinta uma cápsula e a cor volta do log', async () => {
   const { store } = novaLoja(FOLGADO);
   const id = await store.createGroup('Clube');

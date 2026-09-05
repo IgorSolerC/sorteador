@@ -1,16 +1,38 @@
 import { TestBed } from '@angular/core/testing';
 
 import { Identity } from './identity';
-import { IdentityGate } from './identity-gate';
+import { GateCapsule, IdentityGate, ROSTER_LOOKUP } from './identity-gate';
+import { Preferences } from './preferences';
 
 /**
  * A porta é a única tela que todo mundo vê, e a única que não pode ser pulada. O que se
  * prova aqui é que ela não deixa passar em branco, que grava o nome normalizado, e que a
  * cápsula do lado é a mesma para o mesmo nome — a promessa que a coleção depois cumpre.
  */
-async function render() {
-  await TestBed.configureTestingModule({ imports: [IdentityGate] }).compileComponents();
+function capsule(name: string, emoji = ''): GateCapsule {
+  return {
+    name,
+    color: '#5EE7FF',
+    ink: '#0a1830',
+    emoji,
+    initials: name.slice(0, 1).toUpperCase(),
+    key: name.toLowerCase(),
+  };
+}
+
+async function render({
+  groupId = '',
+  changing = false,
+  roster = [] as readonly GateCapsule[],
+  lookup = null as null | (() => Promise<readonly GateCapsule[]>),
+} = {}) {
+  await TestBed.configureTestingModule({
+    imports: [IdentityGate],
+    providers: [{ provide: ROSTER_LOOKUP, useValue: lookup ?? (async () => roster) }],
+  }).compileComponents();
   const fixture = TestBed.createComponent(IdentityGate);
+  fixture.componentRef.setInput('groupId', groupId);
+  fixture.componentRef.setInput('changing', changing);
   fixture.detectChanges();
   await fixture.whenStable();
   fixture.detectChanges();
@@ -113,6 +135,101 @@ describe('a porta', () => {
 
     expect(desistiu).toBe(1);
     expect(TestBed.inject(Identity).name()).toBe('Igor Soler');
+    fixture.destroy();
+  });
+});
+
+describe('a porta oferece as cápsulas que o grupo já tem', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('fora de um grupo, ela continua sendo um campo de texto', async () => {
+    // A prateleira e a oficina não têm lista nenhuma a oferecer.
+    const fixture = await render();
+    expect(el(fixture).querySelector('.gate-people')).toBeNull();
+    expect(el(fixture).querySelector('#gate-name')).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('num grupo, ela mostra uma cápsula por pessoa do globo', async () => {
+    const fixture = await render({
+      groupId: 'demo',
+      roster: [capsule('Ana Paula', '🦄'), capsule('Breno')],
+    });
+    const nomes = [...el(fixture).querySelectorAll('.gate-person')]
+      .map((botao) => botao.textContent?.trim());
+
+    expect(nomes.length).toBe(2);
+    expect(nomes[0]).toContain('Ana Paula');
+    expect(nomes[0]).toContain('🦄');
+    fixture.destroy();
+  });
+
+  it('tocar numa cápsula entra com o nome EXATO do globo', async () => {
+    // É o defeito que isto existe para fechar: digitar "Ana" onde o globo diz "Ana Paula"
+    // cria uma segunda pessoa em silêncio, e o álbum só conta isso meses depois.
+    const fixture = await render({ groupId: 'demo', roster: [capsule('Ana Paula')] });
+    let saiu = 0;
+    fixture.componentInstance.done.subscribe(() => (saiu += 1));
+
+    (el(fixture).querySelector('.gate-person') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(TestBed.inject(Identity).name()).toBe('Ana Paula');
+    expect(saiu).toBe(1);
+    fixture.destroy();
+  });
+
+  it('com lista, digitar é o caminho de baixo — e ele continua existindo', async () => {
+    const fixture = await render({ groupId: 'demo', roster: [capsule('Ana Paula')] });
+
+    expect(el(fixture).querySelector('#gate-name')).toBeNull();
+    (el(fixture).querySelector('.gate-otherwise') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    // O campo acabou de nascer dentro de um `@if`, e o `ngModel` dele só se liga no
+    // microtask seguinte: sem esperar, o `input` do teste bate num campo sem ligação.
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelector('#gate-name')).not.toBeNull();
+    await digitar(fixture, 'Zé de Fora');
+    enviar(fixture);
+    expect(TestBed.inject(Identity).name()).toBe('Zé de Fora');
+    fixture.destroy();
+  });
+
+  it('uma busca que falha não tranca a porta', async () => {
+    // Cota estourada, grupo inexistente, rede caída: nada disso pode impedir alguém de
+    // entrar. Sem lista, digitar continua sendo o caminho — e é o que sempre foi.
+    const fixture = await render({
+      groupId: 'demo',
+      lookup: async () => { throw new Error('cota estourada'); },
+    });
+
+    expect(el(fixture).querySelector('.gate-people')).toBeNull();
+    expect(el(fixture).querySelector('#gate-name')).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('na primeira visita a porta é uma pergunta só, sem painel de preferências', async () => {
+    const fixture = await render({ changing: false });
+    expect(el(fixture).querySelector('.gate-prefs')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('quem já entrou uma vez encontra o modo cego ao trocar de pessoa', async () => {
+    const fixture = await render({ changing: true });
+    const chave = el(fixture).querySelector('.gate-switch') as HTMLButtonElement;
+    expect(chave.getAttribute('aria-pressed')).toBe('false');
+
+    chave.click();
+    fixture.detectChanges();
+
+    expect(TestBed.inject(Preferences).blind()).toBe(true);
+    expect(chave.getAttribute('aria-pressed')).toBe('true');
     fixture.destroy();
   });
 });

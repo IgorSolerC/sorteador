@@ -92,6 +92,8 @@ grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
   texto?: string                         ← spin_reviewed, até 600
   retirada?: bool                        ← spin_reviewed: retira a própria resenha
   mesa?: bool                            ← spin_seated: põe (true) ou tira (false)
+  alvo?: string                          ← review_reacted: a chave de quem escreveu a resenha
+  reagiu?: bool                          ← review_reacted: liga (true) ou desliga (false)
   autor?: string                         ← quem operou, não verificado
                                            (obrigatório só em spin_reviewed)
 ```
@@ -215,6 +217,22 @@ contradiz. O servidor não sabe quem é quem —
 `autor` é crachá, não credencial —, mas sabe que uma resenha sem assinatura não seria de
 ninguém e ninguém conseguiria editá-la depois. Reescrever é gravar outra; `retirada: true`
 a tira da conta sem tirá-la do log.
+
+**Reagir é um evento, e a lista de emoji é fechada NA RULE.** `review_reacted` carrega o
+giro, o `alvo` (a chave de quem escreveu a resenha reagida), o `emoji` e o `reagiu`. Só quatro
+emoji passam — 😯 🔥 😭 😂 —, e é a rule que garante: um campo de emoji livre viraria uma
+segunda caixa de texto num log que não se apaga. Acrescentar um quinto é **publicar as rules
+antes do site**, como toda mudança de rule.
+
+Ligar e desligar é **explícito**, e nunca por paridade: dois aparelhos alternando quase junto
+chegariam a contagens diferentes a partir do mesmo log. Uma reação a uma resenha retirada some
+com ela — o alvo deixou de existir —, e volta se a pessoa reescrever a resenha.
+
+**A porta de um grupo custa uma leitura a mais na primeira visita.** Para oferecer as cápsulas
+que já existem, ela carrega o grupo antes de a pessoa entrar; a máquina, logo depois, paga só
+o delta. São 2 leituras numa visita fria em vez de 1, contra um defeito de identidade que o
+clube só descobriria meses depois. O SDK entra por importação dinâmica, então a prateleira e a
+oficina continuam sem tocar em rede.
 
 **A nota média não é gravada em lugar nenhum.** Ela é derivada das resenhas pelo replay, a
 cada carga. Um campo de média gravável seria um número que alguém escreve à mão — exatamente

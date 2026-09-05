@@ -116,6 +116,9 @@ const SONDA = `(() => {
 
 const paginas = [
   ['porta', 'http://localhost:4200/?emu=1', { anonimo: true }],
+  // A porta de um grupo é outra tela: ela oferece as cápsulas que já existem nele, e é
+  // por elas que se entra. As duas precisam passar por contraste e alvo de toque.
+  ['porta do grupo', 'http://localhost:4200/?emu=1#/g/demo', { anonimo: true }],
   ['prateleira', 'http://localhost:4200/?emu=1'],
   ['máquina', 'http://localhost:4200/?emu=1#/g/demo'],
   ['gaveta', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button' }],
@@ -125,6 +128,11 @@ const paginas = [
     { clique: '.cell-open|.sheet-actions .secondary-action' }],
   // A resenha com a platina marcada é uma tela por si: ela abre duas fileiras que não
   // existem nas outras, e é o único ponto do formulário com a tinta fria da platina.
+  // O lacre do modo cego é uma tela por si: papel silencioso, fio tracejado e duas ações.
+  ['ficha lacrada', 'http://localhost:4200/?emu=1#/g/demo',
+    { clique: '.chart-cell:nth-child(4) .cell-open', cego: true, autor: 'Cecília' }],
+  ['álbum lacrado', 'http://localhost:4200/?emu=1#/g/demo/album',
+    { cego: true, autor: 'Cecília' }],
   ['ficha: a platina', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .secondary-action|.status-choice.is-platinado' }],
   ['ficha: o jogo', 'http://localhost:4200/?emu=1#/g/demo',
@@ -145,7 +153,11 @@ for (const [nome, url, opcoes = {}] of paginas) {
     await sleep(1200);
     await ev(opcoes.anonimo
       ? `localStorage.removeItem('mesa-do-mes:autor:v1')`
-      : `localStorage.setItem('mesa-do-mes:autor:v1', 'Igor Soler')`);
+      : `localStorage.setItem('mesa-do-mes:autor:v1', ${JSON.stringify(opcoes.autor ?? 'Igor Soler')})`);
+    // O modo cego troca o boletim inteiro por um lacre; sem ligá-lo, essa tela não existe.
+    await ev(opcoes.cego
+      ? `localStorage.setItem('mesa-do-mes:cego:v1', '1')`
+      : `localStorage.removeItem('mesa-do-mes:cego:v1')`);
     await send('Page.navigate', { url });
     await sleep(url.includes('/g/') ? 11000 : 5000);
     for (const seletor of (opcoes.clique ?? '').split('|').filter(Boolean)) {

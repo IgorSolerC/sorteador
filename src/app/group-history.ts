@@ -13,6 +13,8 @@ import {
 import {
   BASE_CRITERIA,
   completionShare,
+  owesReview,
+  pendingReviews,
   criterionText,
   formatHours,
   formatScore,
@@ -31,6 +33,9 @@ import {
 import { GroupSnapshot, UsageBlockedError } from './group-store';
 import { GROUP_STORE } from './firebase-app';
 import { Identity } from './identity';
+import { participantKey } from './naming';
+import { Preferences } from './preferences';
+import { renderAlbumPoster } from './album-poster';
 import { capsuleColor, capsuleInk } from './palette';
 import { rememberGroup } from './recent-groups';
 import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
@@ -96,6 +101,7 @@ export class GroupHistory {
   private readonly document = inject(DOCUMENT);
   private readonly store = inject(GROUP_STORE);
   private readonly identity = inject(Identity);
+  private readonly preferences = inject(Preferences);
 
   protected readonly author = this.identity.name;
   protected readonly authorInitials = this.identity.initials;
@@ -140,6 +146,10 @@ export class GroupHistory {
       seat: (spinIndex, memberId, seated) =>
         this.store
           .seatSpin(this.groupId(), spinIndex, memberId, seated, this.identity.name())
+          .then(() => this.reload(this.groupId())),
+      react: (spinIndex, target, emoji, reacted) =>
+        this.store
+          .reactToReview(this.groupId(), spinIndex, target, emoji, reacted, this.identity.name())
           .then(() => this.reload(this.groupId())),
     },
     (error) => explain(error),
@@ -375,6 +385,72 @@ export class GroupHistory {
       }));
   }
 
+  // --- o modo cego e o que esta pessoa deve ---
+
+  protected readonly blind = this.preferences.blind;
+
+  private readonly myKey = computed(() => participantKey(this.identity.name()));
+
+  /** Um cartão fica lacrado quando esta pessoa jogou aquele jogo e ainda não resenhou. */
+  protected sealedOf(spin: SpinRecord): boolean {
+    return this.blind() && owesReview(spin, this.myKey());
+  }
+
+  protected readonly pending = computed(() => {
+    const state = this.snapshot()?.state;
+    return state ? pendingReviews(state, this.myKey()) : [];
+  });
+
+  protected openPending(event: Event): void {
+    const spin = this.pending()[0];
+    if (!spin) return;
+    this.bench.open(spin, event);
+    this.bench.show('resenha');
+  }
+
+  // --- o álbum como imagem ---
+
+  protected readonly saving = signal(false);
+
+  /**
+   * Desenha a parede num canvas e a entrega como PNG. É o que sai do produto e vai parar
+   * no grupo do clube — por isso ela leva o nome, a conta e as cápsulas, e **nunca o
+   * link**: o link é a credencial deste grupo, e uma imagem compartilhada é pública.
+   *
+   * Sai o que está na tela: o filtro de pessoa e a ordem escolhida valem para a imagem
+   * também. Quem separou os dez melhores quer a parede dos dez melhores.
+   */
+  protected async savePoster(): Promise<void> {
+    const snap = this.snapshot();
+    if (!snap || this.saving()) return;
+    this.saving.set(true);
+    try {
+      const blob = await renderAlbumPoster({
+        groupName: snap.name,
+        sections: this.rounds(),
+        stats: this.albumStats(),
+        rounds: snap.state.round,
+        colorOf: (spin) => this.colorOf(spin),
+        inkOf: (spin) => this.inkOf(spin),
+        emojiOf: (spin) => this.emojiOf(spin),
+        averageOf: (spin) => this.averageOf(spin),
+        toneOf: (spin) => this.toneOf(spin),
+      });
+      const url = URL.createObjectURL(blob);
+      const link = this.document.createElement('a');
+      link.href = url;
+      link.download = `album-${slug(snap.name)}.png`;
+      link.click();
+      // Sem revogar, cada salvamento deixa a imagem inteira presa na memória da aba.
+      window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+      this.showNotice('O álbum foi salvo como imagem. O link do grupo não vai nela.');
+    } catch {
+      this.showNotice('Não deu para desenhar a imagem do álbum neste navegador.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
   protected askIdentityChange(): void {
     this.changeIdentity()();
   }
@@ -425,6 +501,18 @@ export class GroupHistory {
     await this.afterBench((spin) => this.bench.commitSeat(spin, change.seat, change.seated));
   }
 
+  /**
+   * Reagir não avisa nada no rodapé: o resultado já está na fileira, embaixo do dedo. Um
+   * aviso por emoji encheria a tela de recados sobre a própria mão de quem os leu.
+   */
+  protected async commitReaction(
+    change: { target: string; emoji: string; reacted: boolean },
+  ): Promise<void> {
+    const spin = this.editingSpin();
+    if (!spin) return;
+    await this.bench.commitReaction(spin, change.target, change.emoji, change.reacted);
+  }
+
   private async afterBench(operation: (spin: SpinRecord) => Promise<string | null>): Promise<void> {
     const spin = this.editingSpin();
     if (!spin) return;
@@ -468,4 +556,15 @@ function explain(error: unknown): string {
     return 'O servidor recusou a operação.';
   }
   return (error as Error)?.message ?? 'Algo deu errado ao falar com o servidor.';
+}
+
+/** O nome do arquivo: só o que um sistema de arquivos aceita sem discutir. */
+function slug(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40) || 'clube';
 }

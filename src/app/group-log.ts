@@ -74,6 +74,26 @@ export type GroupEvent =
       readonly actor?: string;
     }
   /**
+   * Uma reação a UMA resenha: quatro emoji e nada mais. Ela é o mínimo que faz um clube
+   * ler o que o outro escreveu, em vez de só publicar — e é o único lugar do produto onde
+   * uma pessoa comenta a opinião da outra sem escrever a própria.
+   *
+   * Não é um contador nem um estado: é um par (quem reagiu, com qual emoji), ligado e
+   * desligado explicitamente. Alternar por paridade — cada evento invertendo o anterior —
+   * daria contagens diferentes em duas abas que apertassem quase junto.
+   */
+  | {
+      readonly type: 'review_reacted';
+      readonly at: number;
+      readonly spinIndex: number;
+      /** A chave de quem escreveu a resenha reagida. É ela que identifica o alvo. */
+      readonly target: string;
+      readonly emoji: string;
+      readonly reacted: boolean;
+      /** Obrigatório: sem assinatura ninguém conseguiria desfazer a própria reação. */
+      readonly actor: string;
+    }
+  /**
    * Um evento que este código ainda não entende — gravado por uma versão mais nova do app.
    * Ele existe para que a contagem bata com `versaoLog`; o replay o ignora.
    */
@@ -110,6 +130,30 @@ export interface SpinNote {
 export const MAX_NOTE_TITLE = 80;
 export const MAX_NOTE_DESCRIPTION = 280;
 export const MAX_REVIEW_TEXT = 600;
+
+/**
+ * Os quatro emoji com que se reage a uma resenha, e não há um quinto.
+ *
+ * Uma caixa aberta de emoji viraria uma segunda caixa de texto — e o produto já tem uma,
+ * assinada, que é a resenha. Quatro reações cobrem o que um clube diz sobre a opinião de
+ * outra pessoa: me surpreendeu, isso aí, que tristeza, e a piada. A lista é validada
+ * também nas rules, então acrescentar um quinto é publicar as rules antes do site.
+ */
+export const REVIEW_REACTIONS = ['😯', '🔥', '😭', '😂'] as const;
+
+export type ReactionEmoji = (typeof REVIEW_REACTIONS)[number];
+
+export function isReactionEmoji(value: unknown): value is ReactionEmoji {
+  return (REVIEW_REACTIONS as readonly unknown[]).includes(value);
+}
+
+/** Uma reação de UMA pessoa a UMA resenha. Duas pessoas com o mesmo emoji são duas. */
+export interface ReviewReaction {
+  readonly emoji: ReactionEmoji;
+  /** Quem reagiu, como assinou. Não é verificado — é o mesmo crachá de sempre. */
+  readonly author: string;
+  readonly authorKey: string;
+}
 
 /** Como a pessoa terminou o jogo. Obrigatório: é ele que dá denominador à conta do álbum. */
 export type ReviewStatus = 'platinado' | 'finalizado' | 'incompleto';
@@ -247,6 +291,8 @@ export interface SpinReview {
   readonly at: number;
   /** 1 na primeira escrita; a partir de 2 a resenha foi reescrita. */
   readonly revision: number;
+  /** Quem reagiu a ela, na ordem em que cada reação foi ligada pela primeira vez. */
+  readonly reactions: readonly ReviewReaction[];
 }
 
 /**
@@ -330,6 +376,10 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
   // As correções de mesa por giro: memberId -> está na mesa. A última correção de cada
   // pessoa é a que vale, como em toda coisa reescrita neste log.
   const seating = new Map<number, Map<string, boolean>>();
+  // As reações por giro e, dentro dele, por resenha reagida. A chave de dentro é o par
+  // (quem reagiu, qual emoji), porque uma pessoa pode pôr dois emoji na mesma resenha e
+  // duas pessoas podem pôr o mesmo. A ordem do `Map` é a ordem em que cada uma acendeu.
+  const reacted = new Map<number, Map<string, Map<string, ReviewReaction>>>();
   let round = 1;
   let pool: string[] = [];
   // Quem já saiu na rodada aberta; voltar ao grupo não pode limpar isto.
@@ -489,8 +539,36 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
           text: noteText(event.text, MAX_REVIEW_TEXT),
           at: event.at,
           revision: (previous?.revision ?? 0) + 1,
+          // As reações são penduradas depois do laço: elas podem chegar antes da versão
+          // final da resenha, e reescrever a própria opinião não apaga o que os outros
+          // já disseram sobre ela.
+          reactions: [],
         });
         reviews.set(event.spinIndex, written);
+        break;
+      }
+
+      case 'review_reacted': {
+        // Reage-se à resenha de uma cápsula que caiu, e a um emoji da lista fechada. Fora
+        // disso o evento fica no log sem significar nada, como todo evento que não forma.
+        if (!Number.isInteger(event.spinIndex)) break;
+        if (event.spinIndex < 0 || event.spinIndex >= spins.length) break;
+        if (!isReactionEmoji(event.emoji)) break;
+
+        const author = normalizeName(event.actor ?? '').slice(0, 60);
+        const key = participantKey(author);
+        const target = participantKey(event.target ?? '');
+        if (!key || !target) break;
+
+        const doGiro = reacted.get(event.spinIndex) ?? new Map<string, Map<string, ReviewReaction>>();
+        const naResenha = doGiro.get(target) ?? new Map<string, ReviewReaction>();
+        const par = `${key}|${event.emoji}`;
+        // Ligar e desligar é explícito, e nunca por paridade: duas abas alternando quase
+        // junto chegariam a contagens diferentes a partir do mesmo log.
+        if (event.reacted) naResenha.set(par, { emoji: event.emoji, author, authorKey: key });
+        else naResenha.delete(par);
+        doGiro.set(target, naResenha);
+        reacted.set(event.spinIndex, doGiro);
         break;
       }
 
@@ -518,7 +596,13 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
   for (const member of members.values()) byKey.set(participantKey(member.name), member);
 
   const annotated: SpinRecord[] = spins.map((spin) => {
-    const written = [...(reviews.get(spin.index)?.values() ?? [])];
+    const doGiro = reacted.get(spin.index);
+    // Uma reação a uma resenha retirada some com ela: o alvo deixou de existir, e guardar
+    // a reação órfã faria a contagem falar de um texto que ninguém mais lê.
+    const written = [...(reviews.get(spin.index)?.values() ?? [])].map((review) => ({
+      ...review,
+      reactions: [...(doGiro?.get(review.authorKey)?.values() ?? [])],
+    }));
     return {
       ...spin,
       note: notes.get(spin.index) ?? null,
@@ -663,11 +747,23 @@ function firstGrapheme(value: string): string {
  * quando o espaço não dá para o jogo inteiro. Sem resenha, o título sozinho — a metade
  * depois do marcador só existe quando o clube deu uma nota.
  */
-export function spinSummary(spin: SpinRecord | null | undefined): string {
+export function spinSummary(spin: SpinRecord | null | undefined, sealed = false): string {
   if (!spin?.note) return '';
   const average = spinScores(spin).score;
-  return average === null ? spin.note.title : `${spin.note.title} · ${formatScore(average)}`;
+  // Lacrado, sobra o título: a nota do clube é exatamente o que o modo cego esconde de
+  // quem ainda vai dar a dela, e uma linha de resumo é onde ela apareceria primeiro.
+  return average === null || sealed
+    ? spin.note.title
+    : `${spin.note.title} · ${formatScore(average)}`;
 }
+
+/** O nome de cada reação, para quem não vê o emoji e para o rótulo acessível de cada uma. */
+export const REACTION_LABELS: Readonly<Record<ReactionEmoji, string>> = {
+  '😯': 'Surpresa',
+  '🔥': 'Fogo',
+  '😭': 'Choro',
+  '😂': 'Risada',
+};
 
 /**
  * Horas na tela. A média cai em quebrado — três pessoas com 10, 12 e 15 dão 12,33 —, e uma
@@ -776,6 +872,61 @@ export function spinScores(spin: SpinRecord | null | undefined): SpinScores {
     criteria,
     completion,
   };
+}
+
+/** Uma reação somada: o emoji, quantas pessoas o puseram, quem foram, e se eu fui. */
+export interface ReactionTally {
+  readonly emoji: ReactionEmoji;
+  readonly count: number;
+  readonly names: readonly string[];
+  readonly mine: boolean;
+}
+
+/**
+ * As reações de uma resenha, sempre na ordem fixa dos quatro emoji — e não na ordem em que
+ * chegaram. Uma fileira que se reordena sozinha faz o dedo errar o alvo entre duas visitas,
+ * e aqui a fileira também é o controle de ligar e desligar a própria reação.
+ */
+export function reactionTally(
+  review: SpinReview,
+  mineKey = '',
+): readonly ReactionTally[] {
+  return REVIEW_REACTIONS.map((emoji) => {
+    const quem = review.reactions.filter((reaction) => reaction.emoji === emoji);
+    return {
+      emoji,
+      count: quem.length,
+      names: quem.map((reaction) => reaction.author),
+      mine: !!mineKey && quem.some((reaction) => reaction.authorKey === mineKey),
+    };
+  });
+}
+
+/**
+ * Se esta pessoa deve uma resenha deste giro: ela está na mesa — jogou — e não escreveu.
+ *
+ * O denominador é a mesa, e não o globo: quem entrou no clube depois e jogou assim mesmo
+ * deve a resenha, e quem estava no globo e não apareceu não deve nada. É a mesma conta que
+ * faz a completude, vista do lado de uma pessoa só.
+ */
+export function owesReview(spin: SpinRecord, authorKey: string): boolean {
+  if (!authorKey) return false;
+  return spin.seated.some((seat) => seat.key === authorKey)
+    && !spin.reviews.some((review) => review.authorKey === authorKey);
+}
+
+/**
+ * Os jogos que esta pessoa jogou e ainda não resenhou, do mais recente para o mais antigo.
+ *
+ * O mais recente primeiro porque é dele que ela lembra: uma lista que começasse no giro de
+ * dois anos atrás pediria a resenha mais difícil de escrever primeiro. Um giro sem jogo
+ * escrito fica de fora — não há o que resenhar antes de alguém dizer o que o clube jogou.
+ */
+export function pendingReviews(state: GroupState, authorKey: string): readonly SpinRecord[] {
+  if (!authorKey) return [];
+  return state.spins
+    .filter((spin) => spin.note && owesReview(spin, authorKey))
+    .reverse();
 }
 
 /** A fatia de cada jeito de terminar, em porcentagem inteira que soma 100. */

@@ -42,7 +42,40 @@
 
     <!-- ======================= A FICHA: o boletim do clube ======================= -->
     @case ('ficha') {
-      @if (scores(); as conta) {
+      <!-- No modo cego, o boletim inteiro fica lacrado nos jogos que esta pessoa jogou e
+           ainda não resenhou: a nota do clube, as médias, a completude e o que os outros
+           escreveram. Não é um enfeite — é a única forma de a nota dela não nascer
+           ancorada na do clube. Espiar continua sendo dela, e vale só até fechar a ficha. -->
+      @if (sealed()) {
+        <div class="sheet-seal">
+          <p class="sheet-seal-mark" aria-hidden="true">🔒</p>
+          <div>
+            <h3>Lacrado até você escrever</h3>
+            <p>
+              Você jogou este e ainda não resenhou. No modo cego, a nota do clube e as
+              resenhas dos outros só aparecem depois da sua: ler o que o clube achou antes
+              de dar a sua nota move a sua nota.
+            </p>
+            <div class="sheet-seal-actions">
+              <button class="secondary-action" type="button" (click)="go('resenha')">
+                Escrever minha resenha
+              </button>
+              <button class="note-cancel" type="button" (click)="peeked.set(true)">
+                Ver assim mesmo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button class="note-cancel" type="button" (click)="go('jogo')">
+            {{ spin().note ? 'Editar o jogo' : 'Escrever o jogo' }}
+          </button>
+          <button class="sheet-aside" type="button" (click)="go('mesa')">
+            A mesa · {{ seats().length }}{{ seats().length === 1 ? ' pessoa' : ' pessoas' }}
+          </button>
+        </div>
+      } @else if (scores(); as conta) {
         @if (conta.count) {
           <div class="scoreboard">
             <div class="score-heads">
@@ -120,10 +153,11 @@
         }
       }
 
-      @if (spin().note?.description; as descricao) {
-        <p class="sheet-description">{{ descricao }}</p>
+      @if (!sealed() && spin().note?.description) {
+        <p class="sheet-description">{{ spin().note!.description }}</p>
       }
 
+      @if (!sealed()) {
       <div class="sheet-actions">
         <button class="secondary-action" type="button" (click)="go('resenha')">
           {{ mine() ? 'Editar minha resenha' : 'Escrever minha resenha' }}
@@ -137,8 +171,9 @@
           A mesa · {{ seats().length }}{{ seats().length === 1 ? ' pessoa' : ' pessoas' }}
         </button>
       </div>
+      }
 
-      @if (reviews().length) {
+      @if (!sealed() && reviews().length) {
         <h3 class="reviews-title">
           As resenhas
           <b>{{ reviews().length }}</b>
@@ -183,6 +218,30 @@
               @if (review.text) {
                 <p class="review-text">{{ review.text }}</p>
               }
+
+              <!-- Quatro emoji e nada mais. É o mínimo que faz um clube LER o que o outro
+                   escreveu em vez de só publicar, e uma caixa aberta viraria uma segunda
+                   caixa de texto — o produto já tem uma, assinada, que é a resenha. -->
+              <p class="review-reactions">
+                @for (tally of reactionsOf(review); track tally.emoji) {
+                  <button
+                    type="button"
+                    class="reaction"
+                    [class.is-on]="tally.mine"
+                    [class.is-empty]="!tally.count"
+                    [attr.aria-pressed]="tally.mine"
+                    [attr.aria-label]="reactionLabel(tally)"
+                    [attr.title]="reactionLabel(tally)"
+                    [disabled]="saving()"
+                    (click)="toggleReaction(review, tally)"
+                  >
+                    <span aria-hidden="true">{{ tally.emoji }}</span>
+                    @if (tally.count) {
+                      <b aria-hidden="true">{{ tally.count }}</b>
+                    }
+                  </button>
+                }
+              </p>
             </li>
           }
         </ul>

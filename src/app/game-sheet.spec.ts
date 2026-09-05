@@ -28,6 +28,7 @@ function review(overrides: Partial<SpinReview> = {}): SpinReview {
     text: '',
     at: Date.parse('2026-08-02T19:30:00Z'),
     revision: 1,
+    reactions: [],
     ...overrides,
   };
 }
@@ -601,6 +602,128 @@ describe('a mesa de um jogo', () => {
       seat: { key: 'breno', name: 'Breno', memberId: 'breno' },
       seated: true,
     });
+    fixture.destroy();
+  });
+});
+
+describe('reagir a uma resenha', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  const comResenha = (reactions: SpinReview['reactions'] = []) => spinRecord({
+    note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+    reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9, text: 'Grito muito.', reactions })],
+  });
+
+  it('a fileira tem os quatro emoji, sempre, mesmo sem ninguém ter reagido', async () => {
+    // Ela também É o controle: uma fileira que só mostra o que já existe não teria onde a
+    // primeira pessoa apertar.
+    const fixture = await render(comResenha());
+    const botoes = [...el(fixture).querySelectorAll('.review-reactions .reaction')];
+
+    expect(botoes.length).toBe(4);
+    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂']);
+    expect(botoes.every((b) => b.classList.contains('is-empty'))).toBe(true);
+    fixture.destroy();
+  });
+
+  it('conta quem reagiu e marca a minha, com nome para quem não vê o emoji', async () => {
+    const fixture = await render(comResenha([
+      { emoji: '🔥', author: 'Ana', authorKey: 'ana' },
+      { emoji: '🔥', author: 'Cecília', authorKey: 'cecilia' },
+    ]));
+    const fogo = el(fixture).querySelector('.reaction:nth-child(2)') as HTMLButtonElement;
+
+    expect(fogo.textContent).toContain('2');
+    expect(fogo.classList).toContain('is-on');
+    expect(fogo.getAttribute('aria-pressed')).toBe('true');
+    expect(fogo.getAttribute('aria-label')).toBe('Fogo — Ana, Cecília');
+    fixture.destroy();
+  });
+
+  it('apertar liga a minha, e apertar de novo desliga só a minha', async () => {
+    const fixture = await render(comResenha([{ emoji: '😂', author: 'Ana', authorKey: 'ana' }]));
+    const pedidos: unknown[] = [];
+    fixture.componentInstance.commitReaction.subscribe((valor) => pedidos.push(valor));
+
+    (el(fixture).querySelector('.reaction:nth-child(4)') as HTMLButtonElement).click();
+    (el(fixture).querySelector('.reaction:nth-child(1)') as HTMLButtonElement).click();
+
+    expect(pedidos).toEqual([
+      { target: 'breno', emoji: '😂', reacted: false },
+      { target: 'breno', emoji: '😯', reacted: true },
+    ]);
+    fixture.destroy();
+  });
+});
+
+describe('o modo cego', () => {
+  // A preferência é escrita direto no armazenamento porque `Preferences` só nasce quando o
+  // componente a injeta — e injetá-la antes instanciaria o TestBed antes de configurá-lo.
+  beforeEach(() => window.localStorage.setItem('mesa-do-mes:cego:v1', '1'));
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  const jogado = () => spinRecord({
+    note: { title: 'Overcooked 2', description: 'Cooperativo.', at: Date.now(), revision: 1 },
+    seated: [seat('Ana'), seat('Breno')],
+    reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9, text: 'Grito muito.' })],
+  });
+
+  it('lacra o boletim de um jogo que eu joguei e ainda não resenhei', async () => {
+    const fixture = await render(jogado());
+    const texto = el(fixture).textContent ?? '';
+
+    expect(el(fixture).querySelector('.sheet-seal')).not.toBeNull();
+    expect(el(fixture).querySelector('.scoreboard')).toBeNull();
+    // Nem a nota do clube, nem o que os outros escreveram, nem a descrição do jogo.
+    expect(texto).not.toContain('9,0');
+    expect(texto).not.toContain('Grito muito');
+    expect(el(fixture).querySelector('.sheet-description')).toBeNull();
+    // O jogo e a cápsula continuam à vista: lacrar a nota não é esconder o giro.
+    expect(texto).toContain('Overcooked 2');
+    fixture.destroy();
+  });
+
+  it('não lacra o que eu já resenhei', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+      seated: [seat('Ana')],
+      reviews: [review({ authorKey: 'ana', score: 8 })],
+    }));
+
+    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
+    expect(el(fixture).querySelector('.scoreboard')).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('não lacra um jogo de antes de eu entrar: não há nota minha para ancorar', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+      seated: [seat('Breno')],
+      reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9 })],
+    }));
+
+    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('"ver assim mesmo" abre o lacre, e ele vale só nesta ficha', async () => {
+    const fixture = await render(jogado());
+
+    (el(fixture).querySelector('.sheet-seal-actions .note-cancel') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
+    expect(el(fixture).textContent).toContain('Grito muito');
+    fixture.destroy();
+  });
+
+  it('desligado, nada lacra', async () => {
+    window.localStorage.removeItem('mesa-do-mes:cego:v1');
+    const fixture = await render(jogado());
+    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
     fixture.destroy();
   });
 });

@@ -16,7 +16,11 @@ import {
   MAX_NOTE_TITLE,
   MAX_REVIEW_TEXT,
   MAX_SCORE,
+  owesReview,
   PLATINUM_CRITERIA,
+  REACTION_LABELS,
+  ReactionTally,
+  reactionTally,
   REVIEW_CRITERIA,
   REVIEW_CRITERION_LABELS,
   REVIEW_STATUS_LABELS,
@@ -32,6 +36,7 @@ import {
   spinScores,
 } from './group-log';
 import { NoteDraft, ReviewDraft, SheetFace } from './game-bench';
+import { Preferences } from './preferences';
 import { trapFocusWithin } from './focus-trap';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 import { hashString, initialsOf, participantKey } from './naming';
@@ -72,9 +77,12 @@ export class GameSheet {
   readonly commitReview = output<ReviewDraft>();
   readonly removeReview = output<void>();
   readonly commitSeat = output<{ seat: SpinSeat; seated: boolean }>();
+  /** Liga ou desliga a reação desta pessoa a UMA resenha. */
+  readonly commitReaction = output<{ target: string; emoji: string; reacted: boolean }>();
   readonly dismiss = output<void>();
 
   private readonly document = inject(DOCUMENT);
+  private readonly preferences = inject(Preferences);
 
   protected readonly MAX_NOTE_TITLE = MAX_NOTE_TITLE;
   protected readonly MAX_NOTE_DESCRIPTION = MAX_NOTE_DESCRIPTION;
@@ -120,6 +128,49 @@ export class GameSheet {
   );
 
   protected readonly reviews = computed(() => this.spin().reviews);
+
+  // --- o modo cego ---
+
+  /** A chave de quem está com a ficha aberta: a mesma que assina as resenhas dela. */
+  private readonly myKey = computed(() => participantKey(this.author()));
+
+  /** Espiar vale só enquanto esta ficha está aberta; ela fecha, o lacre volta. */
+  protected readonly peeked = signal(false);
+
+  /**
+   * Se o boletim fica lacrado: só no modo cego, e só num jogo que esta pessoa jogou e
+   * ainda não resenhou. Ler "9,2" antes de dar a própria nota move a própria nota — e um
+   * jogo de antes de ela entrar no clube não tem nota dela para ancorar, então não lacra.
+   */
+  protected readonly sealed = computed(() =>
+    this.preferences.blind() && !this.peeked() && owesReview(this.spin(), this.myKey()),
+  );
+
+  // --- as reações ---
+
+  protected readonly REACTION_LABELS = REACTION_LABELS;
+
+  /** As quatro reações de uma resenha, sempre na mesma ordem, e quais são minhas. */
+  protected reactionsOf(review: SpinReview): readonly ReactionTally[] {
+    return reactionTally(review, this.myKey());
+  }
+
+  /** Uma reação é um interruptor: apertar de novo tira a minha e deixa as dos outros. */
+  protected toggleReaction(review: SpinReview, tally: ReactionTally): void {
+    if (this.saving()) return;
+    this.commitReaction.emit({
+      target: review.authorKey,
+      emoji: tally.emoji,
+      reacted: !tally.mine,
+    });
+  }
+
+  /** "Fogo · 2 · Breno e Cecília" — o que um leitor de tela anuncia no lugar do emoji. */
+  protected reactionLabel(tally: ReactionTally): string {
+    const nome = this.REACTION_LABELS[tally.emoji];
+    if (!tally.count) return `${nome} — ninguém ainda`;
+    return `${nome} — ${tally.names.join(', ')}`;
+  }
 
   // --- a mesa ---
 
@@ -192,6 +243,9 @@ export class GameSheet {
       this.text.set(mine?.text ?? '');
       this.hours.set(mine?.hours ?? null);
       this.criteria.set({ ...(mine?.criteria ?? {}) });
+      // Espiar não atravessa de uma cápsula para outra: abrir a ficha de outro jogo
+      // recomeça lacrada, que é o ponto inteiro do modo cego.
+      this.peeked.set(false);
     });
 
     effect(() => {

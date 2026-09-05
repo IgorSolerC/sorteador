@@ -34,6 +34,13 @@ export class App {
   protected readonly albumGroupId = computed(() => readAlbumGroupId(this.hash()));
   protected readonly creatingGroup = computed(() => isNewGroupRoute(this.hash()));
 
+  /**
+   * O grupo que está sendo aberto, seja pela máquina ou pelo álbum. A porta usa isto para
+   * oferecer as cápsulas que já existem nele em vez de pedir um nome no escuro; fora de um
+   * grupo — a prateleira, a oficina — não há lista nenhuma a oferecer, e ela fica vazia.
+   */
+  protected readonly openGroupId = computed(() => this.syncedGroupId() || this.albumGroupId());
+
   /** Quem já se identificou passa direto; quem não, vê a porta e nada mais. */
   protected readonly known = this.identity.known;
   protected readonly changingIdentity = signal(false);

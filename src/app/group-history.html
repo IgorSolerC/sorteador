@@ -71,8 +71,33 @@
     </dl>
   </section>
 
+  @if (spins().length) {
+    <!-- A parede sai como imagem para ir ao grupo do clube. Vai o que está na tela: o
+         filtro de pessoa e a ordem escolhida valem para a imagem também. O link do grupo
+         NÃO vai — ele é a credencial, e uma imagem compartilhada é pública para sempre. -->
+    <p class="album-save">
+      <button type="button" class="plate-action" [disabled]="saving()" (click)="savePoster()">
+        {{ saving() ? 'Desenhando…' : 'Salvar como imagem' }}
+      </button>
+      <span>Uma folha com as cápsulas desta parede. O link do grupo não vai nela.</span>
+    </p>
+  }
+
   @if (error()) {
     <p class="synced-error album-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (pending().length; as devendo) {
+    <p class="owed-note album-owed">
+      <span>
+        Você jogou <strong>{{ devendo }}</strong>
+        {{ devendo === 1 ? 'jogo que ainda não resenhou' : 'jogos que ainda não resenhou' }}
+        — {{ pending()[0].note?.title }}{{ devendo > 1 ? ' e mais ' + (devendo - 1) : '' }}.
+      </span>
+      <button type="button" class="owed-action" (click)="openPending($event)">
+        {{ devendo === 1 ? 'Escrever a minha' : 'Começar pela mais nova' }}
+      </button>
+    </p>
   }
 
   @if (winners().length) {
@@ -177,7 +202,15 @@
                   <span class="album-title album-title-blank">Sem jogo escrito</span>
                 }
 
-                @if (scoresOf(spin); as conta) {
+                @if (sealedOf(spin)) {
+                  <!-- Lacrado: a nota do clube é exatamente o que o modo cego esconde de
+                       quem ainda vai dar a dela, e o cartão é onde ela apareceria antes
+                       de qualquer clique. O jogo e a pessoa continuam à vista. -->
+                  <span class="album-sealed">
+                    <span aria-hidden="true">🔒</span>
+                    Lacrado até você resenhar
+                  </span>
+                } @else if (scoresOf(spin); as conta) {
                   @if (conta.count) {
                     <span [class]="'album-score is-' + toneOf(spin)">
                       <b>{{ averageOf(spin) }}</b>
@@ -232,8 +265,8 @@
                   }
                 }
 
-                @if (spin.note?.description; as descricao) {
-                  <span class="album-description">{{ descricao }}</span>
+                @if (!sealedOf(spin) && spin.note?.description) {
+                  <span class="album-description">{{ spin.note!.description }}</span>
                 }
 
                 @if (!spin.note) {
@@ -302,6 +335,7 @@
     (commitReview)="commitReview($event)"
     (removeReview)="removeReview()"
     (commitSeat)="commitSeat($event)"
+    (commitReaction)="commitReaction($event)"
     (dismiss)="closeNote()"
   />
 }

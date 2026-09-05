@@ -3,6 +3,7 @@
        por baixo dela: um giro anônimo já não pode acontecer nem por engano. -->
   <app-identity-gate
     [changing]="known()"
+    [groupId]="openGroupId()"
     (done)="closeIdentity()"
     (cancelled)="closeIdentity()"
   />

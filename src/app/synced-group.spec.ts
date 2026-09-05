@@ -56,6 +56,15 @@ class FakeStore {
     return this;
   }
 
+  /** Um jogo escrito num giro: sem ele não há o que resenhar, e nada é cobrado. */
+  label(spinIndex: number, title: string) {
+    this.events.push({
+      type: 'spin_annotated', at: (this.clock += 1000), spinIndex, title, description: '',
+      actor: 'Bia',
+    });
+    return this;
+  }
+
   async load() {
     this.calls.push('load');
     if (this.failWith) throw this.failWith;
@@ -1014,6 +1023,73 @@ describe('o confete da entrega', () => {
 
     expect(app.celebration()).toBe(1);
     expect(app.winnerEmoji()).toBe('🎯');
+    fixture.destroy();
+  });
+});
+
+describe('o que esta pessoa deve ao clube, na máquina', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('avisa quantos jogos ela jogou e ainda não resenhou, e diz o mais novo', async () => {
+    // A conta é sobre quem JOGOU: quem está na mesa e não escreveu deve a resenha. É o
+    // mesmo dado que a completude usa, dito do lado de uma pessoa só.
+    const store = new FakeStore().seed(['Igor', 'Breno'], 2).label(0, 'Overcooked 2')
+      .label(1, 'Hollow Knight');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const recado = fixture.nativeElement.querySelector('.owed-note') as HTMLElement;
+    expect(recado.textContent).toContain('2');
+    expect(recado.textContent).toContain('Hollow Knight');
+    fixture.destroy();
+  });
+
+  it('quem não está no grupo não é cobrado de nada', async () => {
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1).label(0, 'Overcooked 2');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Visitante');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.owed-note')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('um giro sem jogo escrito não vira cobrança', async () => {
+    const fixture = await render(new FakeStore().seed(['Igor', 'Breno'], 1));
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.owed-note')).toBeNull();
+    fixture.destroy();
+  });
+});
+
+describe('o som da máquina', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('começa desligado, e o botão diz em qual estado está', async () => {
+    // Uma página que faz barulho sem ser convidada é a coisa mais odiada da web.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
+    const botao = fixture.nativeElement.querySelector('.sound-toggle') as HTMLButtonElement;
+
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
+    expect(botao.getAttribute('aria-label')).toContain('Ligar');
+
+    botao.click();
+    fixture.detectChanges();
+
+    expect(botao.getAttribute('aria-pressed')).toBe('true');
+    expect(botao.getAttribute('aria-label')).toContain('Desligar');
+    expect(window.localStorage.getItem('mesa-do-mes:som:v1')).toBe('1');
     fixture.destroy();
   });
 });

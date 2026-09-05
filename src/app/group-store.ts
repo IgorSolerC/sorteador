@@ -23,6 +23,7 @@ import {
   MAX_REVIEW_TEXT,
   MAX_SCORE,
   isPlatinumCriterion,
+  isReactionEmoji,
   REVIEW_CRITERIA,
   REVIEW_STATUSES,
   ReviewCriterion,
@@ -320,6 +321,47 @@ export class GroupStore {
     );
   }
 
+  /**
+   * Liga ou desliga a reação DESTA pessoa a UMA resenha. Como tudo aqui, desligar também é
+   * gravar: o log guarda que ela reagiu e que depois tirou, e o replay soma o que sobrou.
+   *
+   * O alvo é a chave de quem escreveu a resenha, e não um `memberId`: quem assina uma
+   * resenha não precisa ser do grupo, e a chave é o que casa as duas pontas.
+   */
+  reactToReview(
+    groupId: string,
+    spinIndex: number,
+    target: string,
+    emoji: string,
+    reacted: boolean,
+    actor: string,
+  ): Promise<void> {
+    if (!Number.isInteger(spinIndex) || spinIndex < 0) {
+      return Promise.reject(new Error(`Índice de giro inválido: ${spinIndex}.`));
+    }
+    if (!actor.trim()) {
+      return Promise.reject(new Error('Uma reação precisa de assinatura.'));
+    }
+    if (!target.trim()) {
+      return Promise.reject(new Error('Uma reação precisa de uma resenha.'));
+    }
+    if (!isReactionEmoji(emoji)) {
+      return Promise.reject(new Error(`Reação fora da lista: ${emoji}.`));
+    }
+    return this.append(
+      groupId,
+      {
+        tipo: 'review_reacted',
+        giro: spinIndex,
+        alvo: target.slice(0, 60),
+        emoji,
+        reagiu: reacted === true,
+      },
+      {},
+      actor,
+    );
+  }
+
   static nextSpinAllowedAt(snapshot: GroupSnapshot): number | null {
     return snapshot.lastSpinAt === null ? null : snapshot.lastSpinAt + SPIN_COOLDOWN_MS;
   }
@@ -503,6 +545,20 @@ function toEvent(data: Record<string, unknown>): GroupEvent | null {
             spinIndex: data['giro'],
             memberId: data['memberId'],
             seated: data['mesa'] === true,
+            actor,
+          }
+        : null;
+    case 'review_reacted':
+      // Sem assinatura, sem alvo ou sem emoji não há reação nenhuma a formar — e a rule do
+      // servidor já exige os três, então isto é a mesma guarda vista do lado do cliente.
+      return typeof data['giro'] === 'number' && actor && typeof data['alvo'] === 'string'
+        ? {
+            type: 'review_reacted',
+            at,
+            spinIndex: data['giro'],
+            target: data['alvo'],
+            emoji: typeof data['emoji'] === 'string' ? data['emoji'] : '',
+            reacted: data['reagiu'] === true,
             actor,
           }
         : null;

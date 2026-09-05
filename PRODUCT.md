@@ -64,6 +64,18 @@ O que continua sendo contrato:
   0 a 10, e a **dificuldade de platinar**, nos mesmos cinco degraus com nome da dificuldade
   do jogo. As duas são opcionais como as outras escalas, e pendem do status: quem reescreve a
   resenha como finalizada deixa de tê-las, na tela e na conta.
+- **Oferecer as cápsulas do grupo na porta**, quando alguém abre o link de um grupo sem
+  crachá: tocar numa delas entra com o nome exato do globo. Digitar continua existindo, como
+  caminho secundário, para quem ainda não está na lista.
+- **Reagir à resenha de outra pessoa** com um de quatro emoji — 😯 🔥 😭 😂 — e desfazer a
+  própria reação. A lista é fechada; um campo livre viraria uma segunda caixa de texto.
+- **Avisar o que esta pessoa deve**: quantos jogos ela jogou (está na mesa) e ainda não
+  resenhou, com o atalho para escrever o mais recente.
+- **Modo cego**, opcional e por aparelho: a nota do clube fica lacrada nos jogos que esta
+  pessoa jogou e ainda não resenhou, para que a nota dela não nasça ancorada na do clube.
+- **Som da máquina**, opcional e por aparelho, sintetizado: só toca quando houve um gesto.
+- **Salvar o álbum como imagem**, com o que está na tela. **O link do grupo não vai nela**:
+  ele é a credencial, e uma imagem compartilhada é pública para sempre.
 - Mostrar a conta do clube sobre um jogo — nota média, média de cada critério, tempo médio e
   a porcentagem de platinado, finalizado e incompleto. **Nada disso é gravado**: é recontado
   a partir das resenhas toda vez que a página abre. As duas médias da platina aparecem na

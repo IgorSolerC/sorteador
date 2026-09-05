@@ -113,6 +113,20 @@ for (const pessoa of PESSOAS) {
 }
 
 /**
+ * Reações às resenhas. O grupo semeado precisa mostrar a fileira nos três estados que ela
+ * tem: uma resenha com várias, uma com uma só, e a maioria sem nenhuma — a fileira aparece
+ * inteira de todo jeito, porque é ela que também serve de controle.
+ */
+const REACOES = [
+  { giro: 0, autor: 'Ana', alvo: 'cecília', emoji: '🔥' },
+  { giro: 0, autor: 'Davi', alvo: 'cecília', emoji: '😯' },
+  { giro: 1, autor: 'Breno', alvo: 'ana', emoji: '🔥' },
+  { giro: 1, autor: 'Cecília', alvo: 'ana', emoji: '😂' },
+  { giro: 1, autor: 'Elisa', alvo: 'ana', emoji: '🔥' },
+  { giro: 2, autor: 'Ana', alvo: 'davi', emoji: '😭' },
+];
+
+/**
  * Correções de mesa. O grupo semeado precisa de pelo menos uma, porque "X resenhas de Y"
  * só se lê direito quando Y não é sempre o tamanho do globo: aqui Fátima entrou no clube
  * e não foi à noite do primeiro jogo.
@@ -124,6 +138,12 @@ for (let i = 0; i < 5; i += 1) {
   await grava({ tipo: 'spin', autor: 'Igor' }, 24 * 4);
   ultimoGiro = log[log.length - 1].em;
   if (ETIQUETAS[i]) await grava({ tipo: 'spin_annotated', giro: i, autor: 'Bia', ...ETIQUETAS[i] }, 2);
+  for (const reacao of REACOES.filter((r) => r.giro === i)) {
+    await grava({
+      tipo: 'review_reacted', giro: i, autor: reacao.autor, alvo: reacao.alvo,
+      emoji: reacao.emoji, reagiu: true,
+    }, 0.2);
+  }
   for (const resenha of RESENHAS[i] ?? []) {
     const { autor, texto, ...notas } = resenha;
     await grava({ tipo: 'spin_reviewed', giro: i, autor, ...notas, ...(texto ? { texto } : {}) }, 0.4);
@@ -173,6 +193,11 @@ function paraEvento(d) {
       return {
         type: 'spin_seated', at, spinIndex: d.giro, memberId: d.memberId,
         seated: d.mesa === true, actor: d.autor,
+      };
+    case 'review_reacted':
+      return {
+        type: 'review_reacted', at, spinIndex: d.giro, actor: d.autor,
+        target: d.alvo, emoji: d.emoji, reacted: d.reagiu === true,
       };
     case 'spin_reviewed':
       return {

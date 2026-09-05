@@ -147,6 +147,34 @@ await sleep(900);
 check('fechar a gaveta devolve a máquina',
   (await evaluate(`!document.querySelector('.roster-card') && location.hash`)) === `#/g/${criado}`);
 
+// --- 2b. a porta de um grupo oferece as cápsulas que ele já tem ---
+
+// Um crachá diferente do nome do globo cria uma segunda pessoa em silêncio, e o clube só
+// descobre meses depois, com o álbum dividido ao meio. Aqui a porta é aberta SEM crachá
+// nenhum, sobre um grupo que já tem gente: ela tem de oferecer quem já está lá.
+await evaluate(`localStorage.removeItem('mesa-do-mes:autor:v1'); true`);
+await send('Page.reload');
+await sleep(4000 * slow);
+
+const portaDoGrupo = await evaluate(`(() => ({
+  capsulas: [...document.querySelectorAll('.gate-person')].map((b) => b.innerText.trim()),
+  campo: !!document.querySelector('#gate-name'),
+  saida: !!document.querySelector('.gate-otherwise'),
+}))()`);
+check('a porta de um grupo oferece as cápsulas dele',
+  portaDoGrupo.capsulas.length === 1 && portaDoGrupo.capsulas[0].includes('Teste de Fluxos'),
+  JSON.stringify(portaDoGrupo));
+check('com lista, digitar vira o caminho de baixo',
+  portaDoGrupo.campo === false && portaDoGrupo.saida === true, JSON.stringify(portaDoGrupo));
+
+await evaluate(`document.querySelector('.gate-person').click(); true`);
+await sleep(3000 * slow);
+check('tocar numa cápsula entra com o nome exato do globo',
+  (await evaluate(`localStorage.getItem('mesa-do-mes:autor:v1')`)) === 'Teste de Fluxos',
+  await evaluate(`localStorage.getItem('mesa-do-mes:autor:v1')`));
+check('entrar pela cápsula devolve a máquina do mesmo grupo',
+  (await evaluate(`location.hash`)) === `#/g/${criado}`);
+
 // --- 3. grupo inexistente ---
 await go('/#/g/naoexisteesse123', 8000);
 const inexistente = await evaluate(`(() => ({

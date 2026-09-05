@@ -120,13 +120,13 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 316 unitários e de componente
-npm run test:rules          # 108 rules no emulador
-npm run test:store          # 45 integrações da camada de dados
+npm test -- --watch=false   # 352 unitários e de componente
+npm run test:rules          # 118 rules no emulador
+npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
-npm run test:a11y           # 12 telas x 3 larguras, 0 achados
-npm run test:etiqueta       # 80 verificações de ponta a ponta num navegador real
-node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
+npm run test:a11y           # 15 telas x 3 larguras, 0 achados
+npm run test:etiqueta       # 86 verificações de ponta a ponta num navegador real
+node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
 npm run build -- --base-href=./
 ```
 
@@ -180,6 +180,12 @@ dela: a diversão da platina e a dificuldade de platinar. As duas ficam fora do 
 cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma linha, o jogo vira
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
 gravada em campo nenhum.
+
+A resenha de cada um pode receber **reações** dos outros — 😯 🔥 😭 😂, e nada além dessas
+quatro. Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
+atalho para a mais recente. E quem quiser pode ligar o **modo cego**, que lacra a nota do
+clube justamente nos jogos que a pessoa ainda vai julgar: ler `9,2` antes de dar a própria
+nota move a própria nota.
 
 Editar é gravar outro evento: o replay faz o último valer, e os anteriores continuam no
 registro com quem escreveu cada um. Nenhum dos três altera o vencedor, e **corrigir a mesa
@@ -250,6 +256,8 @@ git push origin main   # o workflow publica o site
 - **As máquinas que você abriu**, para voltar a elas sem procurar o link. A lista não dá
   acesso a nada: quem abre uma máquina é o link.
 - **Uma cópia do log** de cada grupo, para que abrir custe 1 leitura em vez de N.
+- **Duas preferências:** se a máquina faz som, e se o modo cego está ligado. As duas começam
+  desligadas. O som se liga na própria máquina; o modo cego, no crachá.
 
 Nada disso sai do aparelho por outro caminho, e o servidor não sabe que essas listas
 existem.

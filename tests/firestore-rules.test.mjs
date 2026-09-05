@@ -653,6 +653,94 @@ await it('recusa retirada que ainda carrega nota: ela não retira nada', async (
   }, { versaoAtual: 2 }));
 });
 
+// --- reagir a uma resenha ---
+
+const reacao = (extra = {}) => ({
+  tipo: 'review_reacted',
+  em: serverTimestamp(),
+  giro: 0,
+  autor: 'Breno',
+  alvo: 'ana',
+  emoji: '🔥',
+  reagiu: true,
+  ...extra,
+});
+
+await it('aceita uma reação e a retirada dela', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), reacao(), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), reacao({ reagiu: false }), { versaoAtual: 2 }));
+});
+
+await it('aceita os quatro emoji da lista, e só eles', async () => {
+  for (const emoji of ['😯', '🔥', '😭', '😂']) {
+    await comGrupo({ versaoLog: 2 });
+    await assertSucceeds(gravaEvento(alice(), reacao({ emoji }), { versaoAtual: 2 }));
+  }
+});
+
+await it('recusa emoji fora da lista', async () => {
+  // A lista fechada é o que impede o campo virar uma segunda caixa de texto — o produto
+  // já tem uma, assinada, que é a resenha.
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ emoji: '💩' }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ emoji: 'x' }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ emoji: '' }), { versaoAtual: 2 }));
+});
+
+await it('recusa reação sem assinatura: ninguém desfaria a própria', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { autor, ...semAutor } = reacao();
+  await assertFails(gravaEvento(alice(), semAutor, { versaoAtual: 2 }));
+});
+
+await it('recusa reação sem alvo, e alvo longo demais', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { alvo, ...semAlvo } = reacao();
+  await assertFails(gravaEvento(alice(), semAlvo, { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ alvo: 'x'.repeat(61) }), { versaoAtual: 2 }));
+});
+
+await it('recusa reação com o estado ausente ou de outro tipo', async () => {
+  await comGrupo({ versaoLog: 2 });
+  const { reagiu, ...semEstado } = reacao();
+  await assertFails(gravaEvento(alice(), semEstado, { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ reagiu: 'sim' }), { versaoAtual: 2 }));
+});
+
+await it('recusa reação a um giro que ainda não aconteceu', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ giro: 9 }), { versaoAtual: 2 }));
+});
+
+await it('recusa que uma reação leve campo de outro evento de carona', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ nota: 8 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ cor: 3 }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), reacao({ mesa: true }), { versaoAtual: 2 }));
+});
+
+await it('recusa alvo e estado de reação em evento que não é reação', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), alvo: 'ana' }, { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), { ...entrada('Ana'), reagiu: true }, { versaoAtual: 2 }));
+});
+
+await it('reagir não empurra a espera do próximo giro', async () => {
+  await comGrupo({ versaoLog: 2, ultimoGiroEm: new Date(Date.now() - 60_000) });
+  await assertFails(gravaEvento(alice(), reacao(), {
+    versaoAtual: 2, grupoExtra: { ultimoGiroEm: serverTimestamp() },
+  }));
+});
+
 await it('recusa campo de resenha num evento que não é resenha', async () => {
   await comGrupo({ versaoLog: 2 });
   await assertFails(

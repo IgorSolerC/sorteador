@@ -18,6 +18,9 @@ import {
   ReviewStatus,
   scoreTone,
   spinScores,
+  reactionTally,
+  pendingReviews,
+  owesReview,
   spinsOfRound,
   spinSummary,
 } from './group-log';
@@ -662,6 +665,153 @@ function review(
   };
 }
 
+function reaction(
+  spinIndex: number,
+  actor: string,
+  target: string,
+  emoji: string,
+  reacted = true,
+): GroupEvent {
+  return { type: 'review_reacted', at: at(), spinIndex, actor, target, emoji, reacted };
+}
+
+describe('reagir a uma resenha', () => {
+  const jogo = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+    review(0, 'Ana', { score: 9, text: 'A fase do barco é uma prova de amizade.' }),
+  ];
+
+  it('a reação pendura na resenha de quem escreveu, e diz quem reagiu', () => {
+    const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', '🔥')]);
+
+    expect(state.spins[0].reviews[0].reactions).toEqual([
+      { emoji: '🔥', author: 'Breno', authorKey: 'breno' },
+    ]);
+  });
+
+  it('duas pessoas com o mesmo emoji são duas, e uma com dois emoji são duas', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      reaction(0, 'Breno', 'ana', '🔥'),
+      reaction(0, 'Cecília', 'ana', '🔥'),
+      reaction(0, 'Breno', 'ana', '😂'),
+    ]);
+
+    const soma = reactionTally(state.spins[0].reviews[0], 'breno');
+    expect(soma.find((linha) => linha.emoji === '🔥')).toEqual({
+      emoji: '🔥', count: 2, names: ['Breno', 'Cecília'], mine: true,
+    });
+    expect(soma.find((linha) => linha.emoji === '😂')?.count).toBe(1);
+    expect(soma.find((linha) => linha.emoji === '😭')).toEqual({
+      emoji: '😭', count: 0, names: [], mine: false,
+    });
+  });
+
+  it('desligar é gravar, e não contar de novo', () => {
+    // Alternar por paridade daria contagens diferentes a partir do mesmo log quando duas
+    // abas apertassem quase junto. Aqui o evento diz o estado, e o último é o que vale.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      reaction(0, 'Breno', 'ana', '🔥'),
+      reaction(0, 'Breno', 'ana', '🔥', false),
+      reaction(0, 'Breno', 'ana', '🔥', false),
+    ]);
+
+    expect(state.spins[0].reviews[0].reactions).toEqual([]);
+  });
+
+  it('a fileira sai sempre na mesma ordem, e não na ordem em que chegaram', () => {
+    // Uma fileira que se reordena sozinha faz o dedo errar o alvo entre duas visitas — e
+    // ela também é o controle de ligar e desligar a própria reação.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      reaction(0, 'Breno', 'ana', '😂'),
+      reaction(0, 'Cecília', 'ana', '😯'),
+    ]);
+
+    expect(reactionTally(state.spins[0].reviews[0]).map((linha) => linha.emoji))
+      .toEqual(['😯', '🔥', '😭', '😂']);
+  });
+
+  it('emoji fora da lista não vira reação nenhuma', () => {
+    const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', '💩')]);
+    expect(state.spins[0].reviews[0].reactions).toEqual([]);
+  });
+
+  it('a reação a uma resenha retirada some com ela', () => {
+    // O alvo deixou de existir. Guardar a reação órfã faria a contagem falar de um texto
+    // que ninguém mais lê — e ela volta sozinha se a pessoa reescrever a resenha.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      reaction(0, 'Breno', 'ana', '🔥'),
+      review(0, 'Ana', { withdrawn: true }),
+    ]);
+
+    expect(state.spins[0].reviews).toEqual([]);
+  });
+
+  it('reescrever a própria resenha não apaga o que os outros disseram dela', () => {
+    const state = replay(GRUPO, [
+      ...jogo(),
+      reaction(0, 'Breno', 'ana', '🔥'),
+      review(0, 'Ana', { score: 7, text: 'Baixei a nota depois de rejogar.' }),
+    ]);
+
+    expect(state.spins[0].reviews[0].revision).toBe(2);
+    expect(state.spins[0].reviews[0].reactions).toHaveLength(1);
+  });
+
+  it('reagir a um giro que não existe não forma nada', () => {
+    const state = replay(GRUPO, [...jogo(), reaction(9, 'Breno', 'ana', '🔥')]);
+    expect(state.spins[0].reviews[0].reactions).toEqual([]);
+  });
+});
+
+describe('o que esta pessoa ainda deve resenhar', () => {
+  const clube = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 1, title: 'Hollow Knight', description: '' },
+  ];
+
+  it('quem está na mesa e não escreveu deve a resenha', () => {
+    const state = replay(GRUPO, [...clube(), review(0, 'Ana', { score: 8 })]);
+
+    expect(pendingReviews(state, 'ana').map((spin) => spin.note?.title)).toEqual(['Hollow Knight']);
+    expect(pendingReviews(state, 'breno').map((spin) => spin.note?.title))
+      .toEqual(['Hollow Knight', 'Overcooked 2']);
+  });
+
+  it('a lista começa no giro mais recente, que é o que a pessoa lembra', () => {
+    const state = replay(GRUPO, clube());
+    expect(pendingReviews(state, 'ana')[0].index).toBe(1);
+  });
+
+  it('um giro sem jogo escrito não é cobrado de ninguém', () => {
+    // Não há o que resenhar antes de alguém dizer o que o clube jogou.
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), spin()]);
+    expect(pendingReviews(state, 'ana')).toEqual([]);
+  });
+
+  it('quem não está na mesa não deve nada', () => {
+    const semAna = [
+      ...clube(),
+      { type: 'spin_seated', at: at(), spinIndex: 0, memberId: memberId(GRUPO, 'Ana'), seated: false } as GroupEvent,
+      { type: 'spin_seated', at: at(), spinIndex: 1, memberId: memberId(GRUPO, 'Ana'), seated: false } as GroupEvent,
+    ];
+    expect(pendingReviews(replay(GRUPO, semAna), 'ana')).toEqual([]);
+  });
+
+  it('sem crachá não se cobra resenha de ninguém', () => {
+    expect(pendingReviews(replay(GRUPO, clube()), '')).toEqual([]);
+    expect(owesReview(replay(GRUPO, clube()).spins[0], '')).toBe(false);
+  });
+});
+
 describe('a resenha de cada pessoa', () => {
   const jogo = (): GroupEvent[] => [
     ...seed(['Ana', 'Breno', 'Cecília']),
@@ -692,6 +842,7 @@ describe('a resenha de cada pessoa', () => {
         text: 'Melhor coop que já jogamos.',
         at: expect.any(Number),
         revision: 1,
+        reactions: [],
       },
     ]);
   });

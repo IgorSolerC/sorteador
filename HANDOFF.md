@@ -69,7 +69,11 @@ src/app/
   app.ts/html          casca: lê a rota do hash, guarda a porta
   identity.ts          quem está mexendo (signal + localStorage). Serviço, não componente:
                        máquina, álbum e bancadas precisam do MESMO nome
-  identity-gate.*      A PORTA. Ninguém entra sem se identificar
+  identity-gate.*      A PORTA. Ninguém entra sem se identificar — e, num grupo, ela oferece
+                       as cápsulas que já existem nele (ROSTER_LOOKUP, importação dinâmica)
+  preferences.ts       as duas chaves deste aparelho: som e modo cego
+  machine-sound.ts     a voz da máquina, sintetizada. Nada toca sem gesto
+  album-poster.ts      o álbum desenhado em canvas e salvo como PNG. Sem o link, nunca
   home.*               A PRATELEIRA (raiz)
   recent-groups.ts     lista local de grupos visitados — não dá acesso a nada
   create-group.*       a oficina (#/novo)
@@ -105,7 +109,7 @@ grupos/{id}
 
 grupos/{id}/eventos/{eventoId}                ← append-only
   tipo: member_added | member_removed | member_styled | spin
-      | spin_annotated | spin_reviewed | spin_seated
+      | spin_annotated | spin_reviewed | spin_seated | review_reacted
   em: timestamp                               ← obrigatoriamente request.time
   nome? memberId? cor? emoji?                 ← membros
   giro? titulo? descricao?                    ← o jogo do giro
@@ -114,6 +118,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
   jogabilidade? dificuldade?                  ← critérios, inteiros 0..10, opcionais
   dificuldadePlatina? diversaoPlatina?        ← idem, e só com status platinado
   memberId? mesa?                             ← a mesa: quem jogou aquele jogo
+  alvo? reagiu? emoji?                        ← review_reacted: a reação a UMA resenha
   autor?                                      ← não verificado, é um crachá
                                                 (obrigatório só em spin_reviewed)
 ```
@@ -121,6 +126,11 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`subtitulo` saiu em 09/2026 e a rule ainda o ACEITA.** Uma aba aberta no minuto do deploy
   ainda o manda. O replay não o lê. Não apague os eventos antigos: a contagem local nunca
   fecharia com `versaoLog`.
+- **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
+  alternando quase junto chegariam a contagens diferentes a partir do mesmo log. O `alvo` é
+  a **chave de participante** de quem escreveu a resenha, e não um `memberId` — quem assina
+  uma resenha não precisa ser do grupo. Os quatro emoji são validados **na rule**; um quinto
+  exige publicar as rules antes do site.
 - **Os dois critérios da platina pendem do status.** `dificuldadePlatina` e `diversaoPlatina`
   só existem numa resenha `platinado`: a rule os recusa em qualquer outro status e o replay
   os descarta se aparecerem. Isso é a outra ponta da invariante 7 — recusar chave nova não
@@ -144,13 +154,13 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 316 unitários e de componente
-npm run test:rules          # 108 rules no emulador (sobe o próprio, sem rede)
-npm run test:store          # 45 de integração da camada de dados
+npm test -- --watch=false   # 352 unitários e de componente
+npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
+npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
-npm run test:a11y           # 12 telas x 3 larguras — precisa de npm start + emulador
-npm run test:etiqueta       # 80 de ponta a ponta num navegador real — idem
-node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
+npm run test:a11y           # 15 telas x 3 larguras — precisa de npm start + emulador
+npm run test:etiqueta       # 86 de ponta a ponta num navegador real — idem
+node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
 
@@ -221,6 +231,13 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
   carimbo por documento, e a primeira visita de um aparelho a um grupo com mais de 40 eventos
   — uma `getDocs` só — parava a máquina até a virada do dia UTC. O grupo semeado tem 33: o
   defeito estava a oito eventos de aparecer em todo teste de navegador.
+- **`[hidden]` perde para qualquer `display` declarado pelo autor.** Esconder o campo da
+  porta com `[hidden]` não escondia nada: `.gate-field { display: block }` ganha da regra do
+  navegador. Dentro de um `@if` o elemento simplesmente não existe, que é o que se queria.
+- **Um `<button>` não herda a tinta da página.** A fileira de reações nasceu com o branco do
+  esmalte sobre papel — 1.21:1. O emoji é glifo colorido e não reclama, mas a contagem ao
+  lado some, e num sistema que desenhe emoji em monocromático some tudo. A auditoria pegou;
+  toda peça sobre papel diz a própria tinta.
 - **`setInterval` e `addEventListener` num componente precisam de `DestroyRef`.** Ir para o
   álbum e voltar deixava para trás um relógio e um ouvinte de `visibilitychange`, e cada
   visita à aba fazia todos os fantasmas recarregarem o grupo — leituras do orçamento
@@ -231,6 +248,29 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-05 (noite) entregou seis coisas que o usuário escolheu de uma lista de
+propostas. Nenhuma delas toca no sorteio.
+
+1. **O recado do que você deve.** Quem está na mesa de um jogo e não resenhou vê a conta e o
+   atalho, na máquina e no álbum. Derivado (`pendingReviews`), zero escrita. **O denominador
+   é a mesa**, então por padrão ele só alcança quem estava no globo daquele giro — num grupo
+   sem correções de mesa, isso é pouca gente. É o modelo que já existia, não um defeito novo.
+2. **A porta oferece as cápsulas do grupo.** Fecha um defeito de identidade real: digitar
+   `Ana` onde o globo diz `Ana Paula` criava uma segunda pessoa em silêncio. Custa **uma
+   leitura a mais na visita fria**; o Firebase entra por `import()` dinâmico via o token
+   `ROSTER_LOOKUP`, então a prateleira e a oficina continuam sem tocar em rede — e sem o SDK
+   no pacote inicial. Trocar isso por um `import` estático engorda o pacote inicial em 550KB.
+3. **Modo cego**, desligado por padrão, ligado no crachá. Lacra a nota do clube nos jogos que
+   a pessoa jogou e ainda não resenhou — ficha, cartão do álbum e linha do registro.
+4. **Reações às resenhas** (😯 🔥 😭 😂): evento novo, rule nova, replay novo.
+5. **Som da máquina**, sintetizado, desligado por padrão, e **nunca sem gesto** — a cena que
+   abre sozinha ao carregar a página é muda. Os tiques são agendados sobre a curva do CSS
+   invertida (`easeInverse`), então som e imagem freiam juntos; há teste para isso.
+6. **O álbum como imagem**, desenhado em canvas. **O link do grupo não vai nela**, e isso é
+   segurança, não estética: o link é a credencial.
+
+Duas armadilhas que custaram tempo nesta rodada estão na seção 6.
 
 A rodada de 2026-09-05 (tarde) acrescentou **as duas perguntas da platina**, a pedido do
 usuário: `diversaoPlatina` (régua de onze casas) e `dificuldadePlatina` (nos mesmos cinco

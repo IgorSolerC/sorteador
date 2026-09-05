@@ -14,6 +14,27 @@
       <b>{{ members().length }}</b>
     </button>
     <a class="plate-action" [href]="albumUrl()">O álbum</a>
+    <!-- O som mora na máquina, e não na porta: liga-se e desliga-se no meio de uma noite,
+         diferente do modo cego, que é uma decisão sobre como esta pessoa julga. -->
+    <button
+      type="button"
+      class="sound-toggle"
+      [class.is-on]="soundOn()"
+      [attr.aria-pressed]="soundOn()"
+      [attr.aria-label]="soundOn() ? 'Desligar o som da máquina' : 'Ligar o som da máquina'"
+      [attr.title]="soundOn() ? 'Som ligado' : 'Som desligado'"
+      (click)="toggleSound()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4v-5Z" />
+        @if (soundOn()) {
+          <path d="M15.6 9a4.2 4.2 0 0 1 0 6" />
+          <path d="M18.3 6.6a7.6 7.6 0 0 1 0 10.8" />
+        } @else {
+          <path d="m16.4 9.6 4.6 4.8M21 9.6l-4.6 4.8" />
+        }
+      </svg>
+    </button>
     <button type="button" class="who-chip" (click)="askIdentityChange()">
       <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
             [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
@@ -242,6 +263,22 @@
       </p>
     </div>
 
+    <!-- Fora do cabeçalho de propósito: ele é uma grade de duas colunas, e um recado
+         espremido numa delas leria como legenda do título em vez de como o que é — a
+         única coisa que esta pessoa tem a fazer nesta tela. -->
+    @if (pending().length; as devendo) {
+      <p class="owed-note">
+        <span>
+          Você jogou <strong>{{ devendo }}</strong>
+          {{ devendo === 1 ? 'jogo que ainda não resenhou' : 'jogos que ainda não resenhou' }}
+          — {{ pending()[0].note?.title }}{{ devendo > 1 ? ' e mais ' + (devendo - 1) : '' }}.
+        </span>
+        <button type="button" class="owed-action" (click)="openPending($event)">
+          {{ devendo === 1 ? 'Escrever a minha' : 'Começar pela mais nova' }}
+        </button>
+      </p>
+    }
+
     @if (snap.state.spins.length) {
       <ol class="chart-grid">
         @for (spin of snap.state.spins; track spin.index) {
@@ -351,6 +388,7 @@
     (commitReview)="commitReview($event)"
     (removeReview)="removeReview()"
     (commitSeat)="commitSeat($event)"
+    (commitReaction)="commitReaction($event)"
     (dismiss)="closeNote()"
   />
 }

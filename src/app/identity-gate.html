@@ -30,7 +30,46 @@
         Quem é<br /><strong>você?</strong>
       }
     </h1>
+
+    <!-- Com o grupo à mão, a porta oferece as cápsulas que já existem nele em vez de
+         pedir um nome no escuro. Digitar "Ana" onde o globo diz "Ana Paula" cria uma
+         segunda pessoa em silêncio, e ninguém percebe até o álbum estar dividido ao meio.
+         Quem não está na lista continua entrando — só que pelo caminho de baixo. -->
+    @if (roster().length) {
+      <p class="gate-pick-label" id="gate-pick">Toque na sua cápsula</p>
+      <ul class="gate-people" aria-labelledby="gate-pick">
+        @for (capsule of roster(); track capsule.key) {
+          <li>
+            <button
+              type="button"
+              class="gate-person"
+              [class.is-current]="capsule.key === currentKey()"
+              (click)="choose(capsule)"
+            >
+              <span class="gate-person-capsule" aria-hidden="true"
+                    [style.--capsule]="capsule.color" [style.--capsule-ink]="capsule.ink">
+                {{ capsule.emoji || capsule.initials }}
+              </span>
+              {{ capsule.name }}
+              @if (capsule.key === currentKey()) {
+                <span class="visually-hidden">— é como você está agora</span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    } @else if (looking()) {
+      <p class="gate-looking" role="status">Vendo quem já está no globo deste grupo…</p>
+    }
+
     <form class="gate-form" (ngSubmit)="submit()" novalidate>
+      @if (!showField()) {
+        <button class="gate-otherwise" type="button" (click)="openField()">
+          Não estou na lista — escrever meu nome
+        </button>
+      }
+
+      @if (showField()) {
       <label class="gate-field" for="gate-name">
         <span>Seu nome</span>
         <input
@@ -47,15 +86,18 @@
           [attr.aria-describedby]="error() ? 'gate-error' : 'gate-note'"
         />
       </label>
+      }
 
       @if (error()) {
         <p class="field-error" id="gate-error" role="alert">{{ error() }}</p>
       }
 
       <div class="gate-actions">
-        <button class="primary-action" type="submit">
-          {{ changing() ? 'Passar a vez' : 'Entrar na mesa' }}
-        </button>
+        @if (showField()) {
+          <button class="primary-action" type="submit">
+            {{ changing() ? 'Passar a vez' : 'Entrar na mesa' }}
+          </button>
+        }
         @if (changing()) {
           <button class="text-link" type="button" (click)="cancel()">Continuar como estou</button>
         }
@@ -65,5 +107,29 @@
         Não é uma conta e não tem senha: fica só neste aparelho, e você troca quando quiser.
       </p>
     </form>
+
+    <!-- O modo cego mora na porta porque é a mesma classe de coisa que o crachá: uma
+         escolha que fica neste aparelho, não entra no registro e ninguém mais vê. E mora
+         aqui, e não na máquina, porque é uma decisão sobre COMO esta pessoa julga — ela se
+         toma uma vez, não a cada visita. O som, que se liga e desliga no meio de uma noite,
+         fica na própria máquina. Nenhum dos dois aparece na primeira visita: ela é uma
+         pergunta só, e uma chave ao lado dela transformaria a porta num painel. -->
+    @if (changing()) {
+      <div class="gate-prefs">
+        <p class="gate-prefs-title">Neste aparelho</p>
+
+        <button type="button" class="gate-switch" [class.is-on]="blind()"
+                [attr.aria-pressed]="blind()" (click)="toggleBlind()">
+          <span class="gate-switch-track" aria-hidden="true"><i></i></span>
+          <span class="gate-switch-copy">
+            <strong>Modo cego</strong>
+            <small>
+              A nota do clube fica lacrada nos jogos que você jogou e ainda não resenhou.
+              Ler "9,2" antes de dar a sua nota move a sua nota.
+            </small>
+          </span>
+        </button>
+      </div>
+    }
   </div>
 </section>

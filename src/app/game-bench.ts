@@ -38,6 +38,8 @@ export interface BenchWriters {
   withdraw(spinIndex: number): Promise<void>;
   /** Põe ou tira alguém da mesa daquele jogo. Não toca no sorteio. */
   seat(spinIndex: number, memberId: string, seated: boolean): Promise<void>;
+  /** Liga ou desliga a reação desta pessoa a uma resenha. */
+  react(spinIndex: number, target: string, emoji: string, reacted: boolean): Promise<void>;
 }
 
 export class GameBench {
@@ -171,6 +173,29 @@ export class GameBench {
         : `${seat.name} saiu da mesa deste jogo.`,
       'mesa',
     );
+  }
+
+  /**
+   * Reagir não muda de face nem devolve o foco a lugar nenhum: o dedo está na fileira de
+   * emoji e é lá que ele continua. Por isso ela não passa por `write()`, que existe para
+   * as escritas que terminam uma tarefa e voltam para a ficha.
+   */
+  async commitReaction(
+    spin: SpinRecord,
+    target: string,
+    emoji: string,
+    reacted: boolean,
+  ): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.error.set('');
+    try {
+      await this.writers.react(spin.index, target, emoji, reacted);
+    } catch (error) {
+      this.error.set(this.explain(error));
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   private async write(

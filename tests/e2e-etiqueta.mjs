@@ -221,6 +221,33 @@ check('a ação da resenha passa a ser editar a minha',
   (await ev(`document.querySelector('.sheet-actions .secondary-action').textContent.trim()`))
     .includes('Editar minha resenha'));
 
+// --- reagir a uma resenha: o caminho inteiro, do dedo até a rule e de volta ---
+
+const fileira = `[...document.querySelectorAll('.review.is-mine .reaction')]`;
+check('cada resenha traz os quatro emoji, e nenhum a mais',
+  (await ev(`${fileira}.map((b) => b.innerText.trim()).join('')`)) === '😯🔥😭😂',
+  await ev(`${fileira}.map((b) => b.innerText.trim()).join('')`));
+check('sem ninguém ter reagido, a fileira toda está apagada',
+  (await ev(`${fileira}.every((b) => b.classList.contains('is-empty'))`)) === true);
+
+await ev(`${fileira}[1].click()`);
+await sleep(2500);
+check('reagir grava e volta do servidor com a minha marcada',
+  (await ev(`${fileira}[1].getAttribute('aria-pressed')`)) === 'true' &&
+  (await ev(`${fileira}[1].innerText.replace(/\s+/g, '')`)).includes('1'),
+  await ev(`${fileira}[1].innerText`));
+check('a reação diz quem foi, para quem não vê o emoji',
+  (await ev(`${fileira}[1].getAttribute('aria-label')`)).startsWith('Fogo — '),
+  await ev(`${fileira}[1].getAttribute('aria-label')`));
+check('as outras três continuam vazias: uma reação é de um emoji só',
+  (await ev(`${fileira}.filter((b) => b.classList.contains('is-empty')).length`)) === 3);
+
+await ev(`${fileira}[1].click()`);
+await sleep(2500);
+check('apertar de novo desliga a minha, e desligar também é gravar',
+  (await ev(`${fileira}[1].getAttribute('aria-pressed')`)) === 'false' &&
+  (await ev(`${fileira}[1].classList.contains('is-empty')`)) === true);
+
 // --- a mesa: corrigir o elenco de um jogo sem tocar no sorteio ---
 
 const vencedorAntesDaMesa = await ev(`document.querySelector('#synced-title')?.textContent?.trim()`);
