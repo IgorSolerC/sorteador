@@ -11,7 +11,7 @@
   <!-- Uma gaveta que passa da altura da tela precisa de saída no alto: o "Fechar"
        do rodapé fica abaixo da dobra e some justo quando a lista é longa. -->
   <button type="button" class="roster-close" (click)="close()" [disabled]="busy()"
-          aria-label="Fechar a coleção">
+          aria-label="Fechar a lista de integrantes">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
   </button>
 
@@ -20,7 +20,7 @@
     <p class="roster-card-serial">
       <button type="button" class="capsule-back" id="capsule-back" (click)="back()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-        A coleção
+        Integrantes
       </button>
     </p>
 
@@ -110,7 +110,7 @@
     <p class="roster-card-serial" id="roster-card-serial">
       {{ members().length }} / {{ maxMembers() }} cápsulas no globo
     </p>
-    <h2 id="roster-card-title">A coleção</h2>
+    <h2 id="roster-card-title">Integrantes</h2>
     <p class="capsule-lede">
       Quem entra no meio de uma rodada já entra elegível.
     </p>

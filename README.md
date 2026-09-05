@@ -120,12 +120,12 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 309 unitários e de componente
-npm run test:rules          # 105 rules no emulador
-npm run test:store          # 43 integrações da camada de dados
+npm test -- --watch=false   # 316 unitários e de componente
+npm run test:rules          # 108 rules no emulador
+npm run test:store          # 45 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
-npm run test:a11y           # 11 telas x 3 larguras, 0 achados
-npm run test:etiqueta       # 74 verificações de ponta a ponta num navegador real
+npm run test:a11y           # 12 telas x 3 larguras, 0 achados
+npm run test:etiqueta       # 80 verificações de ponta a ponta num navegador real
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
 npm run build -- --base-href=./
 ```
@@ -175,7 +175,9 @@ caem na prateleira inicial.
 Qualquer giro — o de agora ou o de um ano atrás — recebe o **jogo** que o clube jogou (nome e
 descrição, de todo mundo), uma **resenha por pessoa** (nota final e completude obrigatórias;
 tempo de jogo, quatro escalas, dificuldade e texto livre se ela quiser) e uma correção de
-**mesa**: quem de fato jogou aquilo. Onde só cabe uma linha, o jogo vira
+**mesa**: quem de fato jogou aquilo. Quem marca **platinado** recebe mais duas perguntas, só
+dela: a diversão da platina e a dificuldade de platinar. As duas ficam fora do resumo do
+cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma linha, o jogo vira
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
 gravada em campo nenhum.
 

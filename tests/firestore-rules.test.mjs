@@ -518,6 +518,40 @@ await it('aceita a resenha inteira, com os cinco critérios e o texto', async ()
   }), { versaoAtual: 2 }));
 });
 
+await it('aceita as duas medidas da platina numa resenha que platinou', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertSucceeds(gravaEvento(alice(), resenha(0, {
+    status: 'platinado', dificuldadePlatina: 10, diversaoPlatina: 4,
+  }), { versaoAtual: 2 }));
+});
+
+await it('recusa a platina de quem não platinou', async () => {
+  // Não existe dificuldade de platinar numa resenha que largou o jogo no meio. O replay já
+  // descartaria as duas, mas o log é para sempre: um evento que se contradiz fica se
+  // contradizendo no registro pelos anos seguintes. Nenhuma aba antiga manda estas chaves,
+  // então recusá-las não quebra quem está com o app na tela.
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, {
+    status: 'finalizado', dificuldadePlatina: 10,
+  }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, {
+    status: 'incompleto', diversaoPlatina: 8,
+  }), { versaoAtual: 2 }));
+});
+
+await it('recusa medida de platina fora da régua, e numa retirada', async () => {
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), resenha(0, {
+    status: 'platinado', diversaoPlatina: 11,
+  }), { versaoAtual: 2 }));
+  await comGrupo({ versaoLog: 2 });
+  await assertFails(gravaEvento(alice(), {
+    tipo: 'spin_reviewed', em: serverTimestamp(), giro: 0, autor: 'Ana',
+    retirada: true, dificuldadePlatina: 5,
+  }, { versaoAtual: 2 }));
+});
+
 await it('recusa resenha sem assinatura: ela não seria de ninguém', async () => {
   // Sem autor não há de quem a resenha seja, e ninguém conseguiria editá-la depois.
   await comGrupo({ versaoLog: 2 });
@@ -626,6 +660,9 @@ await it('recusa campo de resenha num evento que não é resenha', async () => {
   );
   await assertFails(
     gravaEvento(alice(), { ...etiqueta(0), status: 'platinado' }, { versaoAtual: 2 }),
+  );
+  await assertFails(
+    gravaEvento(alice(), { ...entrada('Ana'), diversaoPlatina: 7 }, { versaoAtual: 2 }),
   );
 });
 

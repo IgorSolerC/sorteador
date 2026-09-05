@@ -168,6 +168,25 @@ await ev(`document.querySelectorAll('input[name="completude"]')[0].click()`);
 await sleep(200);
 await ev(`document.querySelectorAll('input[name="diversao"]')[11].click()`);
 await sleep(200);
+
+// A platina abre duas perguntas que não existem para quem não platinou, e elas continuam
+// dentro da faixa opcional: a folha cobra duas coisas, e não três.
+check('marcar a platina abre as duas perguntas dela',
+  (await conta('.platina-extra')) === 1 &&
+  (await conta('input[name="diversaoPlatina"]')) === 12 &&
+  (await conta('input[name="dificuldadePlatina"]')) === 6,
+  await texto('.platina-extra'));
+check('a diversão da platina vem antes da dificuldade de platinar',
+  (await texto('.platina-extra')).indexOf('DIVERSÃO DA PLATINA')
+    < (await texto('.platina-extra')).indexOf('DIFICULDADE DE PLATINAR'),
+  await texto('.platina-extra'));
+check('a platina não vira uma terceira faixa do formulário',
+  (await conta('.band-title')) === 2, `${await conta('.band-title')}`);
+
+await ev(`document.querySelectorAll('input[name="diversaoPlatina"]')[11].click()`);
+await sleep(200);
+await ev(`document.querySelectorAll('input[name="dificuldadePlatina"]')[4].click()`);
+await sleep(200);
 await digitar('review-hours', '12');
 await digitar('review-text', 'Resenha escrita pelo teste de ponta a ponta.');
 check('com nota e completude, a gravação é oferecida',
@@ -191,6 +210,13 @@ check('o boletim diz de quantas pessoas que jogaram as resenhas vieram',
   /\d+ RESENHAS? DE \d+/.test(await texto('.score-hero')), await texto('.score-hero'));
 check('a completude vira porcentagem escrita, e não só cor',
   (await texto('.completion-legend')).includes('PLATINADO'), await texto('.completion-legend'));
+check('as duas médias da platina voltam do servidor e fecham o boletim',
+  (await conta('.score-rules > div.is-platina')) === 2 &&
+  (await texto('.score-rules')).includes('DIVERSÃO DA PLATINA') &&
+  (await texto('.score-rules')).includes('DIFICULDADE DE PLATINAR'),
+  await texto('.score-rules'));
+check('a dificuldade de platinar volta em palavra, e não em nota',
+  (await texto('.score-rules')).includes('Difícil'), await texto('.score-rules'));
 check('a ação da resenha passa a ser editar a minha',
   (await ev(`document.querySelector('.sheet-actions .secondary-action').textContent.trim()`))
     .includes('Editar minha resenha'));
@@ -268,11 +294,11 @@ check('continua havendo uma resenha minha só',
 await ev(`document.querySelector('#sheet-close').click()`);
 await sleep(900);
 
-// --- a gaveta da coleção e a cápsula de cada pessoa ---
+// --- a gaveta dos integrantes e a cápsula de cada pessoa ---
 
 await ev(`document.querySelector('#roster-button').click()`);
 await sleep(800);
-check('a coleção abre numa gaveta', !!(await ev(`!!document.querySelector('.roster-card')`)));
+check('os integrantes abrem numa gaveta', !!(await ev(`!!document.querySelector('.roster-card')`)));
 check('a gaveta lista uma linha por cápsula', (await conta('.capsule-row')) > 1);
 
 // A pessoa pintada precisa já ter saído para a conferência seguinte encontrá-la no registro.
@@ -365,6 +391,13 @@ check('o cartão do álbum mostra a nota do clube',
   (await ev(`[...document.querySelectorAll('.album-score')].some((e) => e.innerText.includes('6,0'))`)) === true);
 check('o boletim do álbum resume o clube inteiro',
   (await texto('.album-stats')).includes('NOTA DO CLUBE'), await texto('.album-stats'));
+// O resumo do cartão tem teto: as duas medidas da platina ficam para a ficha, que abre a
+// um clique daqui. Numa parede de dezenas de cartões, duas linhas que só existem para
+// alguns jogos alongam todos e não deixam nenhum mais fácil de comparar.
+check('o resumo dos cartões não carrega as medidas da platina',
+  (await ev(`[...document.querySelectorAll('.album-criteria')]
+    .every((e) => !/PLATINA/i.test(e.innerText))`)) === true,
+  await texto('.album-criteria'));
 check('há um chip por pessoa que já saiu', (await conta('.people-chip')) > 1);
 
 // A ordem da parede: por padrão o registro, e qualquer outra fura as rodadas de propósito.

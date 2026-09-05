@@ -60,9 +60,14 @@ O que continua sendo contrato:
   horas, notas de diversão, história, qualidade e jogabilidade, um grau de dificuldade entre
   cinco degraus com nome, e texto livre. Reescrever é gravar outra; retirar é gravar a
   retirada. Todas as versões continuam no registro.
+- Perguntar mais duas coisas a **quem platinou**, e só a ela: a **diversão da platina**, de
+  0 a 10, e a **dificuldade de platinar**, nos mesmos cinco degraus com nome da dificuldade
+  do jogo. As duas são opcionais como as outras escalas, e pendem do status: quem reescreve a
+  resenha como finalizada deixa de tê-las, na tela e na conta.
 - Mostrar a conta do clube sobre um jogo — nota média, média de cada critério, tempo médio e
   a porcentagem de platinado, finalizado e incompleto. **Nada disso é gravado**: é recontado
-  a partir das resenhas toda vez que a página abre.
+  a partir das resenhas toda vez que a página abre. As duas médias da platina aparecem na
+  ficha do jogo, e ficam de fora do resumo do cartão do álbum de propósito.
 - Corrigir a **mesa** de um giro: quem realmente jogou aquele jogo. Ela começa igual ao globo
   do dia e aceita quem entrou no clube depois, ou perde quem não apareceu. É o denominador de
   "X resenhas de Y", e quem jogou e ainda não escreveu conta como incompleto. **Corrigir a

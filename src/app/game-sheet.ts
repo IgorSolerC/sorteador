@@ -3,16 +3,20 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { FormsModule } from '@angular/forms';
 
 import {
+  BASE_CRITERIA,
   completionShare,
   criterionText,
   DIFFICULTY_LEVELS,
   formatHours,
   formatScore,
+  isNamedCriterion,
+  isPlatinumCriterion,
   MAX_HOURS,
   MAX_NOTE_DESCRIPTION,
   MAX_NOTE_TITLE,
   MAX_REVIEW_TEXT,
   MAX_SCORE,
+  PLATINUM_CRITERIA,
   REVIEW_CRITERIA,
   REVIEW_CRITERION_LABELS,
   REVIEW_STATUS_LABELS,
@@ -76,6 +80,9 @@ export class GameSheet {
   protected readonly MAX_NOTE_DESCRIPTION = MAX_NOTE_DESCRIPTION;
   protected readonly MAX_REVIEW_TEXT = MAX_REVIEW_TEXT;
   protected readonly CRITERIA = REVIEW_CRITERIA;
+  /** As cinco que toda resenha aceita, e as duas que só quem platinou responde. */
+  protected readonly BASE_CRITERIA = BASE_CRITERIA;
+  protected readonly PLATINUM_CRITERIA = PLATINUM_CRITERIA;
   protected readonly CRITERION_LABELS = REVIEW_CRITERION_LABELS;
   protected readonly STATUSES = REVIEW_STATUSES;
   protected readonly STATUS_LABELS = REVIEW_STATUS_LABELS;
@@ -96,11 +103,16 @@ export class GameSheet {
   /** O temperamento da nota do clube: é ele que decide se o número brilha ou fede. */
   protected readonly heroTone = computed(() => scoreTone(this.scores().score));
 
-  /** As médias por critério, só as que alguém avaliou, na ordem em que a ficha pergunta. */
+  /**
+   * As médias por critério, só as que alguém avaliou, na ordem em que a ficha pergunta.
+   * As duas da platina fecham a lista e vêm marcadas: elas têm outro denominador — só
+   * quem platinou pôde respondê-las —, e é a marca que impede lê-las como as outras.
+   */
   protected readonly criteriaAverages = computed(() =>
     this.CRITERIA.map((criterion) => ({
       criterion,
       label: this.CRITERION_LABELS[criterion],
+      platina: isPlatinumCriterion(criterion),
       ...this.scores().criteria[criterion],
     })).filter((row): row is typeof row & { average: number; count: number } =>
       row.average !== undefined,
@@ -274,7 +286,23 @@ export class GameSheet {
    * ali diria "tirou 8 em dificuldade", e dificuldade não se tira.
    */
   protected ruleClass(criterion: ReviewCriterion, score: number): string {
-    return criterion === 'dificuldade' ? 'score-rule is-flat' : `score-rule is-${scoreTone(score)}`;
+    return isNamedCriterion(criterion)
+      ? 'score-rule is-flat'
+      : `score-rule is-${scoreTone(score)}`;
+  }
+
+  /** Se o critério se responde em palavra: as duas dificuldades, e só elas. */
+  protected named(criterion: ReviewCriterion): boolean {
+    return isNamedCriterion(criterion);
+  }
+
+  /**
+   * O rótulo de um critério. É um método, e não o mapa direto no template, porque a
+   * fileira é desenhada uma vez só num `ng-template` — e o contexto dele chega sem tipo,
+   * que é o que o compilador recusa indexar.
+   */
+  protected labelOf(criterion: ReviewCriterion): string {
+    return this.CRITERION_LABELS[criterion];
   }
 
   /** Onde a média cai na régua de 0 a 10, em porcentagem da largura. */

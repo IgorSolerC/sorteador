@@ -11,12 +11,12 @@ import {
 } from '@angular/core';
 
 import {
+  BASE_CRITERIA,
   completionShare,
   criterionText,
   formatHours,
   formatScore,
   GroupMember,
-  REVIEW_CRITERIA,
   REVIEW_CRITERION_LABELS,
   REVIEW_STATUS_LABELS,
   REVIEW_STATUSES,
@@ -170,7 +170,13 @@ export class GroupHistory {
 
   protected readonly labelled = computed(() => this.spins().filter((spin) => spin.note).length);
 
-  protected readonly CRITERIA = REVIEW_CRITERIA;
+  /**
+   * O cartão resume, e o resumo tem teto. As duas médias da platina ficam de fora dele de
+   * propósito: numa parede de dezenas de cartões, duas linhas que só existem para alguns
+   * jogos alongam todos e não deixam nenhum mais fácil de comparar. Elas estão na ficha,
+   * a um clique do cartão.
+   */
+  protected readonly CRITERIA = BASE_CRITERIA;
   protected readonly CRITERION_LABELS = REVIEW_CRITERION_LABELS;
   protected readonly SORTS = ALBUM_SORTS;
   protected readonly STATUSES = REVIEW_STATUSES;

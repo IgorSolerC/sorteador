@@ -21,7 +21,7 @@ export function participantKey(value: string): string {
  * uma cápsula quando a pessoa não escolheu emoji.
  *
  * Mora aqui porque é uma conta sobre nome, e porque ela estava copiada em seis lugares — a
- * porta, a prateleira, a coleção, a ficha, o crachá e o rótulo do globo. Seis cópias da
+ * porta, a prateleira, os integrantes, a ficha, o crachá e o rótulo do globo. Seis cópias da
  * mesma linha são seis chances de a mesma pessoa aparecer com duas siglas diferentes.
  */
 export function initialsOf(name: string): string {

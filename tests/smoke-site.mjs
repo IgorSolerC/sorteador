@@ -54,7 +54,7 @@ await send('Page.reload', { ignoreCache: false });
 await sleep(18000);
 const vencedor = await ev(`document.querySelector('#synced-title')?.textContent?.trim() ?? ''`);
 check('a máquina abre em produção', !!vencedor && vencedor !== 'Entregando', vencedor);
-check('a coleção é uma gaveta no cabeçalho', await ev(`!!document.querySelector('#roster-button')`));
+check('os integrantes são uma gaveta no cabeçalho', await ev(`!!document.querySelector('#roster-button')`));
 check('a etiqueta do palco existe no build publicado',
   (await ev(`!!document.querySelector('.note-sticker')`)) === true);
 check('as células do registro abrem a etiqueta',

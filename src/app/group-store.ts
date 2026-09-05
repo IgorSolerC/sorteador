@@ -22,6 +22,7 @@ import {
   MAX_HOURS,
   MAX_REVIEW_TEXT,
   MAX_SCORE,
+  isPlatinumCriterion,
   REVIEW_CRITERIA,
   REVIEW_STATUSES,
   ReviewCriterion,
@@ -249,8 +250,13 @@ export class GroupStore {
 
     // Critério sem nota não vai como `null`: ele simplesmente não vai. Chave ausente é
     // "não avaliei", e é assim que a média de cada critério mantém o próprio denominador.
+    //
+    // Os dois da platina só vão com `platinado`. Quem marca a platina, responde as duas e
+    // depois troca para `finalizado` deixa as notas no rascunho da tela; gravá-las escreveria
+    // no log uma resenha que se contradiz, e o log não se reescreve nem se apaga.
     const notas: Record<string, number> = {};
     for (const criterion of REVIEW_CRITERIA) {
+      if (review.status !== 'platinado' && isPlatinumCriterion(criterion)) continue;
       const nota = review.criteria?.[criterion];
       if (isScore(nota)) notas[criterion] = nota;
     }

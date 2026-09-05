@@ -696,6 +696,43 @@ describe('a resenha de cada pessoa', () => {
     ]);
   });
 
+  it('a platina de quem não platinou é descartada pelo replay', () => {
+    // O log é para sempre e não se reescreve. Uma resenha que diz `finalizado` e leva uma
+    // dificuldade de platinar se contradiz, e quem decide o que ela significa é o replay —
+    // como com todo campo que sobra num evento. A rule também a recusa na entrada.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', {
+        score: 8,
+        status: 'finalizado',
+        criteria: { diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 3 },
+      }),
+    ]);
+
+    expect(state.spins[0].reviews[0].criteria).toEqual({ diversao: 9 });
+  });
+
+  it('reescrever de platinado para finalizado apaga a platina da conta', () => {
+    // Quem platinou, respondeu as duas e depois corrigiu para "finalizado" não pode deixar
+    // as duas notas penduradas: a versão que vale é a última, e nela não houve platina.
+    const state = replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', {
+        score: 9,
+        status: 'platinado',
+        criteria: { dificuldadePlatina: 10, diversaoPlatina: 8 },
+      }),
+      review(0, 'Ana', {
+        score: 9,
+        status: 'finalizado',
+        criteria: { dificuldadePlatina: 10, diversaoPlatina: 8 },
+      }),
+    ]);
+
+    expect(state.spins[0].reviews[0].criteria).toEqual({});
+    expect(spinScores(state.spins[0]).criteria.dificuldadePlatina).toBeUndefined();
+  });
+
   it('uma resenha por pessoa: reescrever substitui a própria e marca a revisão', () => {
     const state = replay(GRUPO, [
       ...jogo(),
@@ -839,6 +876,28 @@ describe('a conta do clube sobre um jogo', () => {
     expect(scores.criteria.historia).toBeUndefined();
   });
 
+  it('as duas médias da platina só contam quem platinou', () => {
+    // Platinar é outro jogo dentro do jogo. Quem finalizou não respondeu — e não poderia
+    // ter respondido — como foi a caçada aos troféus, então ela não entra no denominador.
+    const scores = spinScores(replay(GRUPO, [
+      ...jogo(),
+      review(0, 'Ana', {
+        score: 9,
+        status: 'platinado',
+        criteria: { dificuldadePlatina: 10, diversaoPlatina: 4 },
+      }),
+      review(0, 'Breno', {
+        score: 8,
+        status: 'platinado',
+        criteria: { dificuldadePlatina: 8, diversaoPlatina: 6 },
+      }),
+      review(0, 'Cecília', { score: 7, status: 'finalizado' }),
+    ]).spins[0]);
+
+    expect(scores.criteria.dificuldadePlatina).toEqual({ average: 9, count: 2 });
+    expect(scores.criteria.diversaoPlatina).toEqual({ average: 5, count: 2 });
+  });
+
   it('conta quantas pessoas terminaram de cada jeito', () => {
     const scores = spinScores(replay(GRUPO, [
       ...jogo(),
@@ -925,11 +984,15 @@ describe('a dificuldade em palavra', () => {
     expect(difficultyLabel(6.5)).toBe('Médio');
   });
 
-  it('só a dificuldade responde por palavra; o resto continua em nota', () => {
+  it('as duas dificuldades respondem por palavra; o resto continua em nota', () => {
     expect(criterionText('dificuldade', 8)).toBe('Difícil');
     expect(criterionText('dificuldade', 7.5, true)).toBe('Difícil');
+    // A dificuldade de platinar é medida sem direção pelo mesmo motivo que a do jogo, e
+    // por isso usa os mesmos cinco degraus em vez de uma nota que pareceria elogio.
+    expect(criterionText('dificuldadePlatina', 10)).toBe('Impossível');
+    expect(criterionText('dificuldadePlatina', 4.5, true)).toBe('Médio');
     expect(criterionText('diversao', 9)).toBe('9');
-    expect(criterionText('diversao', 8.5, true)).toBe('8,5');
+    expect(criterionText('diversaoPlatina', 8.5, true)).toBe('8,5');
   });
 });
 

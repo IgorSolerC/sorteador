@@ -7,7 +7,7 @@ const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
 export const MAX_AUTHOR = 60;
 
 /**
- * Quem está mexendo na máquina. Antes era um campo opcional escondido no fim da coleção,
+ * Quem está mexendo na máquina. Antes era um campo opcional escondido no fim da lista de integrantes,
  * e o resultado era um registro cheio de giros sem assinatura: quando o clube abria o
  * álbum meses depois, ninguém sabia quem tinha girado nem quem tinha etiquetado.
  *

@@ -79,6 +79,7 @@ service cloud.firestore {
               'giro', 'titulo', 'subtitulo', 'descricao',
               'nota', 'status', 'texto', 'retirada', 'horas',
               'diversao', 'dificuldade', 'historia', 'qualidade', 'jogabilidade',
+              'dificuldadePlatina', 'diversaoPlatina',
               'mesa',
             ])
             // O carimbo é do servidor, sempre. É a única entrada que o cliente não
@@ -182,7 +183,16 @@ service cloud.firestore {
             && (!('dificuldade' in d) || notaValida(d.dificuldade))
             && (!('historia' in d) || notaValida(d.historia))
             && (!('qualidade' in d) || notaValida(d.qualidade))
-            && (!('jogabilidade' in d) || notaValida(d.jogabilidade));
+            && (!('jogabilidade' in d) || notaValida(d.jogabilidade))
+            // Os dois da platina pendem do status: não existe dificuldade de platinar numa
+            // resenha que não platinou. O replay já os descartaria, mas o log é para sempre
+            // e um evento que se contradiz fica se contradizendo nele pelos anos seguintes.
+            // Recusá-los aqui não quebra aba nenhuma: uma aba aberta antes do deploy não
+            // conhece as chaves e nunca as manda.
+            && (!('dificuldadePlatina' in d)
+                || (d.status == 'platinado' && notaValida(d.dificuldadePlatina)))
+            && (!('diversaoPlatina' in d)
+                || (d.status == 'platinado' && notaValida(d.diversaoPlatina)));
         }
 
         // A mesa diz quem JOGOU aquele jogo, e nunca quem estava no globo. O globo de um
@@ -208,7 +218,8 @@ service cloud.firestore {
         function semNotasDeCriterio() {
           let d = request.resource.data;
           return !('diversao' in d) && !('dificuldade' in d) && !('historia' in d)
-            && !('qualidade' in d) && !('jogabilidade' in d);
+            && !('qualidade' in d) && !('jogabilidade' in d)
+            && !('dificuldadePlatina' in d) && !('diversaoPlatina' in d);
         }
 
         function semCampoDeGiro() {

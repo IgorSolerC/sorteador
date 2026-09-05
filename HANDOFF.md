@@ -1,6 +1,6 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-04**, logo depois de publicar. Tudo verde, nada pendente que bloqueie.
+Estado em **2026-09-05**, logo depois de publicar. Tudo verde, nada pendente que bloqueie.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -76,7 +76,7 @@ src/app/
   synced-group.*       a máquina + o registro. É o componente central
   group-history.*      o álbum
   machine.ts/html      o SVG da máquina. Recebe `people: MachinePerson[]` prontos
-  roster-bench.*       A GAVETA da coleção: duas faces (lista / bancada de uma cápsula)
+  roster-bench.*       A GAVETA dos integrantes: duas faces (lista / bancada de uma cápsula)
   game-sheet.*         A FICHA DO JOGO: quatro faces (boletim / resenha / jogo / mesa)
   game-bench.ts        a orquestração da ficha, compartilhada por máquina e álbum
   notice.ts            o rodapé de aviso: um relógio por vez, e ele morre com a tela
@@ -112,6 +112,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
   nota? status? horas? texto? retirada?       ← a resenha de UMA pessoa
   diversao? historia? qualidade?
   jogabilidade? dificuldade?                  ← critérios, inteiros 0..10, opcionais
+  dificuldadePlatina? diversaoPlatina?        ← idem, e só com status platinado
   memberId? mesa?                             ← a mesa: quem jogou aquele jogo
   autor?                                      ← não verificado, é um crachá
                                                 (obrigatório só em spin_reviewed)
@@ -120,6 +121,11 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`subtitulo` saiu em 09/2026 e a rule ainda o ACEITA.** Uma aba aberta no minuto do deploy
   ainda o manda. O replay não o lê. Não apague os eventos antigos: a contagem local nunca
   fecharia com `versaoLog`.
+- **Os dois critérios da platina pendem do status.** `dificuldadePlatina` e `diversaoPlatina`
+  só existem numa resenha `platinado`: a rule os recusa em qualquer outro status e o replay
+  os descarta se aparecerem. Isso é a outra ponta da invariante 7 — recusar chave nova não
+  quebra ninguém aqui porque nenhuma aba antiga a conhece, e o que a regra impede é o log
+  guardar para sempre uma resenha que diz "finalizado" e leva uma dificuldade de platinar.
 - **Nenhuma média é gravada.** Nota do clube, média de critério, tempo médio e completude são
   recontados pelo replay a cada carga. Um campo de média gravável é um número que alguém
   escreve à mão — a mesma classe de buraco do campo `estado` que já existiu aqui.
@@ -138,12 +144,12 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 309 unitários e de componente
-npm run test:rules          # 105 rules no emulador (sobe o próprio, sem rede)
-npm run test:store          # 43 de integração da camada de dados
+npm test -- --watch=false   # 316 unitários e de componente
+npm run test:rules          # 108 rules no emulador (sobe o próprio, sem rede)
+npm run test:store          # 45 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
-npm run test:a11y           # 11 telas x 3 larguras — precisa de npm start + emulador
-npm run test:etiqueta       # 74 de ponta a ponta num navegador real — idem
+npm run test:a11y           # 12 telas x 3 larguras — precisa de npm start + emulador
+npm run test:etiqueta       # 80 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
@@ -224,8 +230,20 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 
 ## 7. O que ficou aberto
 
-Nada pendente no código. A varredura de 2026-09-05 fechou seis defeitos e um buraco de
-processo, cada um com o teste que falha sem a correção:
+Nada pendente no código.
+
+A rodada de 2026-09-05 (tarde) acrescentou **as duas perguntas da platina**, a pedido do
+usuário: `diversaoPlatina` (régua de onze casas) e `dificuldadePlatina` (nos mesmos cinco
+degraus com nome da dificuldade do jogo), nessa ordem. Elas só são perguntadas depois de a pessoa marcar
+`Platinado`, num bloco dentro da faixa opcional; ficam **fora do resumo do cartão do álbum**
+e aparecem inteiras no boletim da ficha, atrás de um picote e com a faísca no rótulo. O porquê
+de cada decisão está em `DESIGN.md`, em *A Regra da Platina Perguntada*. O que mais custa
+atenção aqui: a fileira de um critério passou a ser escrita **uma vez só**, num `ng-template`
+da ficha — e o contexto dele chega sem tipo, que é por que o rótulo virou o método
+`labelOf()` em vez do mapa indexado direto no template.
+
+A varredura de 2026-09-05 (manhã) fechou seis defeitos e um buraco de processo, cada um com
+o teste que falha sem a correção:
 
 - **A rajada parava a máquina na primeira visita.** O contador de laço somava um carimbo por
   documento, e o log inteiro chega numa busca só. Um grupo com mais de 40 eventos bloqueava
@@ -306,7 +324,7 @@ A rodada anterior tinha fechado:
    inválido. `npx --yes impeccable@3.6.1 update` atualizou as cópias do projeto para 4.1.3.
 4. **Paleta substituída por solicitação explícita:** os índices continuam na mesma ordem do
    log, mas os 24 valores agora são os do JASC-PAL fornecido. Como há tons profundos, texto e
-   ferragens usam `capsuleInk()`; o caminho de ajuste continua sendo **A coleção → pessoa**.
+   ferragens usam `capsuleInk()`; o caminho de ajuste continua sendo **Integrantes → pessoa**.
 5. **Celebração unificada:** toda cena da roleta — abertura automática, replay ao clicar e giro
    verdadeiro — termina com o confete do emoji vencedor, quando essa pessoa escolheu um.
 

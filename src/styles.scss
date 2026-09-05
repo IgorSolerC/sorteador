@@ -228,7 +228,7 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 /* ---- A ficha do jogo: três faces no mesmo papel ---- */
 .sheet-scrim { position: fixed; z-index: 30; inset: 0; background: rgba(4, 10, 22, .62); backdrop-filter: blur(2px); }
 .sheet-card { position: fixed; z-index: 31; top: 50%; left: 50%; width: min(42rem, calc(100vw - 2.4rem)); max-height: calc(100svh - 2.4rem); overflow-y: auto; padding: 1.7rem 1.7rem 1.5rem; background: var(--paper); color: var(--ink); border-radius: 12px; box-shadow: 0 26px 60px rgba(4, 10, 22, .6); transform: translate(-50%, -50%); }
-/* A marca de registro do impressor, no canto — a mesma da gaveta da coleção. */
+/* A marca de registro do impressor, no canto — a mesma da gaveta dos integrantes. */
 .sheet-card::after { content: ''; position: absolute; right: 1rem; bottom: 1rem; width: 19px; height: 19px; opacity: .3; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19 19'%3E%3Cg fill='none' stroke='%2316233a' stroke-width='1'%3E%3Ccircle cx='9.5' cy='9.5' r='5.5'/%3E%3Cpath d='M9.5 0v6M9.5 13v6M0 9.5h6M13 9.5h6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
 .sheet-serial { margin: 0; padding-right: 3rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .sheet-card h2 { display: flex; align-items: center; gap: .75rem; margin: .7rem 0 0; color: var(--ink); font-size: 2.4rem; line-height: 1.05; overflow-wrap: anywhere; }
@@ -310,6 +310,14 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .score-rule i { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 2px; }
 .score-rules dd b { min-width: 2.6ch; color: var(--ink); font-family: var(--mono); font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 .score-rules dd small { flex: none; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; }
+/* As duas médias da platina fecham o boletim atrás de um picote — a mesma marca de
+   impressor que corta o cartão do álbum, porque o que separa duas partes de uma folha é o
+   serrilhado e não um fio de régua —, e cada uma leva a faísca que nomeia a platina em toda
+   parte deste papel. O denominador delas é outro (só quem platinou pôde respondê-las), e
+   lidas na mesma corrida das cinco de cima pareceriam critérios que metade do clube deixou
+   em branco. */
+.score-rules > div:not(.is-platina) + div.is-platina { margin-top: .55rem; padding-top: .75rem; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x top center/9px 3px; }
+.score-rules > div.is-platina dt::before { content: ''; display: inline-block; width: .72rem; height: .72rem; margin-right: .34rem; vertical-align: -.06rem; background: var(--score-high); -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat; }
 
 /* A completude é impressa, não colorida: cheio, meio-tom e hachura. A cor sozinha nunca
    diz nada aqui — cada fatia vem com a palavra e a porcentagem ao lado. */
@@ -455,6 +463,17 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .criteria-field { display: grid; gap: .75rem; }
 .criterion-row { display: grid; grid-template-columns: minmax(5.5rem, 7.5rem) 1fr; align-items: center; gap: .85rem; }
 .criterion-label { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+/* As duas perguntas que a platina abre não são uma terceira faixa — a folha continua
+   cobrando duas coisas e aceitando o resto. São um bloco dentro da faixa opcional, e é o
+   único ponto do formulário que recebe a tinta fria da platina: a mesma do status marcado
+   dois palmos acima, para que a causa e o efeito se reconheçam sem uma frase explicando. */
+.platina-extra { display: grid; gap: .6rem; }
+/* Um corpo abaixo do título da faixa, e não igual a ele: este bloco vive DENTRO de "o
+   resto, se você quiser", e um título do mesmo tamanho — ainda por cima em tinta viva,
+   contra o cinza do de cima — leria como uma terceira faixa. A folha continua cobrando
+   duas coisas e aceitando o resto. */
+.platina-extra-title { display: flex; align-items: center; gap: .42rem; margin: 0; color: var(--score-high); font-size: .82rem; line-height: 1.3; }
+.platina-extra-title::before { content: ''; width: .76rem; height: .76rem; flex: none; background: currentColor; -webkit-mask: var(--spark) center / contain no-repeat; mask: var(--spark) center / contain no-repeat; }
 
 /* A nota média ocupa o lugar do antigo subtítulo e é o oposto dele: não se escreve, se
    recebe. Por isso ela tem a moldura de um campo e nenhum cursor de texto. */
@@ -625,7 +644,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .album-who { display: grid; gap: .12rem; min-width: 0; }
 .album-serial { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .album-name { font-family: var(--display); font-size: 1.42rem; font-weight: 600; line-height: 1.1; letter-spacing: -.03em; overflow-wrap: anywhere; }
-/* A picotagem do bloquinho, a mesma marca de impressor da coleção. */
+/* A picotagem do bloquinho, a mesma marca de impressor da gaveta. */
 .album-perf { height: 3px; margin: .5rem 0 .35rem; background: radial-gradient(circle, rgba(22, 35, 58, .34) 1.5px, transparent 1.7px) repeat-x center/9px 3px; }
 .album-title { font-family: var(--display); font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .album-title-blank { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -735,7 +754,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .home-empty h2 strong { color: var(--yellow); font-weight: 600; }
 .home-empty p { max-width: 34ch; margin: 0; color: var(--sky); font-size: .92rem; line-height: 1.55; }
 
-/* ---- A gaveta da coleção ---- */
+/* ---- A gaveta dos integrantes ---- */
 /* Papel, pela Regra da Única Quebra: aqui se administra. Duas faces e nunca duas camadas —
    a lista e a bancada de uma cápsula trocam de lugar dentro da mesma gaveta, porque um
    segundo modal por cima do primeiro deixaria dois véus disputando a mesma tecla Esc. */

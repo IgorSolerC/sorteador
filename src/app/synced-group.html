@@ -10,7 +10,7 @@
 
   <nav class="topbar-actions" aria-label="A máquina">
     <button id="roster-button" type="button" class="plate-action" (click)="openRoster()">
-      A coleção
+      Integrantes
       <b>{{ members().length }}</b>
     </button>
     <a class="plate-action" [href]="albumUrl()">O álbum</a>
@@ -178,7 +178,7 @@
             Girar a roleta
           }
         </button>
-        <button class="text-link" type="button" (click)="openRoster()">Abrir a coleção</button>
+        <button class="text-link" type="button" (click)="openRoster()">Abrir a lista de integrantes</button>
       </div>
 
       @if (confirming()) {

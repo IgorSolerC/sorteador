@@ -117,14 +117,28 @@ export type ReviewStatus = 'platinado' | 'finalizado' | 'incompleto';
 export const REVIEW_STATUSES = ['platinado', 'finalizado', 'incompleto'] as const;
 
 /**
- * Os cinco critérios opcionais, na ordem em que a ficha os pergunta. Só a nota final é
- * obrigatória — quem quiser dizer apenas "8" diz apenas "8", e a ficha não cobra o resto.
+ * Os cinco critérios que toda resenha aceita, na ordem em que a ficha os pergunta. Só a
+ * nota final é obrigatória — quem quiser dizer apenas "8" diz apenas "8", e a ficha não
+ * cobra o resto.
  */
-export const REVIEW_CRITERIA = [
+export const BASE_CRITERIA = [
   'diversao', 'historia', 'qualidade', 'jogabilidade', 'dificuldade',
 ] as const;
 
+/**
+ * Os dois critérios que só existem para quem PLATINOU. Platinar é outro jogo dentro do
+ * jogo: a caçada aos troféus tem uma dificuldade e uma graça próprias, que muitas vezes
+ * não são as do jogo em si — há jogo delicioso de jogar e insuportável de platinar.
+ *
+ * Eles só são perguntados a quem marcou `platinado`, e só entram na média por essa mesma
+ * porta: a média de "dificuldade de platinar" de quem não platinou não existe.
+ */
+export const PLATINUM_CRITERIA = ['diversaoPlatina', 'dificuldadePlatina'] as const;
+
+export const REVIEW_CRITERIA = [...BASE_CRITERIA, ...PLATINUM_CRITERIA] as const;
+
 export type ReviewCriterion = (typeof REVIEW_CRITERIA)[number];
+export type PlatinumCriterion = (typeof PLATINUM_CRITERIA)[number];
 
 /** O rótulo de cada critério, para quem escreve e para quem lê. */
 export const REVIEW_CRITERION_LABELS: Readonly<Record<ReviewCriterion, string>> = {
@@ -133,13 +147,20 @@ export const REVIEW_CRITERION_LABELS: Readonly<Record<ReviewCriterion, string>> 
   qualidade: 'Qualidade',
   jogabilidade: 'Jogabilidade',
   dificuldade: 'Dificuldade',
+  diversaoPlatina: 'Diversão da platina',
+  dificuldadePlatina: 'Dificuldade de platinar',
 };
 
+/** Se o critério é um dos dois que pendem da platina. */
+export function isPlatinumCriterion(criterion: ReviewCriterion): boolean {
+  return (PLATINUM_CRITERIA as readonly string[]).includes(criterion);
+}
+
 /**
- * Dificuldade é a única medida que não se responde com um número. Ninguém sabe dizer a
- * diferença entre 6 e 7 de dificuldade, e a nota dela ficava perdida no meio de quatro
- * notas que são elogio — parecia que difícil era bom. Ela vira uma escolha de cinco
- * degraus, com as palavras que o clube já usa.
+ * Dificuldade não se responde com um número. Ninguém sabe dizer a diferença entre 6 e 7
+ * de dificuldade, e a nota dela ficava perdida no meio de notas que são elogio — parecia
+ * que difícil era bom. Ela vira uma escolha de cinco degraus, com as palavras que o clube
+ * já usa. A dificuldade de platinar usa exatamente os mesmos degraus.
  *
  * Os degraus são gravados na mesma escala 0–10 de todo critério, e não num campo novo: as
  * rules, a média e o denominador continuam sendo exatamente os mesmos. O que muda é como
@@ -158,6 +179,17 @@ export const DIFFICULTY_LEVELS: readonly DifficultyLevel[] = [
   { score: 10, label: 'Impossível' },
 ];
 
+/**
+ * Os critérios que se respondem em palavra, e não em número. São as duas dificuldades — a
+ * do jogo e a da platina —, pelo mesmo motivo: dificuldade não tem direção, e uma nota ali
+ * pareceria elogio.
+ */
+export const NAMED_CRITERIA = ['dificuldade', 'dificuldadePlatina'] as const;
+
+export function isNamedCriterion(criterion: ReviewCriterion): boolean {
+  return (NAMED_CRITERIA as readonly string[]).includes(criterion);
+}
+
 /** O degrau mais próximo de uma nota. A média cai entre dois, e ela nomeia o vizinho. */
 export function difficultyLabel(score: number): string {
   let perto = DIFFICULTY_LEVELS[0];
@@ -170,14 +202,14 @@ export function difficultyLabel(score: number): string {
 /**
  * Como o valor de um critério se lê. `average` distingue os dois casos que existem: a
  * média do clube tem casa decimal (`8,5`), a nota de uma pessoa é o inteiro que ela
- * marcou (`8`). Dificuldade ignora os dois e responde em palavra.
+ * marcou (`8`). As duas dificuldades ignoram os dois casos e respondem em palavra.
  */
 export function criterionText(
   criterion: ReviewCriterion,
   score: number,
   average = false,
 ): string {
-  if (criterion === 'dificuldade') return difficultyLabel(score);
+  if (isNamedCriterion(criterion)) return difficultyLabel(score);
   return average ? formatScore(score) : String(score);
 }
 
@@ -451,7 +483,7 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
           author,
           authorKey: key,
           score,
-          criteria: asCriteria(event.criteria),
+          criteria: asCriteria(event.criteria, status),
           status,
           hours: asHours(event.hours),
           text: noteText(event.text, MAX_REVIEW_TEXT),
@@ -796,13 +828,22 @@ function asStatus(value: unknown): ReviewStatus | null {
   return REVIEW_STATUSES.includes(value as ReviewStatus) ? (value as ReviewStatus) : null;
 }
 
-/** Só os cinco critérios conhecidos, e só com nota válida. O resto é descartado. */
+/**
+ * Só os critérios conhecidos, e só com nota válida. O resto é descartado.
+ *
+ * Os dois da platina pendem do status: uma resenha que não platinou não tem dificuldade de
+ * platinar, e uma nota dessas num evento de quem marcou `finalizado` é contradição. O log
+ * é para sempre e não se reescreve, então quem decide o que ela significa é o replay —
+ * como sempre foi com todo campo que sobra num evento.
+ */
 function asCriteria(
   value: Readonly<Partial<Record<ReviewCriterion, number>>> | null | undefined,
+  status: ReviewStatus,
 ): Readonly<Partial<Record<ReviewCriterion, number>>> {
   const kept: Partial<Record<ReviewCriterion, number>> = {};
   if (!value) return kept;
   for (const criterion of REVIEW_CRITERIA) {
+    if (status !== 'platinado' && isPlatinumCriterion(criterion)) continue;
     const score = asScore(value[criterion]);
     if (score !== null) kept[criterion] = score;
   }

@@ -277,6 +277,24 @@ describe('as quatro tintas da nota no álbum', () => {
     fixture.destroy();
   });
 
+  it('o resumo do cartão não carrega as duas medidas da platina', async () => {
+    // Numa parede de dezenas de cartões, duas linhas que só existem para alguns jogos
+    // alongam todos e não deixam nenhum mais fácil de comparar. Elas estão na ficha, a um
+    // clique daqui — o cartão inteiro é o botão que a abre.
+    const store = new FakeStore().seed(['Ana', 'Breno'], 1)
+      .label(0, 'Hollow Knight')
+      .review(0, 'Ana', 10, 'platinado', {
+        criteria: { diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 6 },
+      });
+    const fixture = await render(store);
+    const resumo = el(fixture).querySelector('.album-criteria')!;
+
+    expect(resumo.textContent).toContain('Diversão');
+    expect(resumo.textContent).not.toContain('platinar');
+    expect(resumo.textContent).not.toContain('platina');
+    fixture.destroy();
+  });
+
   it('a cápsula sem jogo escrito não repete que também não tem nota', async () => {
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
     const cartao = el(fixture).querySelector('.album-card')!;

@@ -123,6 +123,10 @@ const paginas = [
   ['ficha do jogo', 'http://localhost:4200/?emu=1#/g/demo', { clique: '.cell-open' }],
   ['ficha: minha resenha', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .secondary-action' }],
+  // A resenha com a platina marcada é uma tela por si: ela abre duas fileiras que não
+  // existem nas outras, e é o único ponto do formulário com a tinta fria da platina.
+  ['ficha: a platina', 'http://localhost:4200/?emu=1#/g/demo',
+    { clique: '.cell-open|.sheet-actions .secondary-action|.status-choice.is-platinado' }],
   ['ficha: o jogo', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .note-cancel' }],
   ['ficha: a mesa', 'http://localhost:4200/?emu=1#/g/demo',

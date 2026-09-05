@@ -58,17 +58,19 @@ const ETIQUETAS = [
  * opcionais, tempo de jogo em umas e não em outras, e texto longo. Precisa cobrir também as três faixas da nota, porque é a nota
  * que decide a tinta na tela: um jogo que o clube amou, um mediano e um que foi um desastre.
  * As dificuldades são sempre um dos cinco degraus (0, 2, 5, 8, 10), que é o que a ficha
- * grava desde que ela virou uma escolha por palavra.
+ * grava desde que ela virou uma escolha por palavra. Quem platinou pode trazer as duas
+ * medidas da platina — e o grupo precisa de uma platina sem elas, porque respondê-las
+ * continua sendo opcional.
  */
 const RESENHAS = [
   [
     { autor: 'Ana', nota: 8, status: 'finalizado', horas: 3, diversao: 9, dificuldade: 2, historia: 5, qualidade: 8, jogabilidade: 8, texto: 'Simples até demais, mas não largamos por duas horas.' },
     { autor: 'Breno', nota: 7, status: 'incompleto', horas: 2, diversao: 8, dificuldade: 5 },
-    { autor: 'Cecília', nota: 9, status: 'platinado', horas: 6, diversao: 10, dificuldade: 2, qualidade: 9, jogabilidade: 9, texto: 'Platinei na mesma noite. O botão é uma piada boa que não cansa.' },
+    { autor: 'Cecília', nota: 9, status: 'platinado', horas: 6, diversao: 10, dificuldade: 2, qualidade: 9, jogabilidade: 9, dificuldadePlatina: 2, diversaoPlatina: 9, texto: 'Platinei na mesma noite. O botão é uma piada boa que não cansa.' },
     { autor: 'Davi', nota: 6, status: 'incompleto', texto: 'Não é para mim, mas entendo a graça.' },
   ],
   [
-    { autor: 'Ana', nota: 10, status: 'platinado', horas: 24, diversao: 10, dificuldade: 8, historia: 4, qualidade: 9, jogabilidade: 10, texto: 'Melhor coop que já jogamos. A fase do barco é uma prova de amizade e a gente reprovou.' },
+    { autor: 'Ana', nota: 10, status: 'platinado', horas: 24, diversao: 10, dificuldade: 8, historia: 4, qualidade: 9, jogabilidade: 10, dificuldadePlatina: 10, diversaoPlatina: 5, texto: 'Melhor coop que já jogamos. A fase do barco é uma prova de amizade e a gente reprovou.' },
     { autor: 'Breno', nota: 9, status: 'finalizado', horas: 18, diversao: 10, dificuldade: 8, qualidade: 9 },
     { autor: 'Elisa', nota: 9, status: 'finalizado', horas: 21, diversao: 9, dificuldade: 8, jogabilidade: 8, texto: 'Grito muito. Nota alta mesmo assim.' },
     { autor: 'Fátima', nota: 8, status: 'incompleto', dificuldade: 10 },
@@ -179,6 +181,7 @@ function paraEvento(d) {
         criteria: {
           diversao: d.diversao, dificuldade: d.dificuldade, historia: d.historia,
           qualidade: d.qualidade, jogabilidade: d.jogabilidade,
+          dificuldadePlatina: d.dificuldadePlatina, diversaoPlatina: d.diversaoPlatina,
         },
         status: d.status ?? null,
         hours: typeof d.horas === 'number' ? d.horas : null,

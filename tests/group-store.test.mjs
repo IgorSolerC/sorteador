@@ -468,6 +468,45 @@ await it('critério fora da régua é descartado sem levar a resenha junto', asy
   assert.deepEqual((await store.load(id)).state.spins[0].reviews[0].criteria, { diversao: 9 });
 });
 
+await it('as duas medidas da platina vão ao log e voltam dele', async () => {
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, {
+    score: 10,
+    criteria: { diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 4 },
+    status: 'platinado',
+  }, 'Ana');
+
+  assert.deepEqual((await store.load(id)).state.spins[0].reviews[0].criteria, {
+    diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 4,
+  });
+});
+
+await it('quem troca de platinado para finalizado não deixa a platina gravada', async () => {
+  // Ela marca a platina, responde as duas, muda de ideia e salva. As notas continuam no
+  // rascunho da tela; gravá-las escreveria no log uma resenha que se contradiz — e a rule
+  // do servidor recusaria a escrita inteira, derrubando a resenha junto.
+  const { store } = novaLoja(FOLGADO);
+  const id = await store.createGroup('Clube');
+  await store.addMember(id, 'Ana');
+  await store.addMember(id, 'Breno');
+  await store.spin(id);
+
+  await store.reviewSpin(id, 0, {
+    score: 8,
+    criteria: { diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 4 },
+    status: 'finalizado',
+  }, 'Ana');
+
+  const resenha = (await store.load(id)).state.spins[0].reviews[0];
+  assert.equal(resenha.status, 'finalizado');
+  assert.deepEqual(resenha.criteria, { diversao: 9 });
+});
+
 await it('pinta uma cápsula e a cor volta do log', async () => {
   const { store } = novaLoja(FOLGADO);
   const id = await store.createGroup('Clube');

@@ -79,7 +79,7 @@ export class SyncedGroup {
   protected readonly lastLoadedAt = signal(0);
   protected readonly confirming = signal(false);
 
-  /** A gaveta da coleção, com a lista e a bancada de cada cápsula. */
+  /** A gaveta dos integrantes, com a lista e a bancada de cada cápsula. */
   protected readonly rosterOpen = signal(false);
   protected readonly rosterError = signal('');
   protected readonly restyled = signal(0);
@@ -284,7 +284,7 @@ export class SyncedGroup {
     return spin ? this.emojiOf(spin) : '';
   });
 
-  // --- a coleção ---
+  // --- os integrantes ---
 
   protected async addFromBench(raw: string): Promise<void> {
     const name = normalizeName(raw);

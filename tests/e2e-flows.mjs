@@ -130,7 +130,7 @@ check('o nome do grupo é o que foi digitado', depoisCriar.nome === 'Grupo E2E',
 
 const criado = depoisCriar.hash.replace('#/g/', '');
 
-// --- 2. a gaveta da coleção abre e fecha sem sair da rota ---
+// --- 2. a gaveta dos integrantes abre e fecha sem sair da rota ---
 await evaluate(`document.querySelector('#roster-button').click(); true`);
 await sleep(1200);
 const naGaveta = await evaluate(`(() => ({
@@ -138,7 +138,7 @@ const naGaveta = await evaluate(`(() => ({
   linhas: document.querySelectorAll('.capsule-row').length,
   hash: location.hash,
 }))()`);
-check('a coleção abre numa gaveta, sem trocar de rota',
+check('os integrantes abrem numa gaveta, sem trocar de rota',
   naGaveta.aberta && naGaveta.hash === `#/g/${criado}`, JSON.stringify(naGaveta));
 check('a gaveta já lista quem montou a máquina', naGaveta.linhas === 1, `${naGaveta.linhas}`);
 

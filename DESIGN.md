@@ -234,7 +234,7 @@ O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vis
 
 A densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: o registro e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.
 
-Há exatamente uma quebra no esmalte: a seção da coleção é papel quente impresso (`paper`), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.
+Há exatamente uma quebra no esmalte: a gaveta dos integrantes é papel quente impresso (`paper`), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.
 
 **Key Characteristics:**
 - Máquina de cápsulas em esmalte azul-noite sangrando na tela, nunca um cartão centralizado.
@@ -258,7 +258,7 @@ Uma caixa de vinte e quatro tintas deliberadamente variada: quatro neutros, seis
 
 A fonte da verdade é `src/app/palette.ts`; o frontmatter deste arquivo é a cópia legível. A ordem é exatamente a do JASC-PAL fornecido em 2026-09-04. Como o log guarda índices, os vinte e quatro valores podem ser afinados em posição, mas nunca reordenados.
 
-A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua na gaveta da coleção, e essa cor a identifica em toda parte — a cunha no aro do globo, a bolinha do registro, o disco de iniciais, a cápsula na bandeja, o cartão no álbum, e o confete quando ela sai. É o vínculo que faz a coleção ler como coleção. Antes a cor vinha da posição, e a mesma pessoa mudava de cor quando o bolo mudava de tamanho.
+A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua na gaveta dos integrantes, e essa cor a identifica em toda parte — a cunha no aro do globo, a bolinha do registro, o disco de iniciais, a cápsula na bandeja, o cartão no álbum, e o confete quando ela sai. É o vínculo que faz a coleção ler como coleção. Antes a cor vinha da posição, e a mesma pessoa mudava de cor quando o bolo mudava de tamanho.
 
 ### Tertiary
 - **Cromo** (`chrome`) e **Cromo Fosco** (`chrome-dim`): o aro canelado, a placa da manivela, o cubo central, os links de texto e os estados desabilitados. Cromo é metal, não texto de ênfase.
@@ -266,7 +266,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 ### Neutral
 - **Branco** (`white`): texto primário sobre esmalte e o fundo dos campos de entrada.
-- **Papel Quente** (`paper`) e **Papel Silencioso** (`paper-quiet`): o fundo da seção da coleção e suas caixas internas — a única superfície clara do produto.
+- **Papel Quente** (`paper`) e **Papel Silencioso** (`paper-quiet`): o fundo da gaveta dos integrantes e suas caixas internas — a única superfície clara do produto.
 - **Tinta** (`ink`) e **Tinta Silenciosa** (`ink-quiet`): texto primário e secundário sobre papel.
 - **Linha**, **Linha Forte** e **Linha de Papel** (`line`, `line-strong`, `line-paper`): divisórias hairline. Sobre esmalte são luz azulada de baixa opacidade; sobre papel, tinta de baixa opacidade.
 
@@ -280,7 +280,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para a tinta AA calculada daquela cápsula. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
 
-**A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a seção da coleção, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. Uma terceira superfície clara precisa antes provar que é administração.
+**A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. Uma terceira superfície clara precisa antes provar que é administração.
 
 **A Regra do Amarelo de Ação.** O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (`button-secondary`) ou o link de texto.
 
@@ -295,7 +295,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 ### Hierarchy
 - **Display** (600, `clamp(3rem, 7.4vw, 6rem)`, 0.93, `-0.03em`): o nome vencedor e os títulos de estado de espera. Limitado a 12ch para que a quebra aconteça em nome próprio.
 - **Headline** (600, `clamp(2.4rem, 4.6vw, 4rem)`, 0.95): títulos de seção — o registro, o álbum — e a saudação da prateleira.
-- **Title** (600, `1.42rem`): subtítulos dentro da coleção (configuração, compartilhar).
+- **Title** (600, `1.42rem`): subtítulos dentro dos integrantes (configuração, compartilhar).
 - **Action** (600, `1rem`): rótulos de botão e iniciais no disco da pessoa.
 - **Body** (400, `1rem`, 1.62): parágrafos, campos e instruções. Medida de 40–52ch conforme a coluna.
 - **Label** (700, `0.82rem`): links de texto, dica de trilho e mensagens de estado curtas.
@@ -322,7 +322,7 @@ O produto é uma única página empilhada em faixas de largura total, com goteir
 
 A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr) / minmax(0, 1.08fr)`) com altura mínima de `min(760px, 100svh - 64px)`: a máquina à esquerda, separada por uma hairline vertical; o resultado à direita. O adesivo da rodada fica posicionado em absoluto no canto superior direito do palco, rotacionado `-13deg`. O registro é uma grade de células que se empacota borda a borda (`auto-fit, minmax(124px, 1fr)`) sob uma régua superior de 2px, com um tique por célula. A porta e a prateleira repetem a mesma assimetria do palco. A grade de série sob o resultado é `auto-fit, minmax(140px, 1fr)` com bordas que se costuram sem gap.
 
-A página tem duas faixas e um rodapé, e mais nada: o palco e o registro. **A administração não é uma seção — é uma gaveta.** A coleção ocupava a metade de baixo de toda visita para uma tarefa que se faz uma vez por mês; agora ela abre pelo cabeçalho e some quando acaba.
+A página tem duas faixas e um rodapé, e mais nada: o palco e o registro. **A administração não é uma seção — é uma gaveta.** A lista de integrantes ocupava a metade de baixo de toda visita para uma tarefa que se faz uma vez por mês; agora ela abre pelo cabeçalho e some quando acaba.
 
 **Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a barra do topo quebra em duas linhas, a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, e o rodapé empilha.
 
@@ -381,7 +381,7 @@ Quase não há cards. As agrupações são feitas por costura de bordas: a grade
 - **Share field:** o campo de link compartilhável usa mono `0.72rem` — é um valor a conferir, não um texto a ler.
 
 ### Navigation
-A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 64px, hairline inferior. À esquerda a marca (cápsula desenhada em SVG mais o nome em Fredoka 600); à direita os comprimidos de navegação em mono caixa alta — **A coleção** com a contagem em tabular, **O álbum** — e, por último, o crachá.
+A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 64px, hairline inferior. À esquerda a marca (cápsula desenhada em SVG mais o nome em Fredoka 600); à direita os comprimidos de navegação em mono caixa alta — **Integrantes** com a contagem em tabular, **O álbum** — e, por último, o crachá.
 
 **O crachá** é quem está mexendo, sempre à vista: um disco de cápsula com as iniciais, na cor tirada do próprio nome, mais o nome truncado em `12ch`. Ele é um botão, e o que ele faz é reabrir a porta para passar a vez. Não é um menu de conta e não tem submenu: o produto não tem contas.
 
@@ -415,7 +415,7 @@ A raiz do produto. Antes ela era uma máquina de demonstração com seis nomes i
 - **A lista é local e não dá acesso a nada.** Quem abre uma máquina é o link, não a prateleira — e listar grupos é proibido nas rules justamente para o link continuar sendo o segredo. Cada linha carrega um disco na cor derivada do id do grupo, o nome, a data da última visita e um X para esquecer.
 - **Vazia, ela se explica** com o globo fechado e uma frase, em vez de ficar em branco.
 
-### A Gaveta da Coleção
+### A Gaveta dos Integrantes
 
 Administrar é uma tarefa de uma vez por mês, e ela ocupava metade de toda visita. Agora abre pelo cabeçalho, faz o que tem de fazer, e some.
 
@@ -445,9 +445,11 @@ um. A mesa é a terceira, e é uma nota de rodapé.
 - **Face 1, o boletim:** duas medidas no alto — a nota do clube em display `clamp(3rem, 11vw,
   4.2rem)` e o tempo médio em `clamp(2rem, 7vw, 2.7rem)` —, uma régua por critério, a barra de
   completude com legenda escrita, e a lista de resenhas. Cada resenha traz o disco de cápsula
-  de quem escreveu, a nota, o selo de completude e o tempo.
+  de quem escreveu, a nota, o selo de completude e o tempo. As duas réguas da platina fecham
+  a lista atrás de um **picote** — a mesma marca de impressor que corta o cartão do álbum —,
+  cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
-  de Faixa).
+  de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
 - **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
   antigo subtítulo, e é o oposto dele: não se escreve, se recebe — e descrição.
 - **Face 4, a mesa:** quem jogou, com a saída para quem não resenhou e o convite para quem do
@@ -483,13 +485,15 @@ quadradinho na legenda. Finalizar é o esperado e fica em meio-tom; incompleto c
 hachurado, porque não terminar não é demérito nenhum. Com 0%, a platina perde a tinta: uma
 faísca dourada ao lado de "0%" promete o que não houve.
 
-**A Regra da Medida Sem Direção.** Quatro dos cinco critérios têm direção — diversão,
-história, qualidade e jogabilidade altas são elogio. Dificuldade não tem: 9 ali é um fato
-sobre o jogo, não um aplauso. Ela não recebe tinta, e no boletim não é um filete que enche e
-sim **um traço que cruza o trilho** na posição medida. Um filete cheio diria "tirou 8 em
-dificuldade", e dificuldade não se tira. No formulário, pelo mesmo motivo, ela é uma régua de
-cinco degraus com nome — `Nenhuma`, `Fácil`, `Médio`, `Difícil`, `Impossível` — desenhada como
-as réguas numéricas de cima para a coluna fechar.
+**A Regra da Medida Sem Direção.** Quase todo critério tem direção — diversão, história,
+qualidade e jogabilidade altas são elogio. Dificuldade não tem: 9 ali é um fato sobre o jogo,
+não um aplauso. Ela não recebe tinta, e no boletim não é um filete que enche e sim **um traço
+que cruza o trilho** na posição medida. Um filete cheio diria "tirou 8 em dificuldade", e
+dificuldade não se tira. No formulário, pelo mesmo motivo, ela é uma régua de cinco degraus
+com nome — `Nenhuma`, `Fácil`, `Médio`, `Difícil`, `Impossível` — desenhada como as réguas
+numéricas de cima para a coluna fechar. **A dificuldade de platinar é a segunda medida sem
+direção** e usa exatamente os mesmos cinco degraus; a diversão da platina tem direção como
+qualquer diversão, e continua sendo uma régua de onze casas com as quatro tintas.
 
 **A Regra da Exigência de Faixa.** A resenha pede duas coisas e aceita mais seis, e a folha
 diz qual é qual: **o que ela cobra** (nota final e completude, com o controle em largura cheia
@@ -500,6 +504,19 @@ diferentes, e cinco selos disputando a mesma pergunta viram ruído. `aria-requir
 exigência a quem não vê o cabeçalho. As faixas se anunciam **numa frase em corpo**, e não num
 rótulo em mono caixa alta: dois rótulos iguais empilhados leem como a mesma coisa dita duas
 vezes.
+
+**A Regra da Platina Perguntada.** Platinar é outro jogo dentro do jogo — a caçada aos
+troféus tem uma dificuldade e uma graça que muitas vezes não são as do jogo em si —, e por
+isso a ficha pergunta duas coisas a mais a quem marcou `Platinado`: **diversão da platina**
+e **dificuldade de platinar**, nessa ordem — a graça antes do preço, como nas cinco de cima,
+onde diversão abre a coluna e dificuldade a fecha. As duas só aparecem depois dessa marca, num bloco
+dentro da faixa opcional cujo título — *Porque você platinou* — é o único ponto do
+formulário com a tinta fria da platina, a mesma do status marcado dois palmos acima. Elas
+**não entram no resumo do cartão do álbum**: numa parede de dezenas de cartões, duas linhas
+que só existem para alguns jogos alongam todos e não deixam nenhum mais fácil de comparar.
+No boletim da ficha elas aparecem inteiras, atrás de um picote e com a faísca no rótulo, porque
+ali o denominador delas é outro — só quem platinou pôde respondê-las — e lidas na mesma
+corrida das cinco de cima pareceriam critérios que metade do clube deixou em branco.
 
 **A Regra do Denominador de Quem Jogou.** "X resenhas de Y" e a barra de completude são sobre
 quem **jogou**, e não sobre quem escreveu: quem está na mesa e ainda não resenhou entra como
@@ -515,7 +532,7 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca.
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
-- **Cartão:** a etiqueta de papel virou um boletim, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, a nota do clube em display `2.7rem` na tinta que ela merece, os critérios e o tempo em mono, a barra de completude com legenda, e a descrição cortada em quatro linhas. O cartão inteiro é o controle que abre a ficha. **O nome de quem ganhou não se repete no rodapé**: ele já está em `1.42rem` no alto, e dizê-lo de novo em mono miúdo era a mesma informação duas vezes — para quem não vê o cartão, ele continua no nome acessível do botão.
+- **Cartão:** a etiqueta de papel virou um boletim, com inclinação fixa por posição (`-1.7°` a `1.8°`, seis valores em rodízio) para que a parede nunca se remexa entre duas visitas. Cabeçalho com a cápsula plana e o nome em `1.42rem`, picote de papel, título do jogo, a nota do clube em display `2.7rem` na tinta que ela merece, os cinco critérios de sempre e o tempo em mono — **as duas medidas da platina ficam de fora dele**, ver A Regra da Platina Perguntada —, a barra de completude com legenda, e a descrição cortada em quatro linhas. O cartão inteiro é o controle que abre a ficha. **O nome de quem ganhou não se repete no rodapé**: ele já está em `1.42rem` no alto, e dizê-lo de novo em mono miúdo era a mesma informação duas vezes — para quem não vê o cartão, ele continua no nome acessível do botão.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
 - **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `SEM JOGO ESCRITO` em mono e nada mais. Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas vezes.
 
@@ -565,7 +582,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Don't** centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.
 - **Don't** misturar a cor da cápsula difusamente no azul como tintura de fundo — o resultado é oliva.
 - **Don't** introduzir uma cor de cápsula sem definir e testar a tinta clara ou escura que a torna legível em cada superfície.
-- **Don't** trazer papel para fora de onde se administra: a gaveta da coleção, a bancada da etiqueta e a própria etiqueta.
+- **Don't** trazer papel para fora de onde se administra: a gaveta dos integrantes, a bancada da etiqueta e a própria etiqueta.
 - **Don't** empilhar um modal sobre outro: duas faces na mesma gaveta, e o Esc volta uma de cada vez.
 - **Don't** deixar uma grade de escolhas com uma fileira órfã; o número de colunas divide o número de itens.
 - **Don't** usar sombra dura de bloco com deslocamento diagonal e zero desfoque; a parede lateral do botão é vertical, sólida, e vem com sombra ambiente.

@@ -180,7 +180,7 @@ function reduzirMovimento(): void {
 
 const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Abre a gaveta da colecao, que e onde a administracao mora agora. */
+/** Abre a gaveta dos integrantes, que e onde a administracao mora agora. */
 function abrirColecao(fixture: { componentInstance: unknown; detectChanges(): void }): void {
   (fixture.componentInstance as { openRoster(): void }).openRoster();
   fixture.detectChanges();
@@ -438,7 +438,7 @@ describe('modo sincronizado', () => {
     fixture.destroy();
   });
 
-  it('a colecao e uma gaveta, nao uma secao da pagina', async () => {
+  it('os integrantes sao uma gaveta, nao uma secao da pagina', async () => {
     // A administracao saia meia pagina abaixo do palco e ficava aberta o tempo todo.
     // Agora ela so existe quando alguem pede, e a pagina fica com a maquina e o registro.
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));

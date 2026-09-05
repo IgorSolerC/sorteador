@@ -8,7 +8,7 @@ import { trapFocusWithin } from './focus-trap';
 import { initialsOf } from './naming';
 
 /**
- * A gaveta da coleção. Antes tudo isto era uma seção de duas colunas ocupando a metade de
+ * A gaveta dos integrantes. Antes tudo isto era uma seção de duas colunas ocupando a metade de
  * baixo da página: um formulário, uma lista e um bloco de compartilhar, permanentemente
  * abertos para uma tarefa que se faz uma vez por mês. A página inteira era administração.
  *

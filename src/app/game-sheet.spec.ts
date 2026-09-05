@@ -191,6 +191,39 @@ describe('a ficha do jogo', () => {
     fixture.destroy();
   });
 
+  it('a ficha mostra as médias da platina, que o cartão do álbum não mostra', async () => {
+    // O resumo tem teto e elas ficam de fora dele; a ficha é onde a pergunta "e para
+    // platinar?" é feita, e é aqui que a conta do clube sobre a platina aparece.
+    const fixture = await render(spinRecord({
+      reviews: [
+        review({
+          authorKey: 'ana',
+          status: 'platinado',
+          criteria: { diversao: 9, dificuldadePlatina: 10, diversaoPlatina: 4 },
+        }),
+        review({
+          authorKey: 'breno',
+          status: 'platinado',
+          criteria: { diversao: 7, dificuldadePlatina: 8, diversaoPlatina: 6 },
+        }),
+      ],
+    }));
+    const linhas = [...el(fixture).querySelectorAll('.score-rules > div')]
+      .map((linha) => linha.textContent?.replace(/\s+/g, ' ').trim() ?? '');
+
+    // A dificuldade de platinar responde em palavra, como a do jogo: a média 9 cai entre
+    // Difícil (8) e Impossível (10), e o empate fica no degrau mais fácil.
+    const dificuldade = linhas.find((linha) => linha.includes('Dificuldade de platinar'));
+    expect(dificuldade).toContain('Difícil');
+    expect(dificuldade).toContain('2 votos');
+    expect(linhas.find((linha) => linha.includes('Diversão da platina'))).toContain('5,0');
+    // Elas fecham a lista, atrás do picote, e na mesma ordem em que a ficha as pergunta.
+    const platina = [...el(fixture).querySelectorAll('.score-rules > div.is-platina')];
+    expect(platina.map((linha) => linha.querySelector('dt')?.textContent?.trim()))
+      .toEqual(['Diversão da platina', 'Dificuldade de platinar']);
+    fixture.destroy();
+  });
+
   it('a barra de completude nomeia cada fatia, sem depender da cor', async () => {
     const fixture = await render(spinRecord({
       reviews: [
@@ -215,6 +248,53 @@ describe('minha resenha', () => {
 
     expect(el(fixture).querySelectorAll('input[name="notaFinal"]').length).toBe(11);
     expect(el(fixture).querySelectorAll('input[name="diversao"]').length).toBe(12);
+    fixture.destroy();
+  });
+
+  it('as duas perguntas da platina só existem depois de a pessoa dizer que platinou', async () => {
+    const fixture = await render(spinRecord(), 'resenha');
+
+    expect(el(fixture).querySelector('.platina-extra')).toBeNull();
+    expect(el(fixture).querySelectorAll('input[name="dificuldadePlatina"]').length).toBe(0);
+
+    // "Platinado" é a primeira das três, na ordem em que a ficha as pergunta.
+    (el(fixture).querySelectorAll<HTMLInputElement>('input[name="completude"]')[0])
+      .dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+
+    const bloco = el(fixture).querySelector('.platina-extra');
+    expect(bloco).not.toBeNull();
+    // A diversão vem primeiro: a pergunta que o clube faz é "valeu a pena?", e a
+    // dificuldade é o que explica a resposta, não o que a antecede.
+    expect([...bloco!.querySelectorAll('.criterion-label')].map((r) => r.textContent?.trim()))
+      .toEqual(['Diversão da platina', 'Dificuldade de platinar']);
+    // A dificuldade de platinar é uma régua de cinco degraus com nome, mais o "não
+    // avaliei"; a diversão da platina continua sendo as onze casas mais ele.
+    expect(el(fixture).querySelectorAll('input[name="dificuldadePlatina"]').length).toBe(6);
+    expect(el(fixture).querySelectorAll('input[name="diversaoPlatina"]').length).toBe(12);
+
+    // Trocar de ideia fecha o bloco: quem não platinou não responde por uma platina.
+    (el(fixture).querySelectorAll<HTMLInputElement>('input[name="completude"]')[1])
+      .dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(el(fixture).querySelector('.platina-extra')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('a resenha platinada abre com as duas notas da platina já marcadas', async () => {
+    const fixture = await render(spinRecord({
+      reviews: [review({
+        authorKey: 'ana',
+        status: 'platinado' as ReviewStatus,
+        criteria: { dificuldadePlatina: 8, diversaoPlatina: 9 } as Partial<Record<ReviewCriterion, number>>,
+      })],
+    }), 'resenha');
+
+    const degraus = [...el(fixture).querySelectorAll<HTMLInputElement>('input[name="dificuldadePlatina"]')];
+    // Índice 0 é o "não avaliei"; 8 é o quarto degrau, "Difícil".
+    expect(degraus[4].checked).toBe(true);
+    const notas = [...el(fixture).querySelectorAll<HTMLInputElement>('input[name="diversaoPlatina"]')];
+    expect(notas[10].checked).toBe(true);
     fixture.destroy();
   });
 

@@ -63,7 +63,7 @@ export class Confetti {
       // `untracked` porque montar o carimbo lê o emoji e a cor. Sem ele o efeito passaria
       // a observar os dois, e repintar a cápsula de quem acabou de ganhar soltaria um
       // confete que ninguém pediu — a Regra do Momento Único quebrada por um clique na
-      // gaveta da coleção.
+      // gaveta dos integrantes.
       if (this.burst() > 0) untracked(() => this.fire());
     });
   }

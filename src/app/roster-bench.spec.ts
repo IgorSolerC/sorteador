@@ -39,7 +39,7 @@ function abrirCapsula(fixture: Awaited<ReturnType<typeof render>>, indice = 0): 
   fixture.detectChanges();
 }
 
-describe('a gaveta da coleção', () => {
+describe('a gaveta dos integrantes', () => {
   afterEach(() => TestBed.resetTestingModule());
 
   it('abre na lista, com uma linha por cápsula', async () => {

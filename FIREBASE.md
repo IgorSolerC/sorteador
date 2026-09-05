@@ -87,6 +87,8 @@ grupos/{grupoId}/eventos/{eventoId}     ← append-only, é a verdade
   horas?: number                         ← spin_reviewed: inteiro 1..2000, opcional
   diversao?, historia?, qualidade?,
   jogabilidade?, dificuldade?: number    ← spin_reviewed: inteiros 0..10, opcionais
+  dificuldadePlatina?,
+  diversaoPlatina?: number               ← spin_reviewed: idem, e só com status platinado
   texto?: string                         ← spin_reviewed, até 600
   retirada?: bool                        ← spin_reviewed: retira a própria resenha
   mesa?: bool                            ← spin_seated: põe (true) ou tira (false)
@@ -147,7 +149,7 @@ um evento custa 2 leituras de regra além da escrita.
 
 ## A cápsula de cada pessoa: cor e emoji
 
-Cada membro tem uma **cor** e um **emoji**, escolhidos por quem quiser na gaveta da coleção.
+Cada membro tem uma **cor** e um **emoji**, escolhidos por quem quiser na gaveta dos integrantes.
 Eles descrevem a pessoa; nunca participam do sorteio. `group-log.spec.ts` trava isso: com e
 sem pintura, o vencedor, o bolo e a rodada são idênticos.
 
@@ -204,7 +206,12 @@ descrita acima: um documento mutável que nenhuma regra consegue conferir contra
 
 **A resenha é de uma pessoa, e a assinatura é obrigatória — só aqui.** `spin_reviewed`
 carrega `nota` (0–10), `status` (`platinado` | `finalizado` | `incompleto`), até cinco notas
-de critério, um `texto` de até 600 e um `horas` opcional. O servidor não sabe quem é quem —
+de critério, um `texto` de até 600 e um `horas` opcional. Com `platinado` ela pode carregar
+mais duas notas — `dificuldadePlatina` e `diversaoPlatina` —, e **só com ele**: a rule as
+recusa em qualquer outro status, e o replay as descartaria de todo modo. Recusá-las na
+entrada não quebra aba nenhuma, porque uma aba aberta antes do deploy não conhece as chaves
+e nunca as manda; o que a regra impede é o log guardar para sempre um evento que se
+contradiz. O servidor não sabe quem é quem —
 `autor` é crachá, não credencial —, mas sabe que uma resenha sem assinatura não seria de
 ninguém e ninguém conseguiria editá-la depois. Reescrever é gravar outra; `retirada: true`
 a tira da conta sem tirá-la do log.
