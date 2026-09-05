@@ -16,6 +16,23 @@ export function participantKey(value: string): string {
   return normalizeName(value).toLowerCase();
 }
 
+/**
+ * As iniciais de um crachá: no máximo duas letras, em caixa alta. É o que aparece dentro de
+ * uma cápsula quando a pessoa não escolheu emoji.
+ *
+ * Mora aqui porque é uma conta sobre nome, e porque ela estava copiada em seis lugares — a
+ * porta, a prateleira, a coleção, a ficha, o crachá e o rótulo do globo. Seis cópias da
+ * mesma linha são seis chances de a mesma pessoa aparecer com duas siglas diferentes.
+ */
+export function initialsOf(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export function hashString(value: string): number {
   let hash = 0x811c9dc5;
   for (let index = 0; index < value.length; index += 1) {

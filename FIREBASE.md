@@ -23,6 +23,11 @@ O `UsageGuard` (`src/app/usage-guard.ts`) é a camada acima: orçamento por disp
 UTC, muito abaixo da cota do projeto, mais detecção de laço em rajada. Ele existe para que a
 parede nunca seja alcançada, e para degradar com mensagem clara caso seja.
 
+A detecção de rajada conta **idas à rede, nunca documentos**. Contando documentos, a primeira
+visita de um aparelho a um grupo com mais de 40 eventos — que chega inteiro numa `getDocs` só
+— era lida como laço e parava a máquina até a virada do dia UTC. Volume quem limita é o
+orçamento diário da tabela abaixo.
+
 | | Cota Spark (projeto/dia, conferir) | Orçamento por dispositivo/dia |
 |---|---|---|
 | Leituras | ~50.000 | 1.500 |
@@ -232,8 +237,13 @@ começarem fazia o cartão dizer "100% finalizado" para o clube inteiro.
 `get` do grupo já estava lá para o contador, então a checagem não custa leitura nova. Título e
 descrição são opcionais e limitados. Uma etiqueta não pode carregar `nome` nem `memberId`; uma
 resenha não pode carregar nenhum dos dois; uma mesa exige `memberId` e `mesa` booleano e não
-aceita campo de nota, de etiqueta nem de pintura. Nenhum tipo de evento pode carregar campos
-que não sejam dele.
+aceita campo de nota, de etiqueta nem de pintura.
+
+Nenhum tipo de evento carrega campo que não é dele, e isso é dito **uma vez só**, no alto de
+`eventoValido()`: `nome` existe apenas em `member_added`, e `memberId` apenas em
+`member_removed`, `member_styled` e `spin_seated`. Antes, um `spin` podia levar os dois de
+carona — o replay os ignorava, mas o log é para sempre: o que entra nele não se reescreve nem
+se apaga, e um evento que se contradiz fica no registro pelos anos seguintes.
 
 A espera de 30s **não** se aplica a etiquetar nem a pintar — corrigir um título nunca bloqueia
 o próximo giro. Em contrapartida, **só um giro pode mexer em `ultimoGiroEm`** (senão etiquetar
@@ -267,7 +277,7 @@ sendo o segredo, e essa lista é só um atalho para não caçar a mensagem no Wh
 ## Rules
 
 O arquivo real é `firestore.rules`, e ele é a fonte da verdade — não há esboço aqui para
-divergir dele. `tests/firestore-rules.test.mjs` prova 103 comportamentos contra o emulador:
+divergir dele. `tests/firestore-rules.test.mjs` prova 105 comportamentos contra o emulador:
 
 ```
 npm run test:rules
@@ -303,7 +313,7 @@ mexer na lista e girar — considere depois um segundo segredo só para administ
 
 ```
 npm test              # 235 unitários e de componente
-npm run test:rules    # 75 rules no emulador, sem projeto nem rede
+npm run test:rules    # 105 rules no emulador, sem projeto nem rede
 npm run test:store    # 28 de integração da camada de dados
 npm run test:a11y     # 8 telas x 3 larguras, contra o servidor local
 npm run test:etiqueta # 35 verificações de ponta a ponta num navegador real

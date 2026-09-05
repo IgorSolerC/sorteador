@@ -284,6 +284,42 @@ describe('minha resenha', () => {
     fixture.destroy();
   });
 
+  it('uma recarga do grupo não apaga o que a pessoa está escrevendo', async () => {
+    // A máquina recarrega sozinha quando a aba volta a ficar visível, e cada recarga
+    // reconstrói os giros do zero — objeto novo, mesmo giro. Reencher os rascunhos ali
+    // apagava a resenha meio escrita de quem só tinha ido conferir o nome do jogo.
+    const fixture = await render(spinRecord(), 'resenha');
+
+    marcar(fixture, 'notaFinal', 8);
+    await digitar(fixture, 'review-text', 'Jogamos em cinco.');
+
+    fixture.componentRef.setInput('spin', spinRecord());
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((el(fixture).querySelector('#review-text') as HTMLTextAreaElement).value)
+      .toBe('Jogamos em cinco.');
+    expect(el(fixture).querySelector('#nota-final-8')).toHaveProperty('checked', true);
+    fixture.destroy();
+  });
+
+  it('trocar de cápsula, porém, larga o rascunho da anterior', async () => {
+    const fixture = await render(spinRecord(), 'resenha');
+
+    marcar(fixture, 'notaFinal', 8);
+    await digitar(fixture, 'review-text', 'Jogamos em cinco.');
+
+    fixture.componentRef.setInput('spin', spinRecord({ index: 1 }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((el(fixture).querySelector('#review-text') as HTMLTextAreaElement).value).toBe('');
+    expect(el(fixture).querySelector('#nota-final-8')).toHaveProperty('checked', false);
+    fixture.destroy();
+  });
+
   it('a gravação só é oferecida quando as duas obrigatórias estão respondidas', async () => {
     const fixture = await render(spinRecord(), 'resenha');
     const salvar = () => el(fixture).querySelector('.note-actions button') as HTMLButtonElement;

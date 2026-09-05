@@ -315,7 +315,12 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
         const existing = members.get(id);
 
         if (existing?.active) break;
-        if (!existing && members.size >= MAX_MEMBERS) break;
+        // O teto é do GLOBO, e não de quanta gente o log já viu: quem saiu libera a vaga
+        // que ocupava. Contando o mapa inteiro, um clube que trocou de gente ao longo dos
+        // anos parava de aceitar nome novo em silêncio — a tela dizia "entrou no globo" e o
+        // evento era descartado aqui, depois de o servidor já ter gasto a escrita.
+        const noGlobo = [...members.values()].filter((member) => member.active).length;
+        if (!existing && noGlobo >= MAX_MEMBERS) break;
 
         members.set(id, {
           id,

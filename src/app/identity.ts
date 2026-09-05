@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-import { hashString, normalizeName } from './naming';
+import { hashString, initialsOf, normalizeName } from './naming';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 
 const AUTHOR_KEY = 'mesa-do-mes:autor:v1';
@@ -42,9 +42,7 @@ export class Identity {
   readonly ink = computed(() => capsuleInkForColor(this.color()));
 
   /** As iniciais do crachá, no máximo duas. */
-  readonly initials = computed(() =>
-    this.value().split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join(''),
-  );
+  readonly initials = computed(() => initialsOf(this.value()));
 
   /** Devolve o nome aceito, ou vazio quando não sobrou nada depois de normalizar. */
   remember(value: string): string {

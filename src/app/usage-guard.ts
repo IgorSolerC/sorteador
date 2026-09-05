@@ -24,7 +24,10 @@ export interface UsageBudget {
   readonly writes: number;
   /** Fraction of a budget at which the app starts telling the user. */
   readonly warnAt: number;
-  /** More calls than this inside the window means a loop, not a person. */
+  /**
+   * Mais idas à rede do que isto dentro da janela é um laço, não uma pessoa. Conta
+   * chamadas, e nunca documentos: uma busca que traz o log inteiro é uma chamada só.
+   */
   readonly burstCalls: number;
   readonly burstWindowMs: number;
 }
@@ -147,7 +150,7 @@ export class UsageGuard {
     this.rollDay();
     if (this.usage.stopReason) return false;
 
-    if (this.isBursting(count)) {
+    if (this.isBursting()) {
       this.stop('burst');
       return false;
     }
@@ -163,11 +166,19 @@ export class UsageGuard {
     return !this.usage.stopReason;
   }
 
-  private isBursting(count: number): boolean {
+  /**
+   * Uma ida à rede é UMA chamada, custe ela um documento ou noventa.
+   *
+   * Contando cada documento como uma chamada, a primeira visita de um aparelho a um grupo
+   * com algumas dezenas de eventos — que chega inteiro numa `getDocs` só — era lida como
+   * laço e parava a máquina até a virada do dia UTC. Quem limita volume é o orçamento
+   * diário; isto aqui só distingue uma pessoa de um laço.
+   */
+  private isBursting(): boolean {
     const now = this.now();
     const since = now - this.budget.burstWindowMs;
     this.recentCalls = this.recentCalls.filter((stamp) => stamp > since);
-    for (let index = 0; index < count; index += 1) this.recentCalls.push(now);
+    this.recentCalls.push(now);
     return this.recentCalls.length > this.budget.burstCalls;
   }
 

@@ -98,6 +98,11 @@ service cloud.firestore {
             && (d.tipo != 'spin_seated' || mesaValida())
             && (d.tipo in ['spin_annotated', 'spin_reviewed', 'spin_seated'] || semCampoDeGiro())
             && (d.tipo == 'spin_seated' || !('mesa' in d))
+            // Nenhum evento carrega campo que não é dele. O replay já ignora o intruso, mas
+            // o log é para sempre: o que entra nele não se reescreve nem se apaga, e um
+            // evento que se contradiz fica contradizendo-se no registro pelos anos seguintes.
+            && (d.tipo == 'member_added' || !('nome' in d))
+            && (d.tipo in ['member_removed', 'member_styled', 'spin_seated'] || !('memberId' in d))
             && (d.tipo == 'spin_annotated' || semCamposDeEtiqueta())
             && (d.tipo == 'spin_reviewed' || semCamposDeResenha())
             && (d.tipo == 'member_styled' || semCamposDeEstilo())
@@ -119,9 +124,7 @@ service cloud.firestore {
             // propósito: uma aba aberta no minuto do deploy ainda a manda, e recusá-la
             // quebraria quem está com o app na tela. O replay não a lê mais.
             && (!('subtitulo' in d) || textoOpcional(d.subtitulo, 60))
-            && textoOpcional(d.descricao, 280)
-            && !('nome' in d)
-            && !('memberId' in d);
+            && textoOpcional(d.descricao, 280);
         }
 
         // A aparência de uma cápsula: a cor é uma posição na paleta, nunca um hexadecimal
@@ -133,8 +136,7 @@ service cloud.firestore {
           return texto(d.memberId, 32)
             && (!('cor' in d) || (d.cor is int && d.cor >= 0 && d.cor < 24))
             && (!('emoji' in d) || textoOpcional(d.emoji, 16))
-            && ('cor' in d || 'emoji' in d)
-            && !('nome' in d);
+            && ('cor' in d || 'emoji' in d);
         }
 
         // A resenha é a opinião de UMA pessoa sobre o jogo daquele giro. O servidor não
@@ -151,9 +153,7 @@ service cloud.firestore {
             && d.giro >= 0
             && d.giro < grupoAntes().versaoLog
             && texto(d.autor, 60)
-            && (retiradaDeResenha() || resenhaEscrita())
-            && !('nome' in d)
-            && !('memberId' in d);
+            && (retiradaDeResenha() || resenhaEscrita());
         }
 
         // Retirar a própria resenha é gravar a retirada, como tudo neste log. Um evento de
@@ -196,8 +196,7 @@ service cloud.firestore {
             && d.giro >= 0
             && d.giro < grupoAntes().versaoLog
             && texto(d.memberId, 32)
-            && d.mesa is bool
-            && !('nome' in d);
+            && d.mesa is bool;
         }
 
         // Toda nota é um inteiro de 0 a 10. A régua da ficha tem onze casas, e uma nota

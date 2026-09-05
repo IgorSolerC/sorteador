@@ -77,8 +77,9 @@ src/app/
   group-history.*      o álbum
   machine.ts/html      o SVG da máquina. Recebe `people: MachinePerson[]` prontos
   roster-bench.*       A GAVETA da coleção: duas faces (lista / bancada de uma cápsula)
-  note-editor.*        a bancada da etiqueta (apresentacional)
-  note-bench.ts        a orquestração da etiqueta, compartilhada por máquina e álbum
+  game-sheet.*         A FICHA DO JOGO: quatro faces (boletim / resenha / jogo / mesa)
+  game-bench.ts        a orquestração da ficha, compartilhada por máquina e álbum
+  notice.ts            o rodapé de aviso: um relógio por vez, e ele morre com a tela
   confetti.ts          canvas, 64 partículas, sai da bandeja. Folha absoluta (rola com a
                        página) e uma partícula rasterizada uma vez, depois só copiada
   palette.ts           as 24 cores + o passo de distribuição
@@ -137,11 +138,12 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 301 unitários e de componente
-npm run test:rules          # 103 rules no emulador (sobe o próprio, sem rede)
-npm run test:store          # 28 de integração da camada de dados
-npm run test:a11y           # 8 telas x 3 larguras — precisa de npm start + emulador
-npm run test:etiqueta       # 37 de ponta a ponta num navegador real — idem
+npm test -- --watch=false   # 309 unitários e de componente
+npm run test:rules          # 105 rules no emulador (sobe o próprio, sem rede)
+npm run test:store          # 43 de integração da camada de dados
+npm run test:migration      # 13 da migração de histórico
+npm run test:a11y           # 11 telas x 3 larguras — precisa de npm start + emulador
+npm run test:etiqueta       # 74 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 13 fluxos
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
@@ -201,6 +203,18 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 - **`text-transform` do CSS aparece em `innerText`, mas só se a regra existir.** As casas da
   régua não têm `text-transform` (elas guardam dígitos), então os degraus da dificuldade saem
   em caixa mista — um `includes('IMPOSSÍVEL')` num e2e falha ali e passa no `.album-criteria`.
+- **Recarregar o grupo troca o OBJETO do giro sem trocar o giro.** `replay()` reconstrói
+  tudo do zero a cada carga, então um `effect` que observa `spin()` dispara numa recarga que
+  não mudou nada. A ficha reenchia os rascunhos ali e apagava a resenha meio escrita de quem
+  tinha só ido conferir o nome do jogo — a máquina recarrega sozinha ao voltar para a aba. A
+  identidade do rascunho é `índice do giro + quem assina`, nunca o objeto.
+- **Um relógio por aviso apaga o aviso seguinte.** Dois avisos em menos de 5,5s — corrigir
+  duas cadeiras da mesa, por exemplo — e o relógio do primeiro derruba o segundo no meio.
+  Um relógio por vez, cancelado antes do próximo: ver `notice.ts`.
+- **Rajada se conta em chamadas, nunca em documentos.** `recordRead(snap.size)` empurrava um
+  carimbo por documento, e a primeira visita de um aparelho a um grupo com mais de 40 eventos
+  — uma `getDocs` só — parava a máquina até a virada do dia UTC. O grupo semeado tem 33: o
+  defeito estava a oito eventos de aparecer em todo teste de navegador.
 - **`setInterval` e `addEventListener` num componente precisam de `DestroyRef`.** Ir para o
   álbum e voltar deixava para trás um relógio e um ouvinte de `visibilitychange`, e cada
   visita à aba fazia todos os fantasmas recarregarem o grupo — leituras do orçamento
@@ -210,7 +224,35 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 
 ## 7. O que ficou aberto
 
-Nada pendente no código. A rodada de 2026-09-04 (noite) fechou:
+Nada pendente no código. A varredura de 2026-09-05 fechou seis defeitos e um buraco de
+processo, cada um com o teste que falha sem a correção:
+
+- **A rajada parava a máquina na primeira visita.** O contador de laço somava um carimbo por
+  documento, e o log inteiro chega numa busca só. Um grupo com mais de 40 eventos bloqueava
+  o aparelho de quem abrisse o link, até a virada do dia UTC. Era o mais grave dos sete, e
+  estava a oito eventos de acontecer no grupo semeado.
+- **A ficha apagava a resenha meio escrita** quando a máquina recarregava sozinha — o que ela
+  faz toda vez que a aba volta a ficar visível.
+- **O aviso do rodapé herdava o relógio do anterior**, então o segundo de dois avisos
+  seguidos sumia antes da hora.
+- **O teto de 60 era do log, e não do globo.** Um clube que trocasse de gente ao longo dos
+  anos parava de aceitar nome novo em silêncio: a tela dizia "entrou no globo", o servidor
+  gravava e o replay descartava. Agora quem sai libera a vaga que ocupava.
+- **A casca deixava um ouvinte de `hashchange` para trás** — a mesma armadilha que o relógio
+  e o `visibilitychange` da máquina já tinham custado.
+- **As rules aceitavam campo de outro tipo de evento**: um `spin` podia levar `nome` e
+  `memberId` de carona. O replay os ignorava, mas o log é para sempre. A proibição agora é
+  dita uma vez só, no alto de `eventoValido()`.
+- **O workflow publicava sem rodar teste nenhum.** Ele roda a suíte de unidade antes de
+  construir; um push vermelho não vai mais ao ar.
+
+Duas coisas foram medidas e deixadas como estão, de propósito: o comparador do álbum reconta
+`spinScores` dentro do `sort` (1010 contas em vez de 96 num álbum de oito anos — **0,66ms**
+contra 0,10ms, uma vez por mudança de ordem) e o cartão chama `shareOf()` nove vezes
+(~1µs por conta). Nenhum dos dois é perceptível, e trocar código medido como irrelevante é
+churn.
+
+A rodada de 2026-09-04 (noite) tinha fechado:
 
 - **As quatro tintas da nota**, no lugar do ouro-e-mofo da tentativa anterior: ciano de 8 para
   cima com faísca, laranja entre 2 e 4, vermelho de 2 para baixo, tinta preta no miolo — e a

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 
 import { Identity, MAX_AUTHOR } from './identity';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
-import { hashString, normalizeName } from './naming';
+import { hashString, initialsOf, normalizeName } from './naming';
 
 /**
  * A porta. Ninguém entra na máquina sem dizer quem é, porque tudo que se faz aqui fica
@@ -33,11 +33,7 @@ export class IdentityGate {
 
   protected readonly clean = computed(() => normalizeName(this.draft()));
 
-  protected readonly initials = computed(() => {
-    const parts = this.clean().split(' ').filter(Boolean);
-    if (!parts.length) return '';
-    return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
-  });
+  protected readonly initials = computed(() => initialsOf(this.clean()));
 
   /**
    * A cor sai do nome sendo digitado, não do que está guardado: a cápsula se pinta letra a

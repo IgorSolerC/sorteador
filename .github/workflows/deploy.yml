@@ -27,6 +27,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # O contrato do README exige a suíte verde antes de publicar, e até aqui nada a
+      # cobrava: um push com teste vermelho ia direto para o ar. As outras seis suítes
+      # pedem emulador ou navegador de pé e ficam de fora; esta não pede nada e cobre o
+      # replay, a camada de dados, o orçamento e todos os componentes.
+      - name: Testes de unidade e de componente
+        run: npm test -- --watch=false
       - run: npm run build -- --base-href=./
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -30,7 +30,7 @@ import {
 import { NoteDraft, ReviewDraft, SheetFace } from './game-bench';
 import { trapFocusWithin } from './focus-trap';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
-import { hashString, participantKey } from './naming';
+import { hashString, initialsOf, participantKey } from './naming';
 
 /**
  * A ficha do jogo: o papel que fica colado na cápsula depois que ela caiu.
@@ -151,11 +151,26 @@ export class GameSheet {
   /** A tinta que mantém a inicial legível dentro da cápsula de quem ganhou. */
   protected readonly capsuleInk = computed(() => capsuleInkForColor(this.capsule()));
 
+  /**
+   * De quem é o rascunho que está na tela: qual giro, e quem assina. Recarregar o grupo
+   * reconstrói todos os giros do zero, então o objeto muda sem o giro mudar — e é por isso
+   * que a identidade do rascunho não pode ser o objeto.
+   */
+  private rascunhoDe = '';
+
   constructor() {
     effect(() => {
-      // Toda vez que a ficha muda de giro, os rascunhos voltam a ser o que o servidor tem.
-      // Sem isto, abrir a cápsula de outra pessoa herdaria a nota que ficou na tela.
+      // Quando a ficha muda de giro, os rascunhos voltam a ser o que o servidor tem: abrir
+      // a cápsula de outra pessoa não pode herdar a nota que ficou na tela.
+      //
+      // Mas só quando ela muda de giro. A máquina recarrega sozinha ao voltar para a aba, e
+      // reencher os campos a cada recarga apagava a resenha meio escrita de quem tinha só
+      // ido conferir o nome do jogo noutro lugar.
       const spin = this.spin();
+      const rascunho = `${spin.index}:${participantKey(this.author())}`;
+      if (rascunho === this.rascunhoDe) return;
+      this.rascunhoDe = rascunho;
+
       this.title.set(spin.note?.title ?? '');
       this.description.set(spin.note?.description ?? '');
 
@@ -219,7 +234,7 @@ export class GameSheet {
   }
 
   protected initials(name: string): string {
-    return name.split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
+    return initialsOf(name);
   }
 
   protected show(score: number): string {

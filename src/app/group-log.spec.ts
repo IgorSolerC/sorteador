@@ -22,6 +22,7 @@ import {
   spinSummary,
 } from './group-log';
 import { isColorIndex } from './palette';
+import { initialsOf } from './naming';
 
 const GRUPO = 'g7x2k9';
 let clock = 1_700_000_000_000;
@@ -66,6 +67,21 @@ describe('identidade do integrante', () => {
   });
 });
 
+describe('as iniciais de um crachá', () => {
+  it('são no máximo duas, em caixa alta', () => {
+    expect(initialsOf('Ana')).toBe('A');
+    expect(initialsOf('josé silva')).toBe('JS');
+    expect(initialsOf('Maria da Silva Souza')).toBe('MD');
+  });
+
+  it('um nome vazio não inventa letra nenhuma', () => {
+    // A prateleira põe o seu próprio '?' quando não sobra sigla; as outras cinco telas
+    // mostram a cápsula sem letra, que é o que elas sempre mostraram.
+    expect(initialsOf('')).toBe('');
+    expect(initialsOf('   ')).toBe('');
+  });
+});
+
 describe('replay do log', () => {
   it('um log vazio é um grupo vazio', () => {
     expect(replay(GRUPO, [])).toEqual(emptyState());
@@ -94,6 +110,22 @@ describe('replay do log', () => {
   it('não passa do teto de integrantes', () => {
     const names = Array.from({ length: 65 }, (_, i) => `Pessoa ${i}`);
     expect(activeMembers(replay(GRUPO, seed(names)))).toHaveLength(60);
+  });
+
+  it('quem saiu do globo libera a vaga que ocupava', () => {
+    // O teto é do GLOBO — "o globo comporta até 60 cápsulas" —, e não de quanta gente o log
+    // já viu. Contando também quem saiu, um clube que trocou de gente ao longo dos anos
+    // parava de aceitar qualquer nome novo, e parava em silêncio: a tela dizia "entrou no
+    // globo", o servidor aceitava a escrita e o replay descartava o evento.
+    const names = Array.from({ length: 60 }, (_, i) => `Pessoa ${i}`);
+    const state = replay(GRUPO, [
+      ...seed(names),
+      ...names.slice(0, 58).map(remove),
+      add('Zulmira'),
+    ]);
+
+    expect(activeMembers(state).map((member) => member.name)).toContain('Zulmira');
+    expect(activeMembers(state)).toHaveLength(3);
   });
 });
 

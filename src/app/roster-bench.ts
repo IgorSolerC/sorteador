@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { GroupMember, MAX_EMOJI, emojiText } from './group-log';
 import { CAPSULE_COLORS, capsuleColor, capsuleColorName, capsuleInk } from './palette';
 import { trapFocusWithin } from './focus-trap';
+import { initialsOf } from './naming';
 
 /**
  * A gaveta da coleção. Antes tudo isto era uma seção de duas colunas ocupando a metade de
@@ -105,7 +106,7 @@ export class RosterBench {
   }
 
   protected initials(name: string): string {
-    return name.split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
+    return initialsOf(name);
   }
 
   // --- a lista ---

@@ -120,8 +120,8 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 301 unitários e de componente
-npm run test:rules          # 103 rules no emulador
+npm test -- --watch=false   # 309 unitários e de componente
+npm run test:rules          # 105 rules no emulador
 npm run test:store          # 43 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
 npm run test:a11y           # 11 telas x 3 larguras, 0 achados
@@ -170,14 +170,18 @@ O modo por link estático — o sorteio mensal que vivia dentro do próprio ende
 (`#grupo=...&inicio=...`) — **foi removido em setembro de 2026**. Links daquele formato
 caem na prateleira inicial.
 
-### Etiquetas
+### O jogo, a resenha e a mesa
 
-Qualquer giro — o de agora ou o de um ano atrás — recebe **título**, **subtítulo** e
-**descrição** do que o clube jogou. Onde só cabe uma linha, os dois primeiros viram
-`Click The Button! · Nota 8/10`.
+Qualquer giro — o de agora ou o de um ano atrás — recebe o **jogo** que o clube jogou (nome e
+descrição, de todo mundo), uma **resenha por pessoa** (nota final e completude obrigatórias;
+tempo de jogo, quatro escalas, dificuldade e texto livre se ela quiser) e uma correção de
+**mesa**: quem de fato jogou aquilo. Onde só cabe uma linha, o jogo vira
+`Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
+gravada em campo nenhum.
 
-Editar é gravar outra etiqueta: o replay faz a última valer, e as anteriores continuam no
-registro com quem escreveu cada uma. A etiqueta descreve o giro e nunca altera o vencedor.
+Editar é gravar outro evento: o replay faz o último valer, e os anteriores continuam no
+registro com quem escreveu cada um. Nenhum dos três altera o vencedor, e **corrigir a mesa
+não alcança o globo daquele giro** — ele é imutável porque é dele que a cápsula saiu.
 
 ---
 
@@ -226,6 +230,10 @@ O build estático fica em `dist/sorteador/browser`.
 O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica
 automaticamente os commits enviados à branch `main`. No GitHub, **Settings → Pages → Build
 and deployment** precisa estar em **GitHub Actions**.
+
+O workflow roda `npm test` antes de construir: um push com teste vermelho não publica.
+As outras seis suítes pedem emulador ou navegador de pé e continuam sendo responsabilidade
+de quem entrega — rode as sete antes de dar o push.
 
 **As rules vão antes do site:**
 

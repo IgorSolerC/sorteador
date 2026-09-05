@@ -1,5 +1,14 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 
 import {
   completionShare,
@@ -26,6 +35,7 @@ import { capsuleColor, capsuleInk } from './palette';
 import { rememberGroup } from './recent-groups';
 import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
 import { GameSheet } from './game-sheet';
+import { Notice } from './notice';
 
 /**
  * O álbum: toda cápsula que já saiu da máquina, com a etiqueta colada nela. A máquina
@@ -95,7 +105,9 @@ export class GroupHistory {
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
-  protected readonly notice = signal('');
+  /** O rodapé de confirmação. Um relógio por vez: ver `Notice`. */
+  private readonly toast = new Notice();
+  protected readonly notice = this.toast.text;
   /** Id da pessoa em foco; vazio é a parede inteira. */
   protected readonly filterId = signal('');
 
@@ -145,6 +157,9 @@ export class GroupHistory {
       if (untracked(this.snapshot)?.groupId !== id) this.snapshot.set(null);
       void this.reload(id);
     });
+    // Ir do álbum para a máquina não pode deixar para trás um relógio que ainda vai apagar
+    // um aviso de uma página que não está mais na tela.
+    inject(DestroyRef).onDestroy(() => this.toast.stop());
   }
 
   // --- o que a parede mostra ---
@@ -412,7 +427,7 @@ export class GroupHistory {
   }
 
   protected dismissNotice(): void {
-    this.notice.set('');
+    this.toast.dismiss();
   }
 
   // --- infraestrutura ---
@@ -434,8 +449,7 @@ export class GroupHistory {
   }
 
   private showNotice(message: string): void {
-    this.notice.set(message);
-    window.setTimeout(() => this.notice.set(''), 5500);
+    this.toast.show(message);
   }
 }
 

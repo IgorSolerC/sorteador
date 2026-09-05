@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 
 import { CreateGroup } from './create-group';
 import { GroupHistory } from './group-history';
@@ -46,9 +46,13 @@ export class App {
   protected readonly askIdentityChange = () => this.openIdentity();
 
   constructor() {
-    this.document.defaultView?.addEventListener('hashchange', () => {
-      this.hash.set(this.document.defaultView?.location.hash ?? '');
-    });
+    // O ouvinte sai junto com a casca. Um ouvinte que sobrevive a ela continua escrevendo
+    // num componente destruído a cada mudança de rota — a mesma armadilha que o relógio e
+    // o `visibilitychange` da máquina já custaram uma vez.
+    const view = this.document.defaultView;
+    const rota = () => this.hash.set(view?.location.hash ?? '');
+    view?.addEventListener('hashchange', rota);
+    inject(DestroyRef).onDestroy(() => view?.removeEventListener('hashchange', rota));
   }
 
   protected openIdentity(): void {

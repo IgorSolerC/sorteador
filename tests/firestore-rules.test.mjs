@@ -200,6 +200,30 @@ await it('recusa saída sem memberId', async () => {
   await assertFails(gravaEvento(alice(), { tipo: 'member_removed', em: serverTimestamp() }));
 });
 
+await it('um giro não carrega nome nem memberId de ninguém', async () => {
+  // Nenhum tipo de evento carrega campo que não é dele. O replay já ignora os intrusos,
+  // mas o log é para sempre: o que entra nele nunca mais sai, nem sequer é reescrito.
+  await comGrupo();
+  const carimbo = { grupoExtra: { ultimoGiroEm: serverTimestamp() } };
+  await assertSucceeds(gravaEvento(alice(), giro(), carimbo));
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), { ...giro(), nome: 'Impostor' }, carimbo));
+  await assertFails(gravaEvento(alice(), { ...giro(), memberId: 'a'.repeat(16) }, carimbo));
+});
+
+await it('uma entrada não carrega memberId, e uma saída não carrega nome', async () => {
+  // A entrada diz o NOME e o id sai da normalização dele; a saída diz o ID. Aceitar os dois
+  // nos dois deixaria um evento que se contradiz gravado para sempre no registro.
+  await comGrupo();
+  await assertFails(gravaEvento(alice(), { ...entrada(), memberId: 'a'.repeat(16) }));
+  await assertFails(gravaEvento(alice(), {
+    tipo: 'member_removed',
+    em: serverTimestamp(),
+    memberId: 'a'.repeat(16),
+    nome: 'Ana',
+  }));
+});
+
 await it('um evento gravado não pode ser reescrito', async () => {
   await comGrupo();
   let ref;

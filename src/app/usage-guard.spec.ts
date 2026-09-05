@@ -89,6 +89,18 @@ describe('guarda de uso', () => {
       expect(instance.snapshot().stopReason).toBe('burst');
     });
 
+    it('uma busca que traz muitos documentos é uma chamada, não uma rajada', () => {
+      // O log inteiro de um grupo chega numa `getDocs` só na primeira visita de um
+      // aparelho. Contando cada documento como uma chamada, um clube com algumas dezenas
+      // de eventos parava a máquina na hora em que alguém abria o link pela primeira vez —
+      // e ela só voltaria na virada do dia. O volume quem limita é o orçamento diário.
+      const { instance } = guard();
+      instance.recordRead(9);
+
+      expect(instance.snapshot().stopReason).toBeNull();
+      expect(instance.snapshot().reads).toBe(9);
+    });
+
     it('não confunde uso espaçado com rajada', () => {
       const { instance, advance } = guard();
       for (let i = 0; i < 8; i += 1) {

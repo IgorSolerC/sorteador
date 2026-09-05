@@ -98,6 +98,36 @@ describe('App', () => {
     expect(raiz.querySelector('.gate')).toBeNull();
     fixture.destroy();
   });
+
+  it('leva o ouvinte de rota embora quando sai da tela', () => {
+    // Um ouvinte de `hashchange` que sobrevive à casca continua escrevendo num componente
+    // destruído a cada mudança de rota — a mesma armadilha que o relógio e o
+    // `visibilitychange` da máquina já custaram uma vez.
+    const vivos = new Set<unknown>();
+    const somar = window.addEventListener.bind(window);
+    const tirar = window.removeEventListener.bind(window);
+    type Somar = Parameters<typeof window.addEventListener>;
+    type Tirar = Parameters<typeof window.removeEventListener>;
+    vi.spyOn(window, 'addEventListener').mockImplementation((...args: Somar) => {
+      if (args[0] === 'hashchange') vivos.add(args[1]);
+      somar(...args);
+    });
+    vi.spyOn(window, 'removeEventListener').mockImplementation((...args: Tirar) => {
+      if (args[0] === 'hashchange') vivos.delete(args[1]);
+      tirar(...args);
+    });
+
+    try {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      expect(vivos.size).toBe(1);
+
+      fixture.destroy();
+      expect(vivos.size).toBe(0);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
 });
 
 describe('rotas no fragmento', () => {

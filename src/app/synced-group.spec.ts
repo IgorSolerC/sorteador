@@ -210,6 +210,36 @@ async function render(store: FakeStore, guard = memoryGuard()) {
 describe('modo sincronizado', () => {
   afterEach(() => TestBed.resetTestingModule());
 
+  it('um aviso novo não herda o relógio do anterior', async () => {
+    // Corrigir duas cadeiras da mesa seguidas mostra dois avisos em poucos segundos. Com um
+    // relógio por aviso em vez de um relógio por vez, o primeiro apagava o segundo no meio.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    const aviso = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.toast span')?.textContent?.trim();
+    const maquina = fixture.componentInstance as unknown as { showNotice(mensagem: string): void };
+
+    vi.useFakeTimers();
+    try {
+      maquina.showNotice('primeiro');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(3000);
+
+      maquina.showNotice('segundo');
+      fixture.detectChanges();
+      // Passado o relógio do primeiro, o segundo ainda tem os seus 5,5s inteiros.
+      vi.advanceTimersByTime(3000);
+      fixture.detectChanges();
+      expect(aviso()).toBe('segundo');
+
+      vi.advanceTimersByTime(3000);
+      fixture.detectChanges();
+      expect(aviso()).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+    fixture.destroy();
+  });
+
   it('mostra o grupo carregado, não a tela de espera', async () => {
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno', 'Cecília']));
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';

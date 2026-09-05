@@ -1,6 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 
 import { capsuleColor } from './palette';
+import { initialsOf } from './naming';
 
 /**
  * A máquina de cápsulas, sozinha. Ela não sabe de onde vêm as pessoas nem quem escolheu a
@@ -188,7 +189,7 @@ function fitLabel(name: string, budget: number): string {
   if (budget < 1) return '';
   const first = name.split(' ')[0];
   if (budget >= first.length) return first;
-  const short = name.split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('');
+  const short = initialsOf(name);
   if (budget >= short.length) return short;
   return short.slice(0, 1);
 }

@@ -35,6 +35,7 @@ import { Confetti } from './confetti';
 import { Identity } from './identity';
 import { trapFocusWithin } from './focus-trap';
 import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
+import { Notice } from './notice';
 import { GameSheet } from './game-sheet';
 import { CapsuleStyle, RosterBench } from './roster-bench';
 import { normalizeName, participantKey } from './naming';
@@ -67,7 +68,9 @@ export class SyncedGroup {
   protected readonly snapshot = signal<GroupSnapshot | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
-  protected readonly notice = signal('');
+  /** O rodapé de confirmação. Um relógio por vez: ver `Notice`. */
+  private readonly toast = new Notice();
+  protected readonly notice = this.toast.text;
   protected readonly busy = signal(false);
   protected readonly isSpinning = signal(false);
   protected readonly revealed = signal(true);
@@ -160,6 +163,7 @@ export class SyncedGroup {
     inject(DestroyRef).onDestroy(() => {
       window.clearInterval(clock);
       this.document.removeEventListener('visibilitychange', wake);
+      this.toast.stop();
     });
   }
 
@@ -535,7 +539,7 @@ export class SyncedGroup {
   });
 
   protected dismissNotice(): void {
-    this.notice.set('');
+    this.toast.dismiss();
   }
 
   protected askIdentityChange(): void {
@@ -612,8 +616,7 @@ export class SyncedGroup {
   }
 
   private showNotice(message: string): void {
-    this.notice.set(message);
-    window.setTimeout(() => this.notice.set(''), 5500);
+    this.toast.show(message);
   }
 
 }

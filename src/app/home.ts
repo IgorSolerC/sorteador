@@ -4,7 +4,7 @@ import { Component, computed, inject, output, signal } from '@angular/core';
 import { Identity } from './identity';
 import { RecentGroup, forgetGroup, listGroups } from './recent-groups';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
-import { hashString } from './naming';
+import { hashString, initialsOf } from './naming';
 
 /**
  * A porta da casa. Ela existe porque o modo por link saiu: antes a raiz era uma máquina
@@ -47,9 +47,9 @@ export class Home {
     return capsuleInkForColor(this.colorOf(group));
   }
 
+  /** Uma máquina sem nome ainda precisa de algo dentro da cápsula da prateleira. */
   protected initials(name: string): string {
-    const parts = name.split(' ').filter(Boolean);
-    return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') || '?';
+    return initialsOf(name) || '?';
   }
 
   protected forget(group: RecentGroup, event: Event): void {
