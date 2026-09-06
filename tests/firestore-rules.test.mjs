@@ -673,8 +673,8 @@ await it('aceita uma reação e a retirada dela', async () => {
   await assertSucceeds(gravaEvento(alice(), reacao({ reagiu: false }), { versaoAtual: 2 }));
 });
 
-await it('aceita os quatro emoji da lista, e só eles', async () => {
-  for (const emoji of ['😯', '🔥', '😭', '😂']) {
+await it('aceita os doze emoji da lista, incluindo as reações antigas', async () => {
+  for (const emoji of ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆']) {
     await comGrupo({ versaoLog: 2 });
     await assertSucceeds(gravaEvento(alice(), reacao({ emoji }), { versaoAtual: 2 }));
   }

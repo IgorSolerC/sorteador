@@ -19,6 +19,7 @@ import {
   scoreTone,
   spinScores,
   reactionTally,
+  REVIEW_REACTIONS,
   pendingReviews,
   owesReview,
   spinsOfRound,
@@ -683,6 +684,15 @@ describe('reagir a uma resenha', () => {
     review(0, 'Ana', { score: 9, text: 'A fase do barco é uma prova de amizade.' }),
   ];
 
+  it('todas as novas reações sobrevivem ao replay e podem ser retiradas', () => {
+    for (const emoji of REVIEW_REACTIONS.slice(4)) {
+      const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', emoji)]);
+      expect(state.spins[0].reviews[0].reactions[0]?.emoji).toBe(emoji);
+      const removed = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', emoji), reaction(0, 'Breno', 'ana', emoji, false)]);
+      expect(removed.spins[0].reviews[0].reactions).toEqual([]);
+    }
+  });
+
   it('a reação pendura na resenha de quem escreveu, e diz quem reagiu', () => {
     const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', '🔥')]);
 
@@ -732,7 +742,7 @@ describe('reagir a uma resenha', () => {
     ]);
 
     expect(reactionTally(state.spins[0].reviews[0]).map((linha) => linha.emoji))
-      .toEqual(['😯', '🔥', '😭', '😂']);
+      .toEqual(REVIEW_REACTIONS);
   });
 
   it('emoji fora da lista não vira reação nenhuma', () => {

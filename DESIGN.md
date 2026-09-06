@@ -470,8 +470,8 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
-- **A fileira de reações**, no pé de cada resenha: quatro emoji, `44px` de alvo e desenho
-  quase nenhum (ver A Regra das Quatro Reações).
+- **A fileira de reações**, no pé de cada resenha: doze emoji, `44px` de alvo e desenho
+  contido (ver A Regra das Doze Reações).
 - **O lacre**, no lugar do boletim inteiro quando o modo cego está ligado e esta pessoa
   ainda deve a resenha daquele jogo (ver A Regra do Lacre).
 - **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
@@ -542,16 +542,17 @@ No boletim da ficha elas aparecem inteiras, atrás de um picote e com a faísca 
 ali o denominador delas é outro — só quem platinou pôde respondê-las — e lidas na mesma
 corrida das cinco de cima pareceriam critérios que metade do clube deixou em branco.
 
-**A Regra das Quatro Reações.** Reagir a uma resenha é dizer uma de quatro coisas — 😯 🔥 😭
-😂 — e nada mais. A lista é fechada **nas rules**, e não só na tela: um campo de emoji livre
+**A Regra das Doze Reações.** O clube pode reagir com 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆.
+A lista é fechada **nas rules**, e não só na tela: um campo de emoji livre
 viraria uma segunda caixa de texto, e o produto já tem uma, assinada, que é a resenha.
 
-O desenho encolhe, o alvo não. Sem reação nenhuma o emoji fica sozinho e a `.38` de opacidade
+O desenho encolhe, o alvo não. Sem reação nenhuma o emoji fica sozinho e a `.75` de opacidade
 — um convite, não uma contagem. Quem já recebeu ganha a cápsula de papel com a contagem em
 mono tabular; a minha é a única com tinta cheia, e é a **tinta do papel**, nunca o amarelo de
 ação, que sobre papel viraria um botão pedindo para ser apertado de novo. A fileira aparece
 inteira mesmo vazia, porque ela também **é** o controle: uma fileira que só mostrasse o que
-já existe não teria onde a primeira pessoa apertar. E a ordem dos quatro é fixa — uma fileira
+já existe não teria onde a primeira pessoa apertar. São seis colunas no desktop e quatro
+abaixo de 620px, sempre fileiras completas. A ordem dos doze é fixa — uma fileira
 que se reordena pela contagem faz o dedo errar o alvo entre duas visitas.
 
 **A Regra do Lacre.** No **modo cego** — desligado por padrão, ligado na porta —, a nota do
@@ -598,14 +599,27 @@ pôster é um objeto próprio, com a mesma paleta, as mesmas fontes e as mesmas 
 nota, montado na medida de uma imagem — e sai o que está na tela, porque quem filtrou os dez
 melhores quer a parede dos dez melhores.
 
+Cada ficha impressa tem 480 × 680 unidades: faixa na cor de quem escolheu, emoji, data e
+rodada, título em até três linhas, medida principal, seis medidas secundárias no máximo,
+completude com porcentagens e descrição. Fredoka usa o nome real `Fredoka Variable` no
+canvas. A composição começa em uma ou duas colunas e cresce com a coleção; a rasterização
+fica limitada a 32 milhões de pixels e 16.384px por dimensão. O resumo é do filtro atual,
+e o modo cego lacra também a imagem.
+
+**A Regra da Medida em Foco.** Ordenar muda tanto a posição quanto o destaque do cartão:
+o critério escolhido ocupa a escala maior, e a nota geral passa ao resumo. Rodada e nota
+mantêm a nota como protagonista. Dificuldade aparece por extenso e em tinta neutra; tempo
+traz a unidade em horas. Ausência é `—`, nunca uma nota substituta. Tela e PNG compartilham
+a mesma seleção de medidas.
+
 **O link do grupo nunca entra nele.** O link é a credencial: quem o tem, escreve. Uma imagem
 que o clube manda no grupo é pública para sempre, e uma URL ou um QR impressos nela seriam
 entregar a máquina a quem passasse os olhos. A linha ao lado do botão diz isso antes, não
 depois.
 
 **A Regra da Voz Convidada.** A máquina tem som — catraca, baque na bandeja e a cúpula
-abrindo —, sintetizado em Web Audio, sem um único arquivo: o projeto vive sem Storage, e um
-`.mp3` de catraca custaria mais bytes que o app inteiro.
+abrindo —, sintetizado em Web Audio. A síntese permite sincronizar a freada sem baixar
+arquivos e interromper a cena com uma rampa de volume suave.
 
 Ele **começa desligado**, e **nada toca sem um dedo**. A cena que abre sozinha ao carregar a
 página é muda: o navegador barraria o áudio sem gesto de todo jeito, e barulho que ninguém
@@ -617,6 +631,11 @@ não só da cor.
 E os tiques da catraca são agendados sobre **a mesma curva do CSS** (`cubic-bezier(.12, .72,
 .12, 1)`, invertida): eles freiam quando a roda freia. Um tique regular sobre uma imagem que
 desacelera soa como outro objeto.
+
+O rolamento combina atrito contínuo filtrado com 168 tiques de plástico, um para cada dente
+nas sete voltas. O filtro e a velocidade do atrito descem durante os 4,3s; a cápsula chega
+com um baque curto e abre com três notas senoidais de caixa de música. O contexto é
+destravado no gesto antes da rede; desligar o som silencia a cena em curso.
 
 ### Motion
 Existe um único momento autoral, e ele é sempre o mesmo: a manivela gira duas voltas completas (`720deg`), o globo gira em `4.3s cubic-bezier(.12, .72, .12, 1)` até encaixar a cápsula na calha, as cápsulas soltas assentam com um pequeno balanço, a cápsula cai na bandeja em `.92s`, a cúpula se abre em `1.5s` — e o que estava dentro sai.

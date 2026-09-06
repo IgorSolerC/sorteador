@@ -164,6 +164,7 @@ export class SyncedGroup {
     // fantasmas recarregarem o grupo, gastando leituras do orçamento do aparelho.
     const clock = window.setInterval(() => this.now.set(Date.now()), 1000);
     const wake = () => {
+      if (this.document.visibilityState === 'hidden') this.machineSound.stop();
       const parado = Date.now() - this.lastLoadedAt() > REFRESH_MIN_INTERVAL_MS;
       if (this.document.visibilityState === 'visible' && parado && !this.busy()) {
         void this.reload(this.groupId());
@@ -174,6 +175,7 @@ export class SyncedGroup {
       window.clearInterval(clock);
       this.document.removeEventListener('visibilitychange', wake);
       this.toast.stop();
+      this.sceneToken += 1;
       // Ir para o álbum no meio de uma entrega não pode deixar a catraca tocando sozinha
       // numa tela que não existe mais.
       this.machineSound.stop();
@@ -454,6 +456,8 @@ export class SyncedGroup {
 
   protected toggleSound(): void {
     this.preferences.setSound(!this.soundOn());
+    if (this.soundOn()) this.machineSound.prepare();
+    else this.machineSound.stop();
   }
 
   /** A nota do clube num giro, já formatada. Vazio quando ninguém resenhou. */
@@ -493,6 +497,8 @@ export class SyncedGroup {
 
   private async spin(): Promise<void> {
     if (!this.canSpinNow()) return;
+    // O gesto precisa destravar o áudio antes da ida ao servidor, sobretudo no celular.
+    this.machineSound.prepare();
 
     this.isSpinning.set(true);
     this.revealed.set(false);
@@ -565,7 +571,9 @@ export class SyncedGroup {
       this.celebration.update((tick) => tick + 1);
       // A cúpula abre logo depois do baque, e é aí que o confete sai. As duas coisas são
       // o mesmo instante, e o som acompanha a que se vê.
-      if (sound) window.setTimeout(() => this.machineSound.celebrate(), 730);
+      if (sound) window.setTimeout(() => {
+        if (token === this.sceneToken) this.machineSound.celebrate();
+      }, reducedMotion ? 0 : 730);
     }, reducedMotion ? 120 : 4300);
   }
 

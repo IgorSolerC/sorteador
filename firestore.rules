@@ -114,7 +114,7 @@ service cloud.firestore {
             && (d.tipo == 'member_styled' || !('cor' in d))
             // O emoji tem dois donos: a cápsula que a pessoa pinta e a reação a uma
             // resenha. São regras diferentes — um é livre até 16 unidades, o outro sai de
-            // uma lista de quatro —, e cada tipo valida o seu no lugar dele.
+            // uma lista fechada —, e cada tipo valida o seu no lugar dele.
             && (d.tipo in ['member_styled', 'review_reacted'] || !('emoji' in d))
             && (d.tipo == 'spin' || marcaDeGiroIntacta())
             && contadorAcompanha();
@@ -218,7 +218,7 @@ service cloud.firestore {
             && d.mesa is bool;
         }
 
-        // Reagir é dizer uma de quatro coisas sobre a opinião de outra pessoa, e nada mais.
+        // Reações têm uma lista fechada, sem aceitar texto livre dentro do emoji.
         // A lista fechada é o que impede o campo de emoji virar uma segunda caixa de texto
         // — o produto já tem uma, assinada, que é a resenha. `alvo` é a chave de quem
         // escreveu a resenha reagida; sem assinatura ninguém desfaria a própria reação.
@@ -229,7 +229,7 @@ service cloud.firestore {
             && d.giro < grupoAntes().versaoLog
             && texto(d.autor, 60)
             && texto(d.alvo, 60)
-            && d.emoji in ['😯', '🔥', '😭', '😂']
+            && d.emoji in ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆']
             && d.reagiu is bool
             && !('cor' in d);
         }

@@ -1,6 +1,6 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-05**, logo depois de publicar. Tudo verde, nada pendente que bloqueie.
+Estado em **2026-09-06**, na rodada de som, reações e álbum.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -129,7 +129,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
   alternando quase junto chegariam a contagens diferentes a partir do mesmo log. O `alvo` é
   a **chave de participante** de quem escreveu a resenha, e não um `memberId` — quem assina
-  uma resenha não precisa ser do grupo. Os quatro emoji são validados **na rule**; um quinto
+  uma resenha não precisa ser do grupo. Os doze emoji são validados **na rule**; ampliar a lista
   exige publicar as rules antes do site.
 - **Os dois critérios da platina pendem do status.** `dificuldadePlatina` e `diversaoPlatina`
   só existem numa resenha `platinado`: a rule os recusa em qualquer outro status e o replay
@@ -154,13 +154,14 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 352 unitários e de componente
+npm test -- --watch=false   # 355 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
 npm run test:a11y           # 15 telas x 3 larguras — precisa de npm start + emulador
 npm run test:etiqueta       # 86 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
+node tests/e2e-acabamento.mjs # áudio real, hierarquia, PNG e reações; emulador semeado
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
 
@@ -248,6 +249,18 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-06 amplia as reações para 12 (rules antes do site), redesenha o PNG
+como fichas de coleção e faz o critério de ordenação comandar o destaque do card, na tela
+e na imagem. `album-metrics.ts` centraliza essa seleção. O PNG também respeita o lacre e
+calcula o resumo só sobre os cartões filtrados. O rolamento tem atrito contínuo e 168
+tiques; o contexto de áudio é destravado antes da espera pela rede e o mute corta a cena.
+O script de acabamento guarda capturas e um WAV em `.impeccable/review/2026-09-06/`.
+Validação desta rodada: 355 unitários, 118 regras, 48 integrações, 13 verificações de
+migração, 86 E2E, 17 fluxos e 14 verificações de acabamento. Acessibilidade: 15 telas ×
+3 larguras, zero achados. O áudio renderizado teve pico de 0,283 (limite 1) e sinal nos
+cinco trechos medidos do rolamento; mute produz silêncio e movimento reduzido termina
+antes de um segundo. Rules publicadas antes do site.
 
 A rodada de 2026-09-05 (noite) entregou seis coisas que o usuário escolheu de uma lista de
 propostas. Nenhuma delas toca no sorteio.

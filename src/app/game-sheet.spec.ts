@@ -614,14 +614,14 @@ describe('reagir a uma resenha', () => {
     reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9, text: 'Grito muito.', reactions })],
   });
 
-  it('a fileira tem os quatro emoji, sempre, mesmo sem ninguém ter reagido', async () => {
+  it('a fileira oferece doze reações mesmo sem ninguém ter reagido', async () => {
     // Ela também É o controle: uma fileira que só mostra o que já existe não teria onde a
     // primeira pessoa apertar.
     const fixture = await render(comResenha());
     const botoes = [...el(fixture).querySelectorAll('.review-reactions .reaction')];
 
-    expect(botoes.length).toBe(4);
-    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂']);
+    expect(botoes.length).toBe(12);
+    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆']);
     expect(botoes.every((b) => b.classList.contains('is-empty'))).toBe(true);
     fixture.destroy();
   });

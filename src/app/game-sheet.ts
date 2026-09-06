@@ -150,7 +150,7 @@ export class GameSheet {
 
   protected readonly REACTION_LABELS = REACTION_LABELS;
 
-  /** As quatro reações de uma resenha, sempre na mesma ordem, e quais são minhas. */
+  /** As reações de uma resenha, sempre na mesma ordem, e quais são minhas. */
   protected reactionsOf(review: SpinReview): readonly ReactionTally[] {
     return reactionTally(review, this.myKey());
   }

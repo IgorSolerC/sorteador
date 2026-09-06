@@ -74,7 +74,7 @@ export type GroupEvent =
       readonly actor?: string;
     }
   /**
-   * Uma reação a UMA resenha: quatro emoji e nada mais. Ela é o mínimo que faz um clube
+   * Uma reação a UMA resenha, escolhida numa lista fechada. Ela convida o clube a
    * ler o que o outro escreveu, em vez de só publicar — e é o único lugar do produto onde
    * uma pessoa comenta a opinião da outra sem escrever a própria.
    *
@@ -132,14 +132,13 @@ export const MAX_NOTE_DESCRIPTION = 280;
 export const MAX_REVIEW_TEXT = 600;
 
 /**
- * Os quatro emoji com que se reage a uma resenha, e não há um quinto.
+ * As doze reações do clube, em ordem estável para o dedo encontrar a mesma escolha.
  *
  * Uma caixa aberta de emoji viraria uma segunda caixa de texto — e o produto já tem uma,
- * assinada, que é a resenha. Quatro reações cobrem o que um clube diz sobre a opinião de
- * outra pessoa: me surpreendeu, isso aí, que tristeza, e a piada. A lista é validada
- * também nas rules, então acrescentar um quinto é publicar as rules antes do site.
+ * assinada, que é a resenha. A lista é validada também nas rules; ampliá-la exige
+ * publicar as rules antes do site. As quatro originais permanecem nas mesmas posições.
  */
-export const REVIEW_REACTIONS = ['😯', '🔥', '😭', '😂'] as const;
+export const REVIEW_REACTIONS = ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆'] as const;
 
 export type ReactionEmoji = (typeof REVIEW_REACTIONS)[number];
 
@@ -763,6 +762,14 @@ export const REACTION_LABELS: Readonly<Record<ReactionEmoji, string>> = {
   '🔥': 'Fogo',
   '😭': 'Choro',
   '😂': 'Risada',
+  '❤️': 'Amei',
+  '👍': 'Concordo',
+  '👏': 'Aplausos',
+  '🤔': 'Pensando',
+  '🤯': 'Explodiu a cabeça',
+  '💀': 'Morri',
+  '🎮': 'Bora jogar',
+  '🏆': 'Troféu',
 };
 
 /**
@@ -883,7 +890,7 @@ export interface ReactionTally {
 }
 
 /**
- * As reações de uma resenha, sempre na ordem fixa dos quatro emoji — e não na ordem em que
+ * As reações de uma resenha, sempre na ordem fixa dos emoji — e não na ordem em que
  * chegaram. Uma fileira que se reordena sozinha faz o dedo errar o alvo entre duas visitas,
  * e aqui a fileira também é o controle de ligar e desligar a própria reação.
  */

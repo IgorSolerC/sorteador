@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 352 unitários e de componente
+npm test -- --watch=false   # 355 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -181,8 +181,8 @@ cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma lin
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
 gravada em campo nenhum.
 
-A resenha de cada um pode receber **reações** dos outros — 😯 🔥 😭 😂, e nada além dessas
-quatro. Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
+A resenha de cada um pode receber **doze reações** dos outros — 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆.
+Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
 atalho para a mais recente. E quem quiser pode ligar o **modo cego**, que lacra a nota do
 clube justamente nos jogos que a pessoa ainda vai julgar: ler `9,2` antes de dar a própria
 nota move a própria nota.

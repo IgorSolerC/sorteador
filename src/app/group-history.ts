@@ -1,4 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { albumMetrics } from './album-metrics';
 import {
   Component,
   DestroyRef,
@@ -11,23 +12,17 @@ import {
 } from '@angular/core';
 
 import {
-  BASE_CRITERIA,
   completionShare,
   owesReview,
   pendingReviews,
-  criterionText,
-  formatHours,
   formatScore,
   GroupMember,
-  REVIEW_CRITERION_LABELS,
   REVIEW_STATUS_LABELS,
   REVIEW_STATUSES,
   ReviewCriterion,
-  ScoreTone,
   SpinRecord,
   SpinSeat,
   membersById,
-  scoreTone,
   spinScores,
 } from './group-log';
 import { GroupSnapshot, UsageBlockedError } from './group-store';
@@ -180,14 +175,6 @@ export class GroupHistory {
 
   protected readonly labelled = computed(() => this.spins().filter((spin) => spin.note).length);
 
-  /**
-   * O cartão resume, e o resumo tem teto. As duas médias da platina ficam de fora dele de
-   * propósito: numa parede de dezenas de cartões, duas linhas que só existem para alguns
-   * jogos alongam todos e não deixam nenhum mais fácil de comparar. Elas estão na ficha,
-   * a um clique do cartão.
-   */
-  protected readonly CRITERIA = BASE_CRITERIA;
-  protected readonly CRITERION_LABELS = REVIEW_CRITERION_LABELS;
   protected readonly SORTS = ALBUM_SORTS;
   protected readonly STATUSES = REVIEW_STATUSES;
   protected readonly STATUS_LABELS = REVIEW_STATUS_LABELS;
@@ -306,6 +293,10 @@ export class GroupHistory {
     this.sort.set(key);
   }
 
+  protected metricsOf(spin: SpinRecord) {
+    return albumMetrics(spin, this.sort());
+  }
+
   protected readonly visibleCount = computed(() =>
     this.rounds().reduce((total, section) => total + section.spins.length, 0),
   );
@@ -354,35 +345,8 @@ export class GroupHistory {
     return spinScores(spin);
   }
 
-  protected averageOf(spin: SpinRecord): string {
-    const score = spinScores(spin).score;
-    return score === null ? '' : formatScore(score);
-  }
-
-  /** O tempo médio de um jogo, já escrito. Vazio quando ninguém contou. */
-  protected hoursOf(spin: SpinRecord): string {
-    const hours = spinScores(spin).hours;
-    return hours ? formatHours(hours.average) : '';
-  }
-
   protected shareOf(spin: SpinRecord) {
     return completionShare(spinScores(spin));
-  }
-
-  /** O temperamento da nota do jogo, o mesmo que a ficha usa: brilho, tinta ou cheiro. */
-  protected toneOf(spin: SpinRecord): ScoreTone {
-    return scoreTone(spinScores(spin).score);
-  }
-
-  /** As médias por critério de um jogo, só as que alguém avaliou, na ordem da ficha. */
-  protected criteriaOf(spin: SpinRecord): readonly { label: string; score: string }[] {
-    const conta = spinScores(spin);
-    return this.CRITERIA
-      .filter((criterion) => conta.criteria[criterion] !== undefined)
-      .map((criterion) => ({
-        label: this.CRITERION_LABELS[criterion],
-        score: criterionText(criterion, conta.criteria[criterion]!.average, true),
-      }));
   }
 
   // --- o modo cego e o que esta pessoa deve ---
@@ -428,13 +392,11 @@ export class GroupHistory {
       const blob = await renderAlbumPoster({
         groupName: snap.name,
         sections: this.rounds(),
-        stats: this.albumStats(),
-        rounds: snap.state.round,
+        sort: this.sort(),
+        sealedOf: (spin) => this.sealedOf(spin),
         colorOf: (spin) => this.colorOf(spin),
         inkOf: (spin) => this.inkOf(spin),
         emojiOf: (spin) => this.emojiOf(spin),
-        averageOf: (spin) => this.averageOf(spin),
-        toneOf: (spin) => this.toneOf(spin),
       });
       const url = URL.createObjectURL(blob);
       const link = this.document.createElement('a');

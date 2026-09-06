@@ -5,9 +5,8 @@ import { Preferences } from './preferences';
 /**
  * A voz da máquina, sintetizada.
  *
- * Nenhum arquivo de áudio: o projeto vive no plano gratuito, sem Storage, e um `.mp3` de
- * catraca custaria mais bytes que o app inteiro. Tudo aqui sai de osciladores e de um
- * segundo de ruído branco gerado uma vez.
+ * Osciladores e um buffer de ruído gerado uma vez permitem sincronizar a desaceleração
+ * sem baixar arquivos e interromper a cena com uma rampa de volume suave.
  *
  * Três decisões que não são estéticas:
  *
@@ -32,11 +31,13 @@ export class MachineSound {
   private noise: AudioBuffer | null = null;
   private scene: GainNode | null = null;
 
-  /**
-   * A cena da entrega: os tiques da roda freando, e o baque quando a cápsula chega. As
-   * durações são as mesmas do CSS — mudar uma sem a outra descasa o som da imagem.
-   */
-  spin(durationMs: number, ticks = 26): void {
+  /** Destrava no gesto, antes de qualquer espera pela rede. */
+  prepare(): void {
+    this.open();
+  }
+
+  /** A duração vem da mesma cena que dirige o CSS, inclusive no movimento reduzido. */
+  spin(durationMs: number, ticks = 168): void {
     const ctx = this.open();
     if (!ctx) return;
 
@@ -46,13 +47,14 @@ export class MachineSound {
 
     // Um tique por fração de volta. O instante de cada um é a curva do CSS invertida: em
     // que segundo a animação já andou k/N do caminho.
-    for (let k = 1; k <= ticks; k += 1) {
+    if (duration > 0) this.rolling(ctx, scene, start, duration);
+    for (let k = 1; duration > 0 && k <= ticks; k += 1) {
       const when = start + easeInverse(k / ticks) * duration;
       // Os últimos tiques são os que se ouvem: o começo é uma rajada e some sozinha.
-      this.tick(ctx, scene, when, 0.22 + 0.78 * (k / ticks));
+      this.tick(ctx, scene, when, 0.45 + 0.55 * (k / ticks));
     }
 
-    this.thud(ctx, scene, start + duration + 0.59);
+    this.thud(ctx, scene, start + (duration > 0 ? duration + 0.59 : 0.04));
   }
 
   /** A cúpula abrindo, logo depois do baque. É o momento em que o confete sai. */
@@ -87,11 +89,11 @@ export class MachineSound {
       this.master = this.context.createGain();
       // A máquina é um objeto de mesa, não um show. Alto o bastante para se ouvir num
       // celular na mão, baixo o bastante para não assustar quem esqueceu que ligou.
-      this.master.gain.value = 0.22;
+      this.master.gain.value = 0.32;
       this.master.connect(this.context.destination);
     }
     // Um contexto criado fora de um gesto nasce suspenso; o gesto que chega aqui o destrava.
-    if (this.context.state === 'suspended') void this.context.resume();
+    if (this.context.state === 'suspended') void this.context.resume().catch(() => {});
     return this.context;
   }
 
@@ -104,18 +106,40 @@ export class MachineSound {
     return scene;
   }
 
-  /** Um dente da catraca: um estalo curto de ruído filtrado, e nada mais. */
+  /** O atrito dá corpo entre os dentes da catraca, até o último instante da freada. */
+  private rolling(ctx: AudioContext, out: GainNode, when: number, duration: number): void {
+    const source = ctx.createBufferSource();
+    source.buffer = this.noiseBuffer(ctx);
+    source.loop = true;
+    source.playbackRate.setValueAtTime(1.3, when);
+    source.playbackRate.exponentialRampToValueAtTime(0.35, when + duration);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1800, when);
+    filter.frequency.exponentialRampToValueAtTime(380, when + duration);
+    filter.Q.value = 0.7;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(0.7, when + Math.min(0.08, duration / 4));
+    gain.gain.linearRampToValueAtTime(0.35, when + duration * 0.7);
+    gain.gain.linearRampToValueAtTime(0, when + duration);
+    source.connect(filter).connect(gain).connect(out);
+    source.start(when);
+    source.stop(when + duration + 0.02);
+  }
+
+  /** Dentes arredondados: menos agudo de rádio e mais contato de madeira e plástico. */
   private tick(ctx: AudioContext, out: GainNode, when: number, level: number): void {
     const source = ctx.createBufferSource();
     source.buffer = this.noiseBuffer(ctx);
     const band = ctx.createBiquadFilter();
     band.type = 'bandpass';
-    band.frequency.value = 2100;
-    band.Q.value = 6;
+    band.frequency.value = 1050;
+    band.Q.value = 0.8;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, when);
-    gain.gain.linearRampToValueAtTime(0.5 * level, when + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.045);
+    gain.gain.linearRampToValueAtTime(0.65 * level, when + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.028);
 
     source.connect(band).connect(gain).connect(out);
     source.start(when);
@@ -150,19 +174,19 @@ export class MachineSound {
     knock.stop(when + 0.12);
   }
 
-  /** A cúpula abrindo: duas notas curtas, a segunda uma quinta acima. */
+  /** Um acorde de caixa de música, com ataque macio e cauda curta. */
   private pop(ctx: AudioContext, out: GainNode, when: number): void {
-    for (const [delay, freq] of [[0, 660], [0.09, 990]] as const) {
+    for (const [delay, freq] of [[0, 523.25], [0.075, 659.25], [0.15, 783.99]] as const) {
       const tone = ctx.createOscillator();
-      tone.type = 'triangle';
+      tone.type = 'sine';
       tone.frequency.value = freq;
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0, when + delay);
-      gain.gain.linearRampToValueAtTime(0.32, when + delay + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, when + delay + 0.26);
+      gain.gain.linearRampToValueAtTime(0.28, when + delay + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, when + delay + 0.65);
       tone.connect(gain).connect(out);
       tone.start(when + delay);
-      tone.stop(when + delay + 0.3);
+      tone.stop(when + delay + 0.7);
     }
   }
 
@@ -183,7 +207,7 @@ export class MachineSound {
  * tiques freiam exatamente quando a roda freia.
  *
  * Busca binária em vez de Newton porque a curva é monótona, trinta passos bastam para o
- * ouvido, e uma cena inteira custa vinte e seis destas — medido em microssegundos.
+ * ouvido. Sete voltas passam por 168 dentes, junto da camada contínua de atrito.
  */
 export function easeInverse(progress: number, x1 = 0.12, y1 = 0.72, x2 = 0.12, y2 = 1): number {
   const alvo = Math.min(Math.max(progress, 0), 1);

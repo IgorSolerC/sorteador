@@ -219,10 +219,7 @@
                 <p class="review-text">{{ review.text }}</p>
               }
 
-              <!-- Quatro emoji e nada mais. É o mínimo que faz um clube LER o que o outro
-                   escreveu em vez de só publicar, e uma caixa aberta viraria uma segunda
-                   caixa de texto — o produto já tem uma, assinada, que é a resenha. -->
-              <p class="review-reactions">
+              <p class="review-reactions" role="group" [attr.aria-label]="'Reagir à resenha de ' + review.author">
                 @for (tally of reactionsOf(review); track tally.emoji) {
                   <button
                     type="button"

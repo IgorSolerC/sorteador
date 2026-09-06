@@ -308,6 +308,28 @@ describe('as quatro tintas da nota no álbum', () => {
 describe('a ordem da parede', () => {
   afterEach(() => TestBed.resetTestingModule());
 
+  it('dificuldade vira protagonista e a nota continua como medida secundária', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1).label(0, 'Hollow Knight')
+      .review(0, 'Ana', 9, 'finalizado', { criteria: { dificuldade: 8 }, hours: 42 }));
+    const botao = [...el(fixture).querySelectorAll('.sort-options button')]
+      .find((b) => b.textContent?.trim() === 'Dificuldade') as HTMLButtonElement;
+    botao.click(); fixture.detectChanges();
+    expect(texts(fixture, '.album-score b')).toEqual(['Difícil']);
+    expect(texts(fixture, '.album-criteria').join()).toContain('Nota do clube 9,0');
+    expect(el(fixture).querySelector('.album-score')!.classList.contains('is-high')).toBe(false);
+    fixture.destroy();
+  });
+
+  it('tempo sem avaliação mostra ausência no destaque, sem substituir pela nota', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1).label(0, 'Pico Park').review(0, 'Ana', 9));
+    ([...el(fixture).querySelectorAll('.sort-options button')]
+      .find((b) => b.textContent?.trim() === 'Tempo de jogo') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(texts(fixture, '.album-score b')).toEqual(['—']);
+    expect(texts(fixture, '.album-criteria').join()).toContain('Nota do clube 9,0');
+    fixture.destroy();
+  });
+
   const wall = () => new FakeStore().seed(['Ana', 'Breno'], 3)
     .label(0, 'Primeiro').review(0, 'Ana', 5, 'finalizado', { criteria: { historia: 9 }, hours: 30 })
     .label(1, 'Segundo').review(1, 'Ana', 9, 'finalizado', { criteria: { historia: 2 }, hours: 4 })

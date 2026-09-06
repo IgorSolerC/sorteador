@@ -219,9 +219,9 @@ ninguém e ninguém conseguiria editá-la depois. Reescrever é gravar outra; `r
 a tira da conta sem tirá-la do log.
 
 **Reagir é um evento, e a lista de emoji é fechada NA RULE.** `review_reacted` carrega o
-giro, o `alvo` (a chave de quem escreveu a resenha reagida), o `emoji` e o `reagiu`. Só quatro
-emoji passam — 😯 🔥 😭 😂 —, e é a rule que garante: um campo de emoji livre viraria uma
-segunda caixa de texto num log que não se apaga. Acrescentar um quinto é **publicar as rules
+giro, o `alvo` (a chave de quem escreveu a resenha reagida), o `emoji` e o `reagiu`. Doze
+emoji passam — 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆 —, e é a rule que garante: um campo de emoji livre viraria uma
+segunda caixa de texto num log que não se apaga. Ampliar a lista exige **publicar as rules
 antes do site**, como toda mudança de rule.
 
 Ligar e desligar é **explícito**, e nunca por paridade: dois aparelhos alternando quase junto
