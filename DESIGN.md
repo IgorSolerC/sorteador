@@ -56,6 +56,18 @@ colors:
   line-strong: "rgba(200, 220, 255, .34)"
   line-paper: "rgba(22, 35, 58, .18)"
 typography:
+  nota-ficha:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "3.4rem"
+    fontWeight: 600
+    lineHeight: 0.9
+    letterSpacing: "-0.03em"
+  titulo-ficha-movel:
+    fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
+    fontSize: "1.8rem"
+    fontWeight: 600
+    lineHeight: 1.15
+    letterSpacing: "-0.03em"
   display:
     fontFamily: "Fredoka Variable, Trebuchet MS, sans-serif"
     fontSize: "clamp(3rem, 7.4vw, 6rem)"
@@ -606,15 +618,26 @@ decisões diferentes com nomes diferentes: **o jogo** é de todo mundo, **a rese
 um. A mesa é a terceira, e é uma nota de rodapé.
 
 - **Quatro faces, nunca quatro camadas.** Sobreposição de papel (`12px`,
-  `min(34rem, 100vw - 2.4rem)`) sobre um véu de esmalte com `blur(2px)`, com a marca de
-  registro do impressor. Um segundo modal por cima do primeiro deixaria dois véus e dois
+  `min(48rem, 100vw - 2.4rem)` na leitura e `42rem` nos formulários) sobre um véu de esmalte
+  com `blur(2px)`. No celular a margem externa é `.6rem`. Um segundo modal por cima do primeiro deixaria dois véus e dois
   `aria-modal` disputando a mesma tecla Esc; aqui o Esc volta uma face por vez.
-- **Face 1, o boletim:** duas medidas no alto — a nota do clube em display `clamp(3rem, 11vw,
-  4.2rem)` e o tempo médio em `clamp(2rem, 7vw, 2.7rem)` —, uma régua por critério, a barra de
-  completude com legenda escrita, e a lista de resenhas. Cada resenha traz o disco de cápsula
+- **Identificação fixa:** cápsula, pessoa, rodada e data ficam acima do jogo, junto do fechar
+  de `44px`. Só o conteúdo abaixo rola; fechar continua disponível no fim de uma resenha longa.
+  Voltar da edição para a leitura também volta o conteúdo ao topo.
+- **Face 1, o boletim:** título e nota do clube lado a lado, em Fredoka `2.4rem` e `3.4rem`
+  (`1.8rem` e `2.7rem` no celular). O tempo é uma medida de apoio em `1.42rem`, antes das
+  réguas. Os rótulos de critério são Atkinson `0.92rem`, os valores são Martian Mono
+  `0.82rem`, e a contagem de votos usa Atkinson `0.82rem`. No desktop rótulo e régua dividem
+  a mesma linha; no celular o rótulo fica acima. O boletim usa o próprio papel da ficha,
+  separado por filetes, sem uma segunda caixa. A contagem de resenhas acompanha a completude,
+  com barra e três colunas de percentuais. Cada resenha traz o disco de cápsula
   de quem escreveu, a nota, o selo de completude e o tempo. As duas réguas da platina fecham
   a lista atrás de um **picote** — a mesma marca de impressor que corta o cartão do álbum —,
   cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
+- **Resenhas legíveis:** nome em `1rem`, nota em `1.8rem`, critérios em pares rótulo–valor
+  (`0.82rem` / `0.74rem`), em duas colunas no desktop e uma no celular. No celular o status
+  desce abaixo do nome para não comprimir quem escreveu. Descrição e texto livre são `1rem`,
+  inteiros, com quebras de linha preservadas. Os estilos da ficha vivem em `game-sheet.scss`.
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
 - **A reação compacta**, no pé de cada resenha: um resumo numa linha e nove escolhas sob
@@ -739,7 +762,7 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca. No celular a mesma escolha é o seletor do sistema (ver A Regra da Ordem que Cabe na Mão).
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
-- **Cartão:** jogo em Fredoka `1.42rem` e medida em foco em `2.7rem` abrem a leitura, lado a lado. A cápsula, o nome de quem escolheu e a data assinam abaixo, antes do picote. Os critérios ficam em duas colunas de pares rótulo–valor: rótulos em Atkinson `0.82rem`, valores em Martian Mono `0.74rem`. Dificuldade e tempo ocupam linhas inteiras para acomodar palavras e unidades. A completude reúne a contagem de resenhas, a barra e os percentuais em três colunas. A descrição encerra o cartão **inteira, sem corte por linhas**. Nenhum dado exige hover ou expansão. As duas medidas da platina continuam na ficha, conforme A Regra da Platina Perguntada. A grade usa colunas de no mínimo `20rem`, limitadas à largura disponível; o celular mantém uma coluna. O cartão inteiro continua abrindo a ficha, com inclinação fixa por giro (`-1.7°` a `1.8°`). Os estilos específicos vivem em `group-history.scss`, sem alterar a completude da ficha aberta.
+- **Cartão:** a cápsula, o nome de quem escolheu e a data vêm primeiro. Logo abaixo, jogo em Fredoka `1.42rem` e medida em foco em `2.7rem` ficam lado a lado, antes do picote. Os critérios ficam em duas colunas de pares rótulo–valor: rótulos em Atkinson `0.82rem`, valores em Martian Mono `0.74rem`. Dificuldade e tempo ocupam linhas inteiras para acomodar palavras e unidades. A completude reúne a contagem de resenhas, a barra e os percentuais em três colunas. A descrição encerra o cartão **inteira, sem corte por linhas**. Nenhum dado exige hover ou expansão. As duas medidas da platina continuam na ficha, conforme A Regra da Platina Perguntada. A grade usa colunas de no mínimo `20rem`, limitadas à largura disponível; o celular mantém uma coluna. O cartão inteiro continua abrindo a ficha, com inclinação fixa por giro (`-1.7°` a `1.8°`). Os estilos específicos vivem em `group-history.scss`, sem alterar a completude da ficha aberta.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
 - **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `Sem jogo escrito` em display compacto e mantendo pessoa, cápsula e data. Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas vezes.
 
