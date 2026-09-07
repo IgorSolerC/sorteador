@@ -120,20 +120,22 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 386 unitários e de componente
+npm test -- --watch=false   # 387 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
 npm run test:a11y           # 17 telas x 3 larguras, 0 achados
 npm run test:etiqueta       # 86 verificações de ponta a ponta num navegador real
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 21 fluxos
+npm run build:testjs
+node tests/e2e-roleta.mjs "http://localhost:4200/?emu=1#/g/demo"   # 14 verificações de SVG
 npm run build -- --base-href=./
 ```
 
-Verde nas sete, ou o motivo escrito de por que uma não roda nesta máquina. As contagens
+Verde em todas, ou o motivo escrito de por que uma não roda nesta máquina. As contagens
 acima são as desta última rodada: se a sua baixar, você apagou um teste sem querer.
 
-As duas suítes de navegador (`test:a11y`, `test:etiqueta`, e os fluxos) precisam do emulador
+As suítes de navegador (`test:a11y`, `test:etiqueta`, os fluxos e a roleta) precisam do emulador
 **e** do `ng serve` de pé, com o grupo `demo` semeado — e o e2e da etiqueta escreve nele, então
 **reseme antes de cada rodada** ou a segunda execução falha em cima do que a primeira gravou.
 

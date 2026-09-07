@@ -290,7 +290,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Cor Escolhida.** A cor guardada é a **posição na paleta**, nunca um hexadecimal livre — nem no log, nem nas rules. É o que garante que toda cápsula continue passando no contraste sem que o servidor precise saber calcular contraste, e o que permite reafinar a paleta inteira sem reescrever um evento sequer.
 
-**A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para a tinta AA calculada daquela cápsula. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
+**A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha — trocam para a tinta AA calculada daquela cápsula. O puxador da manivela está sobre cromo: permanece em esmalte profundo, com contorno cromado, para não virar tinta branca sobre metal claro. O pino central conserva a cor da cápsula, delimitada por esmalte profundo. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
 
 **A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São três ocorrências, e as três se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista; a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre; e a bancada da porta, que é a bancada da gaveta no lugar onde a cápsula já está desenhada em 340px, com o mesmo evento por baixo. Uma quarta superfície clara precisa antes provar que é administração — e provar, aqui, quer dizer gravar o mesmo tipo de evento que as outras três.
 
@@ -433,19 +433,19 @@ e sem cartão nenhum.
 O sistema é material, não empilhado: a profundidade vem de gradientes de acrílico e cromo dentro do SVG, de hairlines de luz sobre esmalte, e de uma parede lateral moldada sob os botões. Sombras difusas existem apenas onde uma peça física estaria de fato levantada da chapa.
 
 ### Shadow Vocabulary
-- **Poço do globo** (`drop-shadow(0 22px 40px rgba(4, 10, 22, .55))`): o globo assenta sobre o gabinete.
-- **Placa da manivela** (`drop-shadow(0 6px 12px rgba(4, 10, 22, .5))`) e **cápsula solta** (`drop-shadow(0 2px 3px rgba(4, 10, 22, .45))`): peças menores, sombra proporcional.
+- **Poço do globo:** `feDropShadow` em `enamel-deep`, deslocamento vertical 22, desvio 40, opacidade `.55`: o globo assenta sobre o gabinete.
+- **Corpo e placa da manivela:** `feDropShadow` em `enamel-deep`, respectivamente deslocamento/desvio/opacidade `12/20/.45` e `6/12/.5`, depois do lábio moldado. A **cápsula solta** conserva `drop-shadow(0 2px 3px rgba(4, 10, 22, .45))`: peça menor, sombra proporcional.
 - **Adesivo do mês** (`0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px var(--paper)`): sombra de colagem mais a borda branca de adesivo recortado.
 - **Parede lateral moldada** (`0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38)`): botão primário. O botão de esmalte usa `0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28)`.
 - **Aviso flutuante** (`0 14px 30px rgba(4, 10, 22, .48)`): o toast, único elemento fora do plano da página.
-- **Brilho da cápsula escolhida** (`saturate(1.25) brightness(1.14) drop-shadow(0 0 12px …)`): a cunha vencedora acende no aro.
+- **Cápsula escolhida:** contorno de `1.5` unidades na tinta calculada e brilho especular branco. Nenhum filtro de saturação ou luminosidade altera a cor que a pessoa escolheu.
 
 ### Named Rules
 
 **A Regra do Lábio Moldado.** As peças grandes da máquina são plástico moldado, e não
 retângulos pintados: a caixa da roleta (`.body-plate`) e o disco da manivela
-(`.crank-plate`) levam um **lábio duro de 6 unidades em cima** — `drop-shadow(0 -6px 0
-#1e2531)` — que diz que a peça está à frente do que vem atrás dela, mais a sombra ambiente
+(`.crank-plate`) levam um **lábio duro de 6 unidades em cima** — `feDropShadow` sem
+desfoque, com `dy="-6"` e tinta `enamel-deep` — que diz que a peça está à frente do que vem atrás dela, mais a sombra ambiente
 que diz que ela é grossa.
 
 O lábio nunca vem sozinho, pela Regra da Parede Moldada: deslocamento sem desfoque, sozinho,
@@ -502,6 +502,9 @@ Aviso fixo no canto inferior direito sobre esmalte elevado, borda de linha forte
 
 ### The Machine (signature)
 A máquina é um único SVG (`viewBox="-26 -26 452 576"`) desenhado em espaço próprio de 400×400 para o globo: centro em (200, 200), raio interno 96, equador 118, raio externo 168, trilho de rótulo em 140. O aro cromado leva 84 caneluras desenhadas individualmente entre os raios 171 e 183. Nove cápsulas inteiras repousam fixas no interior inferior, para que a cena nunca reembaralhe.
+
+- **Recortes e sombras:** o SVG permite `overflow: visible`; cada sombra grande declara sua região em `userSpaceOnUse`, contendo a peça, seu deslocamento e três desvios do desfoque. O recorte circular do núcleo fica no grupo externo parado, enquanto apenas o grupo de cápsulas balança dentro dele.
+- **Materiais sem repintar pessoas:** os gradientes usam os tokens de esmalte, cromo e branco. O vidro termina no equador de raio 118, antes da faixa colorida e dos nomes; seu reflexo é um arco dentro do núcleo. As cascas translúcidas usam cromo com opacidade própria de cada escala. Assim o acrílico não clareia a tinta nem reduz o contraste dos nomes, cujo mínimo medido nas 24 cores é `4.611:1`. O puxador em esmalte sobre o trecho mais escuro do cromo mede `7.114:1`.
 
 - **Rótulos no aro:** cada nome corre tangencialmente pelo aro via `textPath`. O arco do rótulo é invertido para as cápsulas que param na metade inferior, de modo que nenhum nome fique de cabeça para baixo. O texto degrada por orçamento de arco — primeiro nome, iniciais, uma letra — conforme o número de participantes; o tamanho da fonte é `min(17, max(8, 46/√n))`.
 - **Calha às seis horas:** a rotação de destino é calculada para que a cápsula vencedora pare exatamente na calha, na base do globo.

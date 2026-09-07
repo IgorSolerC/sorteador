@@ -70,19 +70,19 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 // O host do componente não pode virar o item do grid: sem isto o SVG dimensiona
 // contra uma caixa inline e encolhe. `contents` devolve SVG e legenda ao grid da máquina.
 app-machine { display: contents; }
-.machine-front { width: min(100%, 452px); height: auto; }
+.machine-front { width: min(100%, 452px); height: auto; overflow: visible; }
 /* A caixa da roleta é plástico moldado, e não um retângulo pintado: um lábio duro de 6
    unidades em cima diz que a chapa está À FRENTE do poço do globo, e a sombra ambiente
    embaixo diz que ela é grossa. Pela Regra da Parede Moldada, o lábio nunca vem sozinho —
    deslocamento sem desfoque é adesivo, não moldagem. */
-.body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; filter: drop-shadow(0 -6px 0 #1e2531) drop-shadow(0 12px 20px rgba(4, 10, 22, .45)); transition: fill .6s ease, stroke .6s ease; }
+.body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; filter: url(#sombra-corpo); transition: fill .6s ease, stroke .6s ease; }
 .is-live .body-plate { fill: var(--live); stroke: color-mix(in srgb, var(--live-ink) 34%, transparent); }
 .body-seam { fill: rgba(200, 220, 255, .2); }
 .is-live .body-seam { fill: color-mix(in srgb, var(--live-ink) 30%, transparent); }
-.globe-well { filter: drop-shadow(0 22px 40px rgba(4, 10, 22, .55)); }
+.globe-well { filter: url(#sombra-globo); }
 .globe-core, .globe-inner-edge { pointer-events: none; }
 .loose-dome { filter: drop-shadow(0 2px 3px rgba(4, 10, 22, .45)); }
-.loose-shell { fill: rgba(228, 240, 252, .4); }
+.loose-shell { fill: color-mix(in srgb, var(--chrome) 40%, transparent); }
 .loose-seam { fill: none; stroke: rgba(10, 24, 48, .34); stroke-width: 1.2; stroke-linecap: round; }
 .loose-spot { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 2.2; stroke-linecap: round; }
 .loose { transform-box: view-box; transform-origin: 200px 240px; }
@@ -91,32 +91,30 @@ app-machine { display: contents; }
 .knurl path { fill: none; stroke: rgba(10, 24, 48, .3); stroke-width: 1.1; }
 .capsule-field { transform-box: view-box; transform-origin: 200px 200px; will-change: transform; }
 .machine.is-spinning .capsule-field { transition: transform var(--spin); }
-.capsule-dome { transition: filter .45s ease; }
-.capsule-shell { fill: rgba(228, 240, 252, .46); }
+.capsule-shell { fill: color-mix(in srgb, var(--chrome) 46%, transparent); }
 .capsule-seam { fill: none; stroke: rgba(10, 24, 48, .38); stroke-width: 1.6; }
 .capsule-gloss { fill: none; stroke: rgba(255, 255, 255, .62); stroke-width: 3.4; stroke-linecap: round; }
 .capsule-name { fill: var(--enamel-deep); font-family: var(--display); font-weight: 600; letter-spacing: .01em; }
-.capsule.is-chosen .capsule-dome { filter: saturate(1.25) brightness(1.14) drop-shadow(0 0 12px color-mix(in srgb, var(--live) 65%, transparent)); }
+.capsule.is-chosen .capsule-dome { stroke: var(--live-ink); stroke-width: 1.5; }
 .capsule.is-chosen .capsule-gloss { stroke: var(--white); }
 .globe-glass { pointer-events: none; }
-.globe-sheen { fill: rgba(255, 255, 255, .1); pointer-events: none; }
+.globe-sheen { fill: none; stroke: var(--white); stroke-opacity: .16; stroke-width: 9; stroke-linecap: round; pointer-events: none; }
 .globe-rim-line { stroke: rgba(10, 24, 48, .5); stroke-width: 2; }
 .hub-ring { fill: var(--enamel-deep); }
 
-.hub-pin { fill: var(--live); transition: fill .5s ease; }
+.hub-pin { fill: var(--live); stroke: var(--enamel-deep); stroke-width: 1.5; transition: fill .5s ease; }
 .chute-mouth { fill: var(--enamel-deep); }
 .chute-lip { fill: none; stroke: var(--live); stroke-width: 3; stroke-linecap: round; transition: stroke .5s ease; }
 /* O disco da manivela é uma peça cromada assentada num rebaixo: o lábio escuro em cima é
    a borda do rebaixo caindo sobre ele, e a sombra difusa embaixo é a peça saindo da chapa.
    As duas juntas são o que faz um botão de máquina parecer que gira. */
-.crank-plate { filter: drop-shadow(0 -6px 0 #1e2531) drop-shadow(0 6px 12px rgba(4, 10, 22, .5)); }
+.crank-plate { filter: url(#sombra-manivela); }
 .crank-arm { transform-box: view-box; transform-origin: 106px 452px; }
 .crank-bar { fill: none; stroke: var(--enamel-deep); stroke-width: 9; stroke-linecap: round; }
-.crank-knob { fill: var(--live); stroke: var(--enamel-deep); stroke-width: 2.5; transition: fill .5s ease; }
+.crank-knob { fill: var(--enamel-deep); stroke: var(--chrome); stroke-width: 1.5; }
 .crank-boss { fill: var(--enamel-deep); }
 .is-live .tray-flap { stroke: color-mix(in srgb, var(--live-ink) 55%, transparent); }
 .is-live .chute-lip { stroke: var(--live-ink); }
-.is-live .crank-knob { fill: var(--live-ink); stroke: color-mix(in srgb, var(--live-ink) 48%, transparent); }
 .machine.is-spinning .crank-arm { animation: crank var(--spin) both; }
 @keyframes crank { to { transform: rotate(720deg); } }
 .tray-window { fill: var(--enamel-deep); }
@@ -124,7 +122,7 @@ app-machine { display: contents; }
 .tray-flap { fill: none; stroke: var(--chrome-dim); stroke-width: 2.5; stroke-linecap: round; }
 .delivery { opacity: 0; }
 .delivery-body { transform-box: view-box; transform-origin: 280px 458px; }
-.delivery-shell { fill: rgba(233, 242, 252, .5); }
+.delivery-shell { fill: color-mix(in srgb, var(--chrome) 50%, transparent); }
 .delivery-seam { fill: none; stroke: rgba(10, 24, 48, .45); stroke-width: 2; stroke-linecap: round; }
 .delivery-dome { transform-box: fill-box; transform-origin: 12% 100%; }
 .machine.is-delivered .delivery { opacity: 1; }
