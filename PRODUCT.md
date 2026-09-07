@@ -61,7 +61,8 @@ O que continua sendo contrato:
   (platinado, finalizado, incompleto) obrigatórias, e — se ela quiser — tempo de jogo em
   horas, notas de diversão, história, qualidade e jogabilidade, um grau de dificuldade entre
   cinco degraus com nome, e texto livre. Reescrever é gravar outra; retirar é gravar a
-  retirada. Todas as versões continuam no registro.
+  retirada. Todas as versões continuam no registro, e a tela diz apenas que aquilo foi
+  editado — o contador de reescritas virava um placar da autoria.
 - Perguntar mais duas coisas a **quem platinou**, e só a ela: a **diversão da platina**, de
   0 a 10, e a **dificuldade de platinar**, nos mesmos cinco degraus com nome da dificuldade
   do jogo. As duas são opcionais como as outras escalas, e pendem do status: quem reescreve a
@@ -81,10 +82,14 @@ O que continua sendo contrato:
 - **A nota do clube fica lacrada** nos jogos que esta pessoa jogou e ainda não resenhou,
   para que a nota dela não nasça ancorada na do clube. Não é opcional: era a única escolha
   por aparelho que mudava a conta que o clube lê. Ela pode espiar, e espiar vale só enquanto
-  aquela ficha está aberta.
+  aquela ficha está aberta. **O lacre esconde a média, não a fila:** quantas pessoas já
+  resenharam aquele jogo continua à vista, no cartão, na ficha e no registro — é contagem de
+  resenhas, não média, e é o que diz a quem ainda deve a sua que o clube a espera.
 - **Som da máquina**, opcional e por aparelho, sintetizado: só toca quando houve um gesto.
-- **Salvar o álbum como imagem**, com o que está na tela. **O link do grupo não vai nela**:
-  ele é a credencial, e uma imagem compartilhada é pública para sempre.
+- **Salvar o álbum como imagem**, com o que está na tela. Cada ficha impressa diz três
+  coisas, e só três: quem escolheu, o jogo e a nota do clube — o boletim inteiro fica na
+  ficha do jogo, onde há tela para lê-lo. **O link do grupo não vai nela**: ele é a
+  credencial, e uma imagem compartilhada é pública para sempre.
 - Mostrar a conta do clube sobre um jogo — nota média, média de cada critério, tempo médio e
   a porcentagem de platinado, finalizado e incompleto. **Nada disso é gravado**: é recontado
   a partir das resenhas toda vez que a página abre. As duas médias da platina aparecem na

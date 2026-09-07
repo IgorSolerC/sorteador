@@ -1,7 +1,7 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-07**, na rodada da voz enxuta, do celular, do lacre sem chave e do
-crachá vestido.
+Estado em **2026-09-07**, na rodada da voz enxuta, do celular, do lacre sem chave, do
+crachá vestido e da ficha impressa de três fatos.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -74,7 +74,8 @@ src/app/
                        as cápsulas que já existem nele (ROSTER_LOOKUP, importação dinâmica)
   preferences.ts       a única chave deste aparelho: o som
   machine-sound.ts     a voz da máquina, sintetizada. Nada toca sem gesto
-  album-poster.ts      o álbum desenhado em canvas e salvo como PNG. Sem o link, nunca
+  album-poster.ts      o álbum desenhado em canvas e salvo como PNG. Três fatos por ficha
+                       — quem escolheu, o jogo, a nota. Sem o link, nunca
   home.*               A PRATELEIRA (raiz)
   recent-groups.ts     lista local de grupos visitados — não dá acesso a nada
   create-group.*       a oficina (#/novo)
@@ -164,7 +165,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 386 unitários e de componente
+npm test -- --watch=false   # 399 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
@@ -172,6 +173,7 @@ npm run test:a11y           # 17 telas x 3 larguras — precisa de npm start + e
 npm run test:etiqueta       # 86 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 21 fluxos
 node tests/e2e-acabamento.mjs # áudio real, hierarquia, PNG e reações; emulador semeado
+node tests/e2e-roleta.mjs "http://localhost:4200/?emu=1#/g/demo"   # 14 do SVG da máquina
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
 
@@ -259,6 +261,40 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-07, parte 6, tem três pedidos, e nenhum deles toca no sorteio.
+
+**A marca de reescrita virou uma palavra** (ver A Regra da Marca de Reescrita em
+`DESIGN.md`). `· reescrita 3×` na resenha e `Reescrito 3 vezes.` no jogo saíram; ficaram
+`· editada` e `Editado.`. O log continua contando `revision` — é ele que sabe quantas versões
+existiram, e `group-store` continua provando isso —, mas a tela não expõe o contador: ele
+transformava a autoria num placar que o clube nunca discutiu.
+
+**O lacre esconde a média, não a fila.** `reviewersLabel(count)` em `group-log.ts` é a frase
+única (`Ninguém resenhou ainda` / `1 pessoa já resenhou` / `N pessoas já resenharam`), usada
+no cartão do álbum (`.album-reviewed`, só quando há gente na fila — na parede, "ninguém ainda"
+é a mesma ausência dita duas vezes), no selo da ficha (`.sheet-seal-count`, sempre, porque
+ali a pessoa está decidindo escrever) e na imagem. `spinSummary(spin, true)` deixou de devolver
+só o título: agora é `Overcooked · 2 resenhas`, que é o que a célula do registro mostra no
+lugar da nota. **Nada disso antecipa nota nenhuma** — é contagem de resenhas, não média —, e é
+o que diz a quem ainda deve a sua que o clube está esperando por ela.
+
+**A ficha impressa perdeu o boletim** (ver A Regra do Pôster Sem Link). O cartão do PNG tem
+440 × 428 e diz três coisas: quem escolheu (faixa na cor dela, com o emoji ou a inicial), o
+jogo (até três linhas de `32`) e a nota do clube (`96`, nas quatro tintas). Critérios,
+completude, descrição, data, série e a grade de números do cabeçalho saíram: a imagem é lida
+no grupo do clube, longe do produto e num tamanho que ninguém amplia, e ali eles chegavam como
+letra miúda competindo com o que importa. Consequências: **a Regra da Medida em Foco vale só
+na parede** — a ordem escolhida muda a sequência dos cartões na imagem, e não mais o destaque
+deles, e por isso a linha do cabeçalho diz por onde a parede foi ordenada; e a cápsula sem
+jogo escrito troca o picote por um fio tracejado em volta do papel, porque duas linhas na
+mesma altura brigam e o picote separa a identidade de um conteúdo que ali não existe. O
+`e2e-acabamento` deixou de conferir `Dificuldade`/`Platinado`/`Finalizado` no PNG e passou a
+contar **um `NOTA DO CLUBE` por ficha etiquetada**, mais `escolheu` e uma nota com vírgula.
+
+Validação desta rodada: 399 unitários, 118 regras, 48 integrações, 13 verificações de
+migração, 86 E2E da etiqueta, 21 fluxos, 14 da roleta e 59 de acabamento; a11y em 17 telas ×
+3 larguras com zero achados, e build estático limpo.
 
 A rodada de 2026-09-07, parte 5: **o crachá do cabeçalho veste a cápsula de verdade**
 (ver A Regra do Crachá Vestido em `DESIGN.md`). Dentro de um grupo o disco passou a usar a

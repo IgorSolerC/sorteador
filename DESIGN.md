@@ -731,10 +731,27 @@ julgada, e só inverte quando não há espaço. As rules ainda aceitam os doze v
 👍 🎮 e 🏆 foram aposentados na interface sem apagar o log nem quebrar abas antigas. A lista
 continua fechada no servidor — um emoji livre viraria uma segunda caixa de texto.
 
+**A Regra da Marca de Reescrita.** Editar é gravar outro evento, e o log guarda quantas
+versões existiram — mas a tela diz **uma palavra, não um placar**: a resenha reescrita traz
+`· editada` ao lado da data, e o jogo reescrito abre a linha de assinatura com `Editado.`. O
+contador (`reescrita 3×`, `Reescrito 3 vezes`) transformava a autoria numa pontuação que o
+clube nunca discutiu, e ainda convidava a comparar quem reescreve mais. O que importa naquela
+linha é que aquilo não é a primeira versão, e **quem** assinou a última.
+
 **A Regra do Lacre.** A nota do clube fica lacrada exatamente nos jogos que esta pessoa
 **jogou e ainda não resenhou**: no boletim da ficha, no cartão do álbum e na linha do
 registro. Ler `9,2` antes de dar a própria nota move a própria nota, e o produto inteiro
 existe para que a conta do clube seja honesta.
+
+**O lacre esconde a média, não a fila.** Quantas pessoas já escreveram continua à vista, e
+por extenso: `2 pessoas já resenharam` em tinta cheia sob a linha do lacre no cartão do
+álbum, um degrau acima da explicação no selo da ficha, e `· 2 resenhas` no lugar da nota na
+linha de uma célula do registro. Uma contagem de resenhas não antecipa nota nenhuma, e é ela
+que diz a quem ainda deve a sua que o clube está esperando por ela — um cartão que só dizia
+"lacrado" escondia também o motivo de abri-lo. Sem resenha nenhuma o cartão do álbum não diz
+nada: na parede, "ninguém ainda" é a mesma ausência dita duas vezes. No selo da ficha, onde a
+pessoa está decidindo escrever, ela é dita — `Ninguém resenhou ainda`, e a sua abre o
+boletim.
 
 **Não há interruptor.** Ele era uma chave por aparelho na porta, desligada por padrão, e foi a
 única preferência que mudava a conta que o clube lê — uma conta que depende de um interruptor
@@ -767,6 +784,7 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
 - **Cartão:** a cápsula, o nome de quem escolheu e a data vêm primeiro. Logo abaixo, jogo em Fredoka `1.42rem` e medida em foco em `2.7rem` ficam lado a lado, antes do picote. Os critérios ficam em duas colunas de pares rótulo–valor: rótulos em Atkinson `0.82rem`, valores em Martian Mono `0.74rem`. Dificuldade e tempo ocupam linhas inteiras para acomodar palavras e unidades. A completude reúne a contagem de resenhas, a barra e os percentuais em três colunas. A descrição encerra o cartão **inteira, sem corte por linhas**. Nenhum dado exige hover ou expansão. As duas medidas da platina continuam na ficha, conforme A Regra da Platina Perguntada. A grade usa colunas de no mínimo `20rem`, limitadas à largura disponível; o celular mantém uma coluna. O cartão inteiro continua abrindo a ficha, com inclinação fixa por giro (`-1.7°` a `1.8°`). Os estilos específicos vivem em `group-history.scss`, sem alterar a completude da ficha aberta.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
+- **Cartão lacrado:** a linha silenciosa do lacre e, sob ela, em tinta cheia, quantas pessoas já resenharam (ver A Regra do Lacre). O cartão mantém pessoa, cápsula, data e jogo — lacrar a nota não é esconder o giro.
 - **Cápsula em branco:** papel silencioso com a segunda borda tracejada 6px para dentro, dizendo `Sem jogo escrito` em display compacto e mantendo pessoa, cápsula e data. Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas vezes.
 
 - **Salvar como imagem:** um comprimido de plaqueta no alto da parede, com a linha que diz a
@@ -784,18 +802,33 @@ pôster é um objeto próprio, com a mesma paleta, as mesmas fontes e as mesmas 
 nota, montado na medida de uma imagem — e sai o que está na tela, porque quem filtrou os dez
 melhores quer a parede dos dez melhores.
 
-Cada ficha impressa tem 480 × 680 unidades: faixa na cor de quem escolheu, emoji, data e
-rodada, título em até três linhas, medida principal, seis medidas secundárias no máximo,
-completude com porcentagens e descrição. Fredoka usa o nome real `Fredoka Variable` no
-canvas. A composição começa em uma ou duas colunas e cresce com a coleção; a rasterização
-fica limitada a 32 milhões de pixels e 16.384px por dimensão. O resumo é do filtro atual,
-e o lacre vale também na imagem.
+**Cada ficha impressa diz três coisas, e só três:** quem escolheu, o jogo e a nota do clube.
+São 440 × 428 unidades: a faixa de 128 na cor de quem escolheu, com o emoji dela — ou a
+inicial, quando ela não escolheu um, para o nome não deslizar de cartão para cartão —, o nome
+em `30` e `escolheu` em `15`; o picote; o título em até três linhas de `32`; e a nota em `96`,
+numa das quatro tintas, com `NOTA DO CLUBE` em mono de série embaixo. Critérios, completude e
+descrição **saíram**: a imagem é lida no grupo do clube, longe do produto e num tamanho que
+ninguém amplia, e ali eles chegavam como letra miúda competindo com o que importa. Quem quer
+o boletim inteiro abre a ficha do jogo.
+
+Lacrado, o lugar da nota diz `Lacrada` em `56` e ganha a fila acima dela (ver A Regra do
+Lacre): o lacre vale também na imagem. Uma cápsula sem jogo escrito troca o picote por um fio
+tracejado em volta do papel — o mesmo fio do que ainda não foi escrito — e não imprime nota
+nenhuma. O cabeçalho é o nome do grupo, `O álbum do clube` e uma linha com a contagem de
+fichas e a ordem da parede; a grade de números saiu com o resto do boletim.
+
+Fredoka usa o nome real `Fredoka Variable` no canvas. A composição começa em uma ou duas
+colunas e cresce com a coleção; a rasterização fica limitada a 32 milhões de pixels e
+16.384px por dimensão. Sai o que está na tela: o filtro de pessoa e a ordem escolhida valem
+para a imagem também.
 
 **A Regra da Medida em Foco.** Ordenar muda tanto a posição quanto o destaque do cartão:
 o critério escolhido ocupa a escala maior, e a nota geral passa ao resumo. Rodada e nota
 mantêm a nota como protagonista. Dificuldade aparece por extenso e em tinta neutra; tempo
-traz a unidade em horas. Ausência é `—`, nunca uma nota substituta. Tela e PNG compartilham
-a mesma seleção de medidas.
+traz a unidade em horas. Ausência é `—`, nunca uma nota substituta. **Ela vale na parede, e
+não no PNG:** a ficha impressa imprime sempre a nota do clube, e a ordem escolhida muda
+apenas a sequência dos cartões na imagem — dita na linha do cabeçalho, para que uma coleção
+ordenada por diversão não pareça fora de ordem.
 
 **O link do grupo nunca entra nele.** O link é a credencial: quem o tem, escreve. Uma imagem
 que o clube manda no grupo é pública para sempre, e uma URL ou um QR impressos nela seriam

@@ -755,18 +755,31 @@ function firstGrapheme(value: string): string {
 }
 
 /**
+ * Quantas pessoas já escreveram sobre um jogo, por extenso. É o que um jogo lacrado tem a
+ * dizer no lugar da nota: quem ainda deve a sua vê que o clube está esperando por ela, e
+ * uma contagem de resenhas não antecipa nota nenhuma.
+ */
+export function reviewersLabel(count: number): string {
+  if (count <= 0) return 'Ninguém resenhou ainda';
+  return count === 1 ? '1 pessoa já resenhou' : `${count} pessoas já resenharam`;
+}
+
+/**
  * O resumo de um giro numa linha só: `TÍTULO · 8,4`. É o que a célula do registro mostra
  * quando o espaço não dá para o jogo inteiro. Sem resenha, o título sozinho — a metade
- * depois do marcador só existe quando o clube deu uma nota.
+ * depois do marcador só existe quando há o que dizer: a nota do clube, ou, num jogo
+ * lacrado, quantas resenhas ele já tem.
  */
 export function spinSummary(spin: SpinRecord | null | undefined, sealed = false): string {
   if (!spin?.note) return '';
-  const average = spinScores(spin).score;
-  // Lacrado, sobra o título: a nota do clube é exatamente o que o modo cego esconde de
-  // quem ainda vai dar a dela, e uma linha de resumo é onde ela apareceria primeiro.
-  return average === null || sealed
-    ? spin.note.title
-    : `${spin.note.title} · ${formatScore(average)}`;
+  const { score: average, count } = spinScores(spin);
+  // Lacrado, a nota sai e a contagem entra: a média é exatamente o que o lacre esconde de
+  // quem ainda vai dar a dela, mas saber que três pessoas já escreveram não move nota
+  // nenhuma — e é o que faz a linha continuar valendo a pena ler.
+  if (sealed) {
+    return count ? `${spin.note.title} · ${count}${count === 1 ? ' resenha' : ' resenhas'}` : spin.note.title;
+  }
+  return average === null ? spin.note.title : `${spin.note.title} · ${formatScore(average)}`;
 }
 
 /** O nome de cada reação, para quem não vê o emoji e para o rótulo acessível de cada uma. */

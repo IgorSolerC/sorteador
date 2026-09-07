@@ -25,6 +25,7 @@ import {
   owesReview,
   spinsOfRound,
   spinSummary,
+  reviewersLabel,
 } from './group-log';
 import { isColorIndex } from './palette';
 import { initialsOf, participantKey } from './naming';
@@ -610,6 +611,35 @@ describe('o resumo de uma linha', () => {
       review(0, 'Breno', { score: 9 }),
     ]);
     expect(spinSummary(state.spins[0])).toBe('Overcooked · 8,5');
+  });
+
+  it('lacrado, a nota sai da linha e a contagem de resenhas entra', () => {
+    // O lacre esconde a média, não a fila: saber que duas pessoas já escreveram não
+    // ancora a nota de ninguém, e é o que faz a linha continuar valendo a pena ler.
+    const state = replay(GRUPO, [
+      ...jogo('Overcooked'),
+      review(0, 'Ana', { score: 8 }),
+      review(0, 'Breno', { score: 9 }),
+    ]);
+    expect(spinSummary(state.spins[0], true)).toBe('Overcooked · 2 resenhas');
+  });
+
+  it('lacrado, uma resenha é uma resenha', () => {
+    const state = replay(GRUPO, [...jogo('Overcooked'), review(0, 'Ana', { score: 8 })]);
+    expect(spinSummary(state.spins[0], true)).toBe('Overcooked · 1 resenha');
+  });
+
+  it('lacrado e sem resenha nenhuma, sobra o título', () => {
+    const state = replay(GRUPO, jogo('Overcooked'));
+    expect(spinSummary(state.spins[0], true)).toBe('Overcooked');
+  });
+
+  it('a fila de quem já resenhou concorda com o número', () => {
+    expect(reviewersLabel(0)).toBe('Ninguém resenhou ainda');
+    expect(reviewersLabel(1)).toBe('1 pessoa já resenhou');
+    expect(reviewersLabel(3)).toBe('3 pessoas já resenharam');
+    // Contagem nunca é negativa, mas uma frase quebrada num cartão seria pior que o zero.
+    expect(reviewersLabel(-1)).toBe('Ninguém resenhou ainda');
   });
 
   it('sem etiqueta não há resumo, mesmo com resenha', () => {

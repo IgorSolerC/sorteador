@@ -19,6 +19,7 @@ import {
   GroupMember,
   REVIEW_STATUS_LABELS,
   REVIEW_STATUSES,
+  reviewersLabel,
   ReviewCriterion,
   SpinRecord,
   SpinSeat,
@@ -383,6 +384,9 @@ export class GroupHistory {
   protected shareOf(spin: SpinRecord) {
     return completionShare(spinScores(spin));
   }
+
+  /** Quantas pessoas já escreveram sobre um jogo. É o que um cartão lacrado ainda diz. */
+  protected readonly reviewersLabel = reviewersLabel;
 
   // --- o lacre e o que esta pessoa deve ---
 

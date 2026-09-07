@@ -340,6 +340,8 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .sheet-seal-mark { margin: 0; font-size: 1.42rem; line-height: 1; }
 .sheet-seal h3 { margin: 0 0 .4rem; font-family: var(--display); font-size: 1.1rem; font-weight: 600; letter-spacing: -.02em; }
 .sheet-seal p { max-width: 46ch; margin: 0; color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
+/* A fila do clube é fato, não rodapé: um degrau acima da explicação e um abaixo do título. */
+.sheet-seal .sheet-seal-count { margin: 0 0 .35rem; color: var(--ink); font-size: .92rem; font-weight: 700; line-height: 1.5; }
 .sheet-seal-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem 1.2rem; margin-top: 1rem; }
 
 /* A resenha continua sendo papel escrito: as nove escolhas só aparecem quando há intenção.

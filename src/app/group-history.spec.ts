@@ -443,3 +443,50 @@ describe('a ordem da parede', () => {
     fixture.destroy();
   });
 });
+
+describe('o lacre na parede', () => {
+  // O lacre não tem interruptor: vale para todo jogo que esta pessoa jogou e não
+  // resenhou. O nome no crachá é o que decide, e ele mora no aparelho.
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  const jogado = () => new FakeStore().seed(['Ana', 'Breno'], 1)
+    .label(0, 'Lethal Company')
+    .review(0, 'Breno', 9);
+
+  it('um cartão lacrado esconde a nota e mostra a fila', async () => {
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana');
+    const fixture = await render(jogado());
+    const cartao = el(fixture).querySelector('.album-card')!;
+
+    expect(cartao.querySelector('.album-sealed')).not.toBeNull();
+    expect(cartao.querySelector('.album-score')).toBeNull();
+    expect(cartao.textContent).not.toContain('9,0');
+    expect(cartao.querySelector('.album-reviewed')?.textContent?.trim()).toBe('1 pessoa já resenhou');
+    expect(cartao.getAttribute('aria-label')).toContain('1 pessoa já resenhou');
+    fixture.destroy();
+  });
+
+  it('lacrado e sem resenha nenhuma, o cartão não diz a mesma ausência duas vezes', async () => {
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana');
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1).label(0, 'Lethal Company'));
+    const cartao = el(fixture).querySelector('.album-card')!;
+
+    expect(cartao.querySelector('.album-sealed')).not.toBeNull();
+    expect(cartao.querySelector('.album-reviewed')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('quem já resenhou vê a nota, e não a fila', async () => {
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Breno');
+    const fixture = await render(jogado());
+    const cartao = el(fixture).querySelector('.album-card')!;
+
+    expect(cartao.querySelector('.album-sealed')).toBeNull();
+    expect(cartao.querySelector('.album-reviewed')).toBeNull();
+    expect(cartao.textContent).toContain('9,0');
+    fixture.destroy();
+  });
+});

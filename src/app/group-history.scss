@@ -52,6 +52,8 @@
 .album-card .completion-legend b { font-family: var(--mono); font-size: .74rem; }
 .album-description { display: block; margin-top: var(--intervalo-blocos); overflow: visible; -webkit-line-clamp: unset; }
 .album-sealed { margin: 0; padding: 0; background: none; box-shadow: none; font-family: var(--body); font-size: .82rem; letter-spacing: normal; text-transform: none; }
+/* O lacre é linha silenciosa; a fila que ele não esconde é tinta cheia no mesmo corpo. */
+.album-reviewed { display: block; margin-top: var(--intervalo-detalhes); color: var(--ink); font-family: var(--body); font-size: .82rem; line-height: 1.5; }
 .album-card.is-blank .album-perf:last-child { display: none; }
 
 @media (max-width: 620px) {

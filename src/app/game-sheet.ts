@@ -24,6 +24,7 @@ import {
   REVIEW_CRITERION_LABELS,
   REVIEW_STATUS_LABELS,
   REVIEW_STATUSES,
+  reviewersLabel,
   GroupMember,
   ReviewCriterion,
   ReviewStatus,
@@ -148,6 +149,9 @@ export class GameSheet {
   protected readonly sealed = computed(() =>
     !this.peeked() && owesReview(this.spin(), this.myKey()),
   );
+
+  /** Quantas pessoas já escreveram sobre este jogo. O lacre esconde a nota, não a fila. */
+  protected readonly reviewersLabel = reviewersLabel;
 
   // --- as reações ---
 

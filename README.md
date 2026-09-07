@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 387 unitários e de componente
+npm test -- --watch=false   # 399 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -185,7 +185,7 @@ ainda não saiu. Quem marca **platinado** recebe mais duas perguntas, só
 dela: a diversão da platina e a dificuldade de platinar. As duas ficam fora do resumo do
 cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma linha, o jogo vira
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
-gravada em campo nenhum.
+gravada em campo nenhum, e `Overcooked 2 · 2 resenhas` quando a nota está lacrada.
 
 A resenha de cada um pode receber **nove reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀.
 Um único controle mostra os emoji mais usados e a contagem; as escolhas se abrem por
@@ -193,10 +193,14 @@ clique, toque, teclado ou hover, sem ocupar uma fileira permanente.
 Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
 atalho para a mais recente. E a nota do clube fica **lacrada** justamente nos jogos que a
 pessoa ainda vai julgar — ler `9,2` antes de dar a própria nota move a própria nota. Não é
-opcional; ela pode espiar, e espiar vale só enquanto aquela ficha está aberta.
+opcional; ela pode espiar, e espiar vale só enquanto aquela ficha está aberta. **O lacre
+esconde a média, não a fila:** quantas pessoas já resenharam continua à vista, no cartão, na
+ficha e na linha do registro — uma contagem de resenhas não antecipa nota nenhuma, e é ela
+que diz a quem ainda deve a sua que o clube está esperando por ela.
 
 Editar é gravar outro evento: o replay faz o último valer, e os anteriores continuam no
-registro com quem escreveu cada um. Nenhum dos três altera o vencedor, e **corrigir a mesa
+registro com quem escreveu cada um. A tela diz **`editada`**, e não quantas vezes: o log
+conta as versões, mas um contador na assinatura virava um placar que o clube nunca discutiu. Nenhum dos três altera o vencedor, e **corrigir a mesa
 não alcança o globo daquele giro** — ele é imutável porque é dele que a cápsula saiu.
 
 ---

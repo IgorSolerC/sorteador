@@ -139,7 +139,13 @@ try {
     document.querySelector('.album-save button').click()`); await sleep(1200);
   const poster = await ev(`new Promise(resolve => { const r=new FileReader(); r.onload=()=>resolve(r.result); r.readAsDataURL(window.posterBlob) })`);
   writeFileSync(`${output}/album.png`, Buffer.from(poster.split(',')[1], 'base64'));
-  check('PNG inclui critérios, completude e rodada', await ev(`['Dificuldade','Platinado','Finalizado','Incompleto'].every(t=>posterTexts.includes(t)) && posterTexts.some(t=>t.includes('RODADA'))`));
+  // A ficha impressa diz três coisas e só três: quem escolheu, o jogo e a nota do clube.
+  // Critérios, completude e descrição continuam na ficha do jogo, onde há tela para lê-los.
+  const impressas = await ev(`document.querySelectorAll('.album-card:not(.is-blank)').length`);
+  check('PNG desenha uma nota do clube por ficha etiquetada',
+    await ev(`posterTexts.filter(t=>t==='NOTA DO CLUBE').length === ${impressas}`));
+  check('PNG diz quem escolheu e traz a nota', await ev(`posterTexts.includes('escolheu') && posterTexts.some(t=>/^[0-9]+,[0-9]$/.test(t))`));
+  check('PNG não carrega o boletim inteiro', await ev(`!['Dificuldade','Platinado','Finalizado','Incompleto'].some(t=>posterTexts.includes(t))`));
   check('PNG não inclui credencial do grupo', await ev(`!posterTexts.some(t=>t.includes('#/g/') || t.includes('http'))`));
   await ev(`document.querySelector('.people-chip:not(.is-all)').click()`); await sleep(200);
   await ev(`document.querySelector('.album-save button').click()`); await sleep(800);
@@ -323,7 +329,7 @@ try {
     const fill=CanvasRenderingContext2D.prototype.fillText;
     CanvasRenderingContext2D.prototype.fillText=function(t,...a){posterTexts.push(String(t));return fill.call(this,t,...a)};
     document.querySelector('.album-save button').click()`); await sleep(800);
-  check('exportação respeita o lacre', await ev(`posterTexts.includes('Lacrado') && !posterTexts.includes('Platinado') && !posterTexts.includes('Finalizado')`));
+  check('exportação respeita o lacre', await ev(`posterTexts.includes('Lacrada') && !posterTexts.some(t=>/^[0-9]+,[0-9]$/.test(t))`));
 } finally {
   console.log(`${checks - failures}/${checks} verificações de acabamento`);
   ws.close(); chrome.kill();

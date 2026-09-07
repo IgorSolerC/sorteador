@@ -759,6 +759,31 @@ describe('o lacre da nota do clube', () => {
     fixture.destroy();
   });
 
+  it('lacrado, o selo diz quantas pessoas já resenharam', async () => {
+    // A fila não é a média: quem ainda deve a sua vê que o clube está esperando por ela,
+    // e continua sem ver a nota que ancoraria a dela.
+    const fixture = await render(jogado());
+    const selo = el(fixture).querySelector('.sheet-seal')?.textContent ?? '';
+
+    expect(selo).toContain('1 pessoa já resenhou');
+    expect(selo).not.toContain('9,0');
+    fixture.destroy();
+  });
+
+  it('lacrado e sem resenha nenhuma, o selo diz que a dela abre o boletim', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Pico Park', description: '', at: Date.now(), revision: 1 },
+      seated: [seat('Ana'), seat('Breno')],
+    }));
+    const selo = el(fixture).querySelector('.sheet-seal')?.textContent ?? '';
+
+    expect(selo).toContain('Ninguém resenhou ainda');
+    expect(selo).toContain('A sua abre o boletim deste jogo.');
+    // Sem resenha de ninguém, prometer "as resenhas dos outros" é prometer o vazio.
+    expect(selo).not.toContain('as resenhas dos outros');
+    fixture.destroy();
+  });
+
   it('não lacra o que eu já resenhei', async () => {
     const fixture = await render(spinRecord({
       note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
@@ -799,6 +824,51 @@ describe('o lacre da nota do clube', () => {
     window.localStorage.removeItem('mesa-do-mes:cego:v1');
     const fixture = await render(jogado());
     expect(el(fixture).querySelector('.sheet-seal')).not.toBeNull();
+    fixture.destroy();
+  });
+});
+
+describe('o rastro de quem reescreveu', () => {
+  // A contagem de reescritas virava um placar na linha de assinatura, e o clube nunca
+  // discutiu quantas versões uma resenha teve: basta saber que aquela não é a primeira.
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('a resenha reescrita diz apenas "editada"', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+      seated: [seat('Ana')],
+      reviews: [review({ authorKey: 'ana', revision: 3 })],
+    }));
+    const cabeca = el(fixture).querySelector('.review-head')?.textContent ?? '';
+
+    expect(cabeca).toContain('editada');
+    expect(cabeca).not.toContain('reescrita');
+    expect(cabeca).not.toContain('3×');
+    fixture.destroy();
+  });
+
+  it('a primeira escrita não carrega marca nenhuma', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+      seated: [seat('Ana')],
+      reviews: [review({ authorKey: 'ana' })],
+    }));
+
+    expect(el(fixture).querySelector('.review-head')?.textContent).not.toContain('editada');
+    fixture.destroy();
+  });
+
+  it('o jogo reescrito diz "Editado", e não quantas vezes', async () => {
+    const fixture = await render(spinRecord({
+      note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 4, actor: 'Bia' },
+      seated: [seat('Ana')],
+      reviews: [review({ authorKey: 'ana' })],
+    }), 'jogo');
+    const historia = el(fixture).querySelector('.sheet-history')?.textContent ?? '';
+
+    expect(historia).toContain('Editado.');
+    expect(historia).toContain('de Bia');
+    expect(historia).not.toMatch(/\d+ vezes/);
     fixture.destroy();
   });
 });

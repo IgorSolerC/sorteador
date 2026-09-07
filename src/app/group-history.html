@@ -205,7 +205,9 @@
                 [attr.aria-label]="
                   'Abrir a ficha de ' + (spin.note ? spin.note.title : 'uma cápsula sem jogo') +
                   ', que saiu para ' + spin.winnerName +
-                  (sealedOf(spin) ? ', lacrado até você resenhar' : ', ' + metricsOf(spin).hero.label + ' ' + metricsOf(spin).hero.value)
+                  (sealedOf(spin)
+                    ? ', lacrado até você resenhar' + (scoresOf(spin).count ? ', ' + reviewersLabel(scoresOf(spin).count) : '')
+                    : ', ' + metricsOf(spin).hero.label + ' ' + metricsOf(spin).hero.value)
                 "
               >
                 <span class="album-card-head">
@@ -240,6 +242,13 @@
                     <span aria-hidden="true">🔒</span>
                     Lacrado até você resenhar
                   </span>
+                  <!-- O que o lacre esconde é a média, não a fila: quem já escreveu conta
+                       para quem ainda deve. Numa parede de cartões, dizer "ninguém ainda"
+                       seria a mesma ausência dita duas vezes, então a linha só aparece
+                       quando há gente na fila. -->
+                  @if (scoresOf(spin).count; as feitas) {
+                    <span class="album-reviewed">{{ reviewersLabel(feitas) }}</span>
+                  }
                 } @else if (scoresOf(spin); as conta) {
                   @if (conta.count) {
                     @if (metricsOf(spin).secondary; as medias) {

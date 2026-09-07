@@ -65,9 +65,17 @@
           <p class="sheet-seal-mark" aria-hidden="true">🔒</p>
           <div>
             <h3>Lacrado até você escrever</h3>
-            <p>
-              A nota do clube e as resenhas dos outros aparecem depois da sua.
-            </p>
+            <!-- Lacrar a nota não é esconder que o clube está escrevendo: a contagem de
+                 resenhas não antecipa média nenhuma, e é ela que diz a quem ainda deve a
+                 sua que há gente esperando por ela. -->
+            <p class="sheet-seal-count">{{ reviewersLabel(scores().count) }}</p>
+            @if (scores().count) {
+              <p>A nota do clube e as resenhas dos outros aparecem depois da sua.</p>
+            } @else if (spin().note) {
+              <!-- Sem jogo escrito não há boletim a prometer: o giro ainda não tem o que
+                   resenhar, e a saída dele é escrever o jogo, ali embaixo. -->
+              <p>A sua abre o boletim deste jogo.</p>
+            }
             <div class="sheet-seal-actions">
               <button class="secondary-action" type="button" (click)="go('resenha')">
                 Escrever minha resenha
@@ -194,7 +202,7 @@
                       · {{ time(review.hours) }}
                     }
                     @if (review.revision > 1) {
-                      · reescrita {{ review.revision }}×
+                      · editada
                     }
                   </small>
                 </span>
@@ -603,9 +611,9 @@
       @if (spin().note; as note) {
         <p class="sheet-history">
           @if (note.revision > 1) {
-            Reescrito {{ note.revision }} vezes.
+            Editado.
           }
-          A última foi {{ note.actor ? 'de ' + note.actor : 'sem assinatura' }}, em
+          A última escrita foi {{ note.actor ? 'de ' + note.actor : 'sem assinatura' }}, em
           {{ note.at | date: 'dd/MM/yy HH:mm' }}.
         </p>
       }
