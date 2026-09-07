@@ -208,6 +208,14 @@
                   (sealedOf(spin) ? ', lacrado até você resenhar' : ', ' + metricsOf(spin).hero.label + ' ' + metricsOf(spin).hero.value)
                 "
               >
+                <span class="album-card-head">
+                  <span class="album-capsule" aria-hidden="true">{{ emojiOf(spin) }}</span>
+                  <span class="album-who">
+                    <span class="album-name">{{ spin.winnerName }}</span>
+                    <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
+                  </span>
+                </span>
+
                 <span class="album-resumo">
                   @if (spin.note; as note) {
                     <span class="album-title">{{ note.title }}</span>
@@ -220,14 +228,6 @@
                       <span>{{ metricsOf(spin).hero.label }}</span>
                     </span>
                   }
-                </span>
-
-                <span class="album-card-head">
-                  <span class="album-capsule" aria-hidden="true">{{ emojiOf(spin) }}</span>
-                  <span class="album-who">
-                    <span class="album-name">{{ spin.winnerName }}</span>
-                    <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
-                  </span>
                 </span>
 
                 <span class="album-perf" aria-hidden="true"></span>

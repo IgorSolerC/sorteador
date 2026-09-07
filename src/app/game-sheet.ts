@@ -56,6 +56,7 @@ import { hashString, initialsOf, participantKey } from './naming';
   selector: 'app-game-sheet',
   imports: [CommonModule, FormsModule, ReviewReactions],
   templateUrl: './game-sheet.html',
+  styleUrl: './game-sheet.scss',
 })
 export class GameSheet {
   readonly spin = input.required<SpinRecord>();
@@ -250,7 +251,15 @@ export class GameSheet {
         ? `nota-final-${untracked(this.score) ?? 0}`
         : face === 'jogo' ? 'note-title'
         : face === 'mesa' ? 'sheet-back' : 'sheet-close';
-      window.setTimeout(() => this.document.getElementById(first)?.focus(), 0);
+      window.setTimeout(() => {
+        // O fechar agora fica fora da rolagem; focá-lo sozinho deixaria o boletim
+        // na posição do formulário que acabou de sair, com o título fora da vista.
+        if (face === 'ficha') {
+          const conteudo = this.document.querySelector<HTMLElement>('#sheet-card .ficha-conteudo');
+          if (conteudo) conteudo.scrollTop = 0;
+        }
+        this.document.getElementById(first)?.focus();
+      }, 0);
     });
   }
 

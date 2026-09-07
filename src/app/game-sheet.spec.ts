@@ -130,6 +130,22 @@ describe('a ficha do jogo', () => {
     fixture.destroy();
   });
 
+  it('voltar da edição abre o boletim no topo mesmo depois de rolar o formulário', async () => {
+    const fixture = await render(spinRecord(), 'jogo');
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    const conteudo = el(fixture).querySelector<HTMLElement>('.ficha-conteudo')!;
+    conteudo.scrollTop = 500;
+
+    fixture.componentRef.setInput('face', 'ficha');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(conteudo.scrollTop).toBe(0);
+    expect(document.activeElement?.id).toBe('sheet-close');
+    fixture.destroy();
+  });
+
   it('as duas ações de escrita são distintas e nomeadas', async () => {
     const fixture = await render(spinRecord());
     const acoes = [...el(fixture).querySelectorAll('.sheet-actions button')]
@@ -538,7 +554,7 @@ describe('a mesa de um jogo', () => {
       reviews: [review({ authorKey: 'ana', score: 8 }), review({ authorKey: 'breno', score: 6 })],
     }));
 
-    expect(el(fixture).querySelector('.score-hero')!.textContent!.replace(/\s+/g, ' '))
+    expect(el(fixture).querySelector('.ficha-completude-titulo')!.textContent!.replace(/\s+/g, ' '))
       .toContain('2 resenhas de 4');
     fixture.destroy();
   });

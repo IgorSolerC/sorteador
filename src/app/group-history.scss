@@ -1,4 +1,4 @@
-/* O álbum compara jogos: título e medida abrem a ficha; a cápsula assina logo abaixo.
+/* A cápsula identifica o cartão antes do jogo e da medida que ele compara.
    As regras locais evitam repintar o boletim e a completude da ficha aberta. */
 .album-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
 .album-card {
@@ -22,7 +22,7 @@
 .album-score.is-word { align-items: flex-start; gap: var(--intervalo-detalhes); }
 .album-score.is-word > span { max-width: none; text-align: left; }
 .album-score.is-empty { font-family: var(--body); font-size: .82rem; font-weight: 400; line-height: 1.5; letter-spacing: normal; text-transform: none; }
-.album-card-head { gap: var(--intervalo-detalhes); margin-top: var(--intervalo-blocos); }
+.album-card-head { gap: var(--intervalo-detalhes); margin-bottom: var(--intervalo-blocos); }
 .album-who { gap: .25rem; }
 .album-name { font-family: var(--body); font-size: .92rem; font-weight: 700; line-height: 1.2; letter-spacing: normal; }
 .album-serial { font-size: .62rem; line-height: 1.5; letter-spacing: normal; }

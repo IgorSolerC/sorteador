@@ -1,6 +1,7 @@
 <div class="sheet-scrim" (click)="close()"></div>
 <div
   class="sheet-card"
+  [class.em-leitura]="face() === 'ficha'"
   id="sheet-card"
   role="dialog"
   aria-modal="true"
@@ -9,6 +10,7 @@
   (keydown.escape)="escape()"
   (keydown.tab)="trapFocus($event)"
 >
+  <header class="ficha-identidade">
   <button
     id="sheet-close"
     class="roster-close"
@@ -20,23 +22,35 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
   </button>
 
+  <span class="sheet-capsule" aria-hidden="true" [style.--capsule]="capsule()"
+        [style.--capsule-ink]="capsuleInk()">
+    {{ capsuleEmoji() || spin().winnerName.slice(0, 1).toUpperCase() }}
+  </span>
+  <div class="ficha-origem">
+  <p class="sheet-winner">A cápsula saiu para <strong>{{ spin().winnerName }}</strong>.</p>
   <p class="sheet-serial" id="sheet-serial">
     Cápsula {{ spin().index + 1 }} · Rodada {{ spin().round }} ·
     {{ spin().at | date: 'dd/MM/yy HH:mm' }}
   </p>
+  </div>
+  </header>
 
+  <div class="ficha-conteudo">
+  <div class="ficha-jogo">
   <h2 id="sheet-title">
-    <span class="sheet-capsule" aria-hidden="true" [style.--capsule]="capsule()"
-          [style.--capsule-ink]="capsuleInk()">
-      {{ capsuleEmoji() || spin().winnerName.slice(0, 1).toUpperCase() }}
-    </span>
     @if (spin().note; as note) {
       {{ note.title }}
     } @else {
       <span class="sheet-title-blank">Sem jogo escrito</span>
     }
   </h2>
-  <p class="sheet-winner">A cápsula saiu para <strong>{{ spin().winnerName }}</strong>.</p>
+  @if (face() === 'ficha' && !sealed() && scores().count) {
+    <p [class]="'score-hero is-' + heroTone()">
+      <b>{{ average() }}</b>
+      <span>Nota do clube</span>
+    </p>
+  }
+  </div>
 
   @switch (face()) {
 
@@ -77,21 +91,11 @@
         @if (conta.count) {
           <div class="scoreboard">
             <div class="score-heads">
-              <p [class]="'score-hero is-' + heroTone()">
-                <b>{{ average() }}</b>
-                <span>
-                  Nota do clube
-                  <br />{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }}
-                  de {{ seats().length }}
-                </span>
-              </p>
-
               @if (conta.hours; as tempo) {
                 <p class="score-time">
                   <b>{{ time(tempo.average) }}</b>
                   <span>
-                    Tempo de jogo
-                    <br />{{ tempo.count }}{{ tempo.count === 1 ? ' contou' : ' contaram' }}
+                    Tempo de jogo · {{ tempo.count }}{{ tempo.count === 1 ? ' contou' : ' contaram' }}
                   </span>
                 </p>
               }
@@ -115,6 +119,10 @@
             }
 
             <div class="completion">
+              <p class="ficha-completude-titulo">
+                <span>Completude</span>
+                <span>{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }} de {{ seats().length }}</span>
+              </p>
               <span class="completion-bar" aria-hidden="true">
                 @if (share().platinado) {
                   <i class="is-platinado" [style.width.%]="share().platinado"></i>
@@ -129,7 +137,7 @@
               <p class="completion-legend">
                 @for (option of STATUSES; track option) {
                   <span [class]="'is-' + option" [class.is-zero]="!share()[option]">
-                    {{ STATUS_LABELS[option] }} <b>{{ share()[option] }}%</b>
+                    <span>{{ STATUS_LABELS[option] + ' ' }}</span><b>{{ share()[option] }}%</b>
                   </span>
                 }
               </p>
@@ -200,7 +208,7 @@
                 @if (notas.length) {
                   <p class="review-criteria">
                     @for (nota of notas; track nota.label) {
-                      <span>{{ nota.label }} <b>{{ nota.value }}</b></span>
+                      <span><span>{{ nota.label + ' ' }}</span><b>{{ nota.value }}</b></span>
                     }
                   </p>
                 }
@@ -603,4 +611,5 @@
       }
     }
   }
+  </div>
 </div>

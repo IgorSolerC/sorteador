@@ -207,13 +207,13 @@ check('a nota do clube aparece no boletim',
 check('o tempo de jogo volta do servidor e vira média',
   (await texto('.score-time')).includes('12 h'), await texto('.score-time'));
 check('o boletim diz de quantas pessoas que jogaram as resenhas vieram',
-  /\d+ RESENHAS? DE \d+/.test(await texto('.score-hero')), await texto('.score-hero'));
+  /\d+ resenhas? de \d+/i.test(await texto('.ficha-completude-titulo')), await texto('.ficha-completude-titulo'));
 check('a completude vira porcentagem escrita, e não só cor',
-  (await texto('.completion-legend')).includes('PLATINADO'), await texto('.completion-legend'));
+  /platinado/i.test(await texto('.completion-legend')), await texto('.completion-legend'));
 check('as duas médias da platina voltam do servidor e fecham o boletim',
   (await conta('.score-rules > div.is-platina')) === 2 &&
-  (await texto('.score-rules')).includes('DIVERSÃO DA PLATINA') &&
-  (await texto('.score-rules')).includes('DIFICULDADE DE PLATINAR'),
+  /diversão da platina/i.test(await texto('.score-rules')) &&
+  /dificuldade de platinar/i.test(await texto('.score-rules')),
   await texto('.score-rules'));
 check('a dificuldade de platinar volta em palavra, e não em nota',
   (await texto('.score-rules')).includes('Difícil'), await texto('.score-rules'));
@@ -513,7 +513,7 @@ check('o giro antigo aceita resenha pelo álbum',
   await texto('.reviews'));
 check('a minha resenha entra na conta que já existia, sem virar a conta inteira',
   (await ev(`document.querySelector('.score-hero b').textContent.trim()`)) !== '4,0' &&
-  Number(await ev(`document.querySelector('.score-hero').innerText.match(/(\\d+) RESENHAS?/i)[1]`))
+  Number(await ev(`document.querySelector('.ficha-completude-titulo').innerText.match(/(\\d+) RESENHAS?/i)[1]`))
     === resenhasAntes + 1,
   `${resenhasAntes} -> ${await texto('.score-hero')}`);
 await ev(`document.querySelector('#sheet-close').click()`);
