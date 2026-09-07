@@ -1048,6 +1048,26 @@ export function membersById(state: GroupState): ReadonlyMap<string, GroupMember>
   return new Map(state.members.map((member) => [member.id, member]));
 }
 
+/**
+ * A pessoa do grupo que assina com este nome, quando o grupo a conhece.
+ *
+ * É a ponte entre o crachá — que é só um nome guardado no aparelho — e a cápsula dessa
+ * pessoa dentro de um grupo. A comparação é pela chave de participante, a mesma
+ * normalização congelada que decide o `memberId`: é ela que faz "  ana  " e "Ana" serem a
+ * mesma pessoa, e `josé` e `jose` serem duas.
+ *
+ * Vale para quem já saiu do clube também, e é de propósito: a cor de uma pessoa continua
+ * sendo dela depois que ela sai, e quem saiu ainda abre o álbum.
+ */
+export function memberByAuthor(
+  members: readonly GroupMember[],
+  author: string,
+): GroupMember | null {
+  const key = participantKey(author);
+  if (!key) return null;
+  return members.find((member) => participantKey(member.name) === key) ?? null;
+}
+
 export function spinsOfRound(state: GroupState, round: number): readonly SpinRecord[] {
   return state.spins.filter((spin) => spin.round === round);
 }

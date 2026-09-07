@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 381 unitários e de componente
+npm test -- --watch=false   # 386 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico

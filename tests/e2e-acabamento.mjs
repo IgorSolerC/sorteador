@@ -33,10 +33,18 @@ const ev = async (expression) => {
   if (response.result?.exceptionDetails) throw new Error(JSON.stringify(response.result.exceptionDetails));
   return response.result?.result?.value;
 };
-/** Espera por uma condição na página em vez de por um número de segundos. */
+/**
+ * Espera por uma condição na página em vez de por um número de segundos.
+ *
+ * Uma tentativa que ESTOURA conta como "ainda não": durante um `Page.reload` o contexto de
+ * execução é destruído, e `ev` levanta em vez de devolver `false`. Sem este `catch`, a
+ * espera morria no primeiro instante da recarga e a suíte terminava em `0/0`.
+ */
 const esperar = async (expressao, oQue, tentativas = 40) => {
   for (let i = 0; i < tentativas; i += 1) {
-    if (await ev(expressao)) return;
+    try {
+      if (await ev(expressao)) return;
+    } catch { /* contexto trocando: tenta de novo */ }
     await sleep(500);
   }
   const onde = await ev(`location.href + ' | ' + document.readyState + ' | ' + document.body.innerText.slice(0, 120)`);
@@ -101,9 +109,24 @@ try {
   check('som desligado produz silêncio', variants.muted);
   check('movimento reduzido tem entrega curta, sem rolamento longo', variants.reduced);
   await send('Page.navigate', { url: base + '#/g/demo/album' }); await sleep(4000);
-  await ev(`[...document.querySelectorAll('.sort-options button')].find(b => b.textContent.trim() === 'Dificuldade').click()`); await sleep(250);
-  check('dificuldade aparece no destaque', await ev(`document.querySelector('.album-score').innerText.toLowerCase().includes('dificuldade')`));
-  check('nota geral passa ao resumo', await ev(`document.querySelector('.album-criteria').innerText.includes('NOTA DO CLUBE')`));
+  await ev(`[...document.querySelectorAll('.sort-options button')].find(b => b.textContent.trim() === 'Dificuldade').click()`);
+  // A Regra da Medida em Foco é sobre UM cartão: o critério escolhido vira o destaque e a
+  // nota geral passa ao resumo. Então a conferência é feita no primeiro cartão que TEM
+  // boletim — `querySelector` solto pegava o primeiro `.album-score` e o primeiro
+  // `.album-criteria` do documento, que com o lacre sempre ligado podem ser de cartões
+  // diferentes (ou nem existir). E a comparação é sem caixa: o maiúsculo é do CSS, não do
+  // conteúdo, e `innerText` só o aplica em elemento que está desenhado.
+  await esperar(`(() => {
+    const c = [...document.querySelectorAll('.album-card')].find((card) => card.querySelector('.album-score'));
+    return !!c && c.querySelector('.album-score').textContent.toLowerCase().includes('dificuldade');
+  })()`, 'a parede reordenar por dificuldade');
+  const foco = await ev(`(() => {
+    const c = [...document.querySelectorAll('.album-card')].find((card) => card.querySelector('.album-score'));
+    return { destaque: c.querySelector('.album-score').textContent.replace(/\\s+/g, ' ').trim(),
+      resumo: (c.querySelector('.album-criteria')?.textContent ?? '').replace(/\\s+/g, ' ').trim() };
+  })()`);
+  check('dificuldade aparece no destaque', foco.destaque.toLowerCase().includes('dificuldade'), JSON.stringify(foco));
+  check('nota geral passa ao resumo', foco.resumo.toLowerCase().includes('nota do clube'), JSON.stringify(foco));
   for (const width of [1440, 900, 390]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
     await ev(`document.querySelector('.album-sort').scrollIntoView()`); await sleep(300);
@@ -233,7 +256,7 @@ try {
   // A máquina é a tela com controles, e é ela que ganha a barra de baixo.
   await send('Page.navigate', { url: base + '#/g/demo' });
   await send('Page.reload');
-  await esperar(`!!document.querySelector('.topbar-actions') && !!document.querySelector('.machine')`, 'a máquina voltar');
+  await esperar(`!!document.querySelector('.topbar-actions') && !!document.querySelector('.machine')`, 'a máquina voltar', 80);
   const barraMaquina = await ev(`(() => {
     const bar = document.querySelector('.topbar').getBoundingClientRect();
     const nav = document.querySelector('.topbar-actions');

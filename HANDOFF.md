@@ -1,6 +1,7 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-07**, na rodada da voz enxuta, do celular e do lacre sem chave.
+Estado em **2026-09-07**, na rodada da voz enxuta, do celular, do lacre sem chave e do
+crachá vestido.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -163,7 +164,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 381 unitários e de componente
+npm test -- --watch=false   # 386 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
@@ -258,6 +259,27 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-07, parte 5: **o crachá do cabeçalho veste a cápsula de verdade**
+(ver A Regra do Crachá Vestido em `DESIGN.md`). Dentro de um grupo o disco passou a usar a
+cor que a pessoa escolheu e o emoji dela; era o último lugar do produto onde a cor de alguém
+saía de um hash do nome, e o disco ficava de uma cor na barra e de outra dois dedos abaixo, no
+aro e no registro, no mesmo giro dela. Fora de um grupo — prateleira, oficina — e para quem
+abre o link sem estar na lista, nada muda: não há cápsula a consultar. A ponte é
+`memberByAuthor` em `group-log.ts`, pela chave de participante.
+
+**Três correções de robustez das suítes de navegador saíram daqui, todas da mesma classe** —
+conferir uma duração ou um `querySelector` solto em vez da coisa que se quer medir:
+
+1. A conferência da Regra da Medida em Foco pegava o primeiro `.album-score` e o primeiro
+   `.album-criteria` do DOCUMENTO. Com o lacre sempre ligado eles podem ser de cartões
+   diferentes — ou não existir. Agora ela é feita no primeiro cartão que tem boletim, e sem
+   caixa: o maiúsculo é do CSS, e `innerText` só o aplica em elemento desenhado.
+2. `esperar` tratava o contexto destruído durante um `Page.reload` como falha, e a suíte
+   terminava em `0/0`. Uma tentativa que estoura agora conta como "ainda não".
+3. As duas esperas pela máquina tinham 20s, e o dev server com HMR e `@defer` eager passa
+   disso. **A suíte reportava sucesso pulando onze verificações** — 46/46 em vez de 57/57.
+   Agora são 40s, e o número fica estável.
 
 A rodada de 2026-09-07, parte 4, tem quatro pedidos.
 

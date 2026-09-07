@@ -18,6 +18,7 @@ import {
   SpinRecord,
   activeMembers,
   formatScore,
+  memberByAuthor,
   membersById,
   poolMembers,
   spinScores,
@@ -94,9 +95,33 @@ export class SyncedGroup {
   protected readonly celebration = signal(0);
 
   protected readonly author = this.identity.name;
-  protected readonly authorInitials = this.identity.initials;
-  protected readonly authorColor = this.identity.color;
-  protected readonly authorInk = this.identity.ink;
+  /**
+   * O crachá do cabeçalho é a cápsula DESTA pessoa neste grupo: a cor que ela escolheu e o
+   * emoji dela, os mesmos do aro, do registro, da gaveta e do álbum. A identidade visual de
+   * uma pessoa é a mesma em toda parte do produto, e aqui era o último lugar onde não era —
+   * a cor saía de um hash do nome, e o disco ficava de uma cor na barra e de outra dois
+   * dedos abaixo, no mesmo giro dela.
+   *
+   * Fora de um grupo não há cápsula: a prateleira e a oficina continuam com a cor tirada do
+   * nome, que é o que faz o crachá ser o mesmo em toda tela mesmo sem grupo nenhum. E quem
+   * abre o link sem estar na lista também — um convidado não tem cápsula para vestir.
+   */
+  private readonly myCapsule = computed(() => memberByAuthor(this.everyone(), this.author()));
+
+  protected readonly authorColor = computed(() => {
+    const mine = this.myCapsule();
+    return mine ? capsuleColor(mine.colorIndex) : this.identity.color();
+  });
+
+  protected readonly authorInk = computed(() => {
+    const mine = this.myCapsule();
+    return mine ? capsuleInk(mine.colorIndex) : this.identity.ink();
+  });
+
+  /** O emoji da pessoa quando ela tem um; as iniciais quando não, como em toda cápsula. */
+  protected readonly authorMark = computed(
+    () => this.myCapsule()?.emoji || this.identity.initials(),
+  );
 
   /** Uma cena por vez. Um token velho que volta de um `setTimeout` não encerra a atual. */
   private sceneToken = 0;

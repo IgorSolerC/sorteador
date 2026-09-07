@@ -11,6 +11,7 @@ import {
   GroupEvent,
   MAX_EMOJI,
   MAX_REVIEW_TEXT,
+  memberByAuthor,
   memberId,
   poolMembers,
   replay,
@@ -1166,6 +1167,33 @@ describe('a dificuldade em palavra', () => {
     expect(criterionText('dificuldadePlatina', 4.5, true)).toBe('Médio');
     expect(criterionText('diversao', 9)).toBe('9');
     expect(criterionText('diversaoPlatina', 8.5, true)).toBe('8,5');
+  });
+});
+
+describe('a cápsula de quem assina', () => {
+  it('acha a pessoa pelo nome normalizado, e não pelo texto cru', () => {
+    // É a mesma normalização congelada que decide o `memberId`: o crachá é só um nome
+    // guardado no aparelho, e é por ela que ele encontra a cápsula dele no grupo.
+    const state = replay(GRUPO, seed(['Ana Paula', 'Breno']));
+
+    expect(memberByAuthor(state.members, '  ana   paula ')?.name).toBe('Ana Paula');
+    expect(memberByAuthor(state.members, 'ANA PAULA')?.name).toBe('Ana Paula');
+    // A aspereza da normalização vale aqui como em todo lugar: acento é outra pessoa.
+    expect(memberByAuthor(state.members, 'Ana Paulá')).toBeNull();
+  });
+
+  it('quem saiu do clube continua tendo cápsula', () => {
+    // A cor de uma pessoa continua sendo dela depois que ela sai, e quem saiu ainda abre
+    // o álbum — o crachá dela não pode voltar a ser uma cor tirada do nome.
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno']), remove('Ana')]);
+    expect(memberByAuthor(state.members, 'Ana')?.name).toBe('Ana');
+  });
+
+  it('sem crachá, e para quem o grupo não conhece, não há cápsula', () => {
+    const state = replay(GRUPO, seed(['Ana', 'Breno']));
+    expect(memberByAuthor(state.members, '')).toBeNull();
+    expect(memberByAuthor(state.members, '   ')).toBeNull();
+    expect(memberByAuthor(state.members, 'Zulmira')).toBeNull();
   });
 });
 

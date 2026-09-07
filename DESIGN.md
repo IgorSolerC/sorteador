@@ -476,7 +476,9 @@ Quase não há cards. As agrupações são feitas por costura de bordas: a grade
 ### Navigation
 A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 64px, hairline inferior. À esquerda a marca (cápsula desenhada em SVG mais o nome em Fredoka 600); à direita os comprimidos de navegação em mono caixa alta — **Integrantes** com a contagem em tabular, **O álbum** — e, por último, o crachá.
 
-**O crachá** é quem está mexendo, sempre à vista: um disco de cápsula com as iniciais, na cor tirada do próprio nome, mais o nome truncado em `12ch`. Ele é um botão, e o que ele faz é reabrir a porta para passar a vez. Não é um menu de conta e não tem submenu: o produto não tem contas.
+**O crachá** é quem está mexendo, sempre à vista: um disco de cápsula mais o nome truncado em `12ch`. Ele é um botão, e o que ele faz é reabrir a porta para passar a vez. Não é um menu de conta e não tem submenu: o produto não tem contas.
+
+**E o disco é a cápsula de verdade dentro de um grupo** (ver A Regra do Crachá Vestido): a cor que a pessoa escolheu e o emoji dela, os mesmos do aro, do registro, da gaveta e do álbum.
 
 **No celular a barra é OUTRA barra** (ver A Regra das Duas Barras). No alto ficam só a
 saída e a identidade — voltar, a marca, o crachá — numa linha de 56px. O que se **faz** na
@@ -533,6 +535,19 @@ e decide a identidade; o clube só descobre meses depois, com o álbum dividido 
 A porta **nunca espera pela rede**: ela desenha primeiro e as cápsulas entram quando
 chegarem. Cota estourada, grupo inexistente ou rede caída não trancam a entrada — sem
 lista, ela volta a ser o campo de texto que sempre foi.
+
+**A Regra do Crachá Vestido.** Dentro de um grupo, o disco do crachá é a **cápsula desta
+pessoa**: a cor que ela escolheu e o emoji dela, e não as iniciais numa cor tirada do hash do
+nome. Era o último lugar do produto onde a cor de alguém não era a que ela escolheu — o disco
+ficava de uma cor na barra e de outra dois dedos abaixo, no aro e no registro, no mesmo giro
+dela. Vale também para quem já saiu do clube: a cor continua sendo dela, e quem saiu ainda
+abre o álbum.
+
+**Fora de um grupo não há cápsula**, e aí o crachá volta a ser a cor tirada do nome — é o que
+o faz ser o mesmo disco na prateleira e na oficina, onde não existe grupo nenhum para
+consultar. Quem abre o link sem estar na lista também: um convidado não tem cápsula para
+vestir. A ponte entre o nome guardado no aparelho e a cápsula é `memberByAuthor`, pela chave
+de participante — a mesma normalização congelada que decide o `memberId`.
 
 **A Regra da Cápsula Que É Você.** A identidade visual de uma pessoa pertence a ela e é a
 mesma em toda parte do produto — e a porta era o único lugar onde não era: a cor saía de um

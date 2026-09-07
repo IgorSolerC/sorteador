@@ -49,8 +49,9 @@ O que continua sendo contrato:
 - Montar um grupo novo, já entrando quem montou como a primeira cápsula.
 - Adicionar e remover participantes numa gaveta, sem que a administração ocupe a página.
 - Escolher a cor de cada pessoa numa roda de 24, e um emoji que sai como confete quando a
-  cápsula dela cai. A cor identifica a pessoa no globo, no registro e no álbum inteiro, e
-  continua sendo dela depois que ela sai do grupo.
+  cápsula dela cai. A cor identifica a pessoa no globo, no registro, no crachá do cabeçalho
+  e no álbum inteiro, e continua sendo dela depois que ela sai do grupo. Fora de um grupo o
+  crachá usa uma cor tirada do próprio nome: não há cápsula a consultar.
 - Girar, com confirmação, e ver a entrega encenada. Reencená-la a qualquer momento clicando
   no globo, sem que isso grave nada nem mude o resultado.
 - Escrever o **jogo** de qualquer giro — o de agora ou um de um ano atrás — com nome e

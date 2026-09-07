@@ -12,7 +12,7 @@ import {
 } from './group-log';
 import { GroupSnapshot } from './group-store';
 import { Identity } from './identity';
-import { capsuleColor } from './palette';
+import { capsuleColor, capsuleInk } from './palette';
 import { SyncedGroup } from './synced-group';
 import { UsageGuard } from './usage-guard';
 
@@ -218,6 +218,40 @@ async function render(store: FakeStore, guard = memoryGuard()) {
 
 describe('modo sincronizado', () => {
   afterEach(() => TestBed.resetTestingModule());
+
+  it('o crachá do cabeçalho veste a cápsula desta pessoa neste grupo', async () => {
+    // Era o último lugar do produto onde a cor de uma pessoa não era a que ela escolheu:
+    // ela saía de um hash do nome, e o disco ficava de uma cor na barra e de outra dois
+    // dedos abaixo, no aro e no registro, no mesmo giro dela.
+    const store = new FakeStore();
+    store.events.push(
+      { type: 'member_added', at: 1, name: 'Ana' },
+      { type: 'member_added', at: 2, name: 'Breno' },
+      { type: 'member_styled', at: 3, memberId: memberId(GRUPO, 'Ana'), colorIndex: 19, emoji: '🦄' },
+    );
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('  ana  ');
+    fixture.detectChanges();
+    const disco = (fixture.nativeElement as HTMLElement).querySelector('.who-mark') as HTMLElement;
+
+    expect(disco.style.getPropertyValue('--capsule')).toBe(capsuleColor(19));
+    expect(disco.style.getPropertyValue('--capsule-ink')).toBe(capsuleInk(19));
+    expect(disco.textContent?.trim()).toBe('🦄');
+    fixture.destroy();
+  });
+
+  it('quem o grupo não conhece continua com a cor tirada do nome', async () => {
+    // Um convidado com o link não tem cápsula para vestir, e o crachá volta a ser o que
+    // sempre foi na prateleira: o mesmo em toda tela, sem depender de grupo nenhum.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    TestBed.inject(Identity).remember('Zulmira');
+    fixture.detectChanges();
+    const disco = (fixture.nativeElement as HTMLElement).querySelector('.who-mark') as HTMLElement;
+
+    expect(disco.style.getPropertyValue('--capsule')).toBe(TestBed.inject(Identity).color());
+    expect(disco.textContent?.trim()).toBe('Z');
+    fixture.destroy();
+  });
 
   it('o crachá é irmão da nav, e não filho dela', async () => {
     // É disto que a barra do celular depende: a nav inteira desce para o pé da tela por
