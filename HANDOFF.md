@@ -1,7 +1,6 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-07**, na rodada da mesa que não perdia mais ninguém e da cápsula
-repintada na porta.
+Estado em **2026-09-07**, na rodada da voz enxuta, do celular e do lacre sem chave.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -72,7 +71,7 @@ src/app/
                        máquina, álbum e bancadas precisam do MESMO nome
   identity-gate.*      A PORTA. Ninguém entra sem se identificar — e, num grupo, ela oferece
                        as cápsulas que já existem nele (ROSTER_LOOKUP, importação dinâmica)
-  preferences.ts       as duas chaves deste aparelho: som e modo cego
+  preferences.ts       a única chave deste aparelho: o som
   machine-sound.ts     a voz da máquina, sintetizada. Nada toca sem gesto
   album-poster.ts      o álbum desenhado em canvas e salvo como PNG. Sem o link, nunca
   home.*               A PRATELEIRA (raiz)
@@ -132,7 +131,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
   sorteio e encolhe a cada giro da rodada, porque ninguém repete antes de todos saírem;
   `roster` é quem estava ativo no grupo naquele instante. **A mesa senta em `roster`.**
   Enquanto ela sentava em `eligible`, quem já havia sido sorteado desaparecia da mesa dos
-  jogos seguintes: a completude mentia, e o modo cego parava de lacrar qualquer coisa para
+  jogos seguintes: a completude mentia, e o lacre parava de pegar qualquer coisa para
   essa pessoa, porque ela não devia resenha nenhuma. `synced-group` continua usando
   `eligible` — e só ele — para encenar a entrega.
 - **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
@@ -164,7 +163,7 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 374 unitários e de componente
+npm test -- --watch=false   # 381 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
@@ -260,6 +259,63 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 
 Nada pendente no código.
 
+A rodada de 2026-09-07, parte 4, tem quatro pedidos.
+
+**O lacre da nota perdeu o interruptor.** Ele era `Preferences.blind`, uma chave por aparelho
+na porta, desligada por padrão — e era a única preferência que mudava a conta que o clube lê.
+`preferences.ts` perdeu a chave e o `localStorage`; `sealed`/`sealedOf` em `game-sheet.ts`,
+`group-history.ts` e `synced-group.ts` agora são só `owesReview(...)`. Espiar continua sendo
+de quem lê, e continua valendo só enquanto aquela ficha está aberta. A porta ficou sem painel
+de preferência nenhum — o som mora na máquina. **Consequência para as suítes:** mais fichas
+abrem lacradas, e o trecho das reações no `e2e-acabamento` passou a abrir de propósito um jogo
+que esta pessoa já resenhou (num lacrado não há resenha na tela para reagir).
+
+**A barra do celular é outra barra** (ver A Regra das Duas Barras em `DESIGN.md`). No alto
+sobraram a saída, a marca e o crachá, numa linha de `60px`; os três controles da máquina
+desceram para uma barra fixa no pé, em células iguais de `130×56` em 390 e `107×56` em 320.
+Era `175px` em três linhas. É a MESMA nav, movida por CSS: por isso o crachá passou a ser
+irmão de `.topbar-actions` e não filho dela — duplicar os controles daria `#roster-button`
+repetido e dois caminhos de teclado. `body:has(.topbar-actions:not(:empty))` dá o chão, e o
+toast sobe acima da barra.
+
+**Toda tela em que se entra tem saída no alto** (A Regra da Saída no Alto): `A MÁQUINA` no
+álbum, `INÍCIO` na oficina, `VOLTAR` na porta de quem troca de pessoa. "Continuar como estou"
+saiu: no meio da fileira de ações ele lia como uma terceira resposta a "quem está na mesa?".
+A prateleira e a máquina não têm — são onde se está.
+
+**A caixa da roleta e o disco da manivela ganharam lábio moldado** (A Regra do Lábio
+Moldado): `drop-shadow(0 -6px 0 #1e2531)` mais a sombra ambiente que a Regra da Parede
+Moldada exige. O lábio fica na tinta do esmalte mesmo quando a chapa é repintada — é sombra
+de carcaça, não elemento montado nela.
+
+A rodada de 2026-09-07, parte 3, é de texto e de celular.
+
+**A tela parou de explicar a máquina** (ver A Regra do Texto que Não Explica a Máquina em
+`DESIGN.md`). Saíram do produto as frases sobre log, registro que ninguém reescreve, nota
+recontada em vez de gravada, preferência que fica no aparelho e cota gratuita — e as que a
+própria UX já dizia ("clique em um registro para escrever uma resenha", "abra para escrever
+o jogo"). Ficaram três coisas, e todas porque quem lê decide algo com elas: a consequência
+de um gesto irreversível, o erro com a saída, e o que um controle faz quando não se vê pelo
+desenho. Dois rodapés inteiros deixaram de existir. **O porquê do produto não foi perdido —
+ele mora aqui, em `PRODUCT.md` e em `DESIGN.md`.**
+
+Dois testes seguravam a voz antiga e foram trocados junto: o aviso do giro agora é conferido
+por "não pode ser desfeito" em vez de "permanentemente", e o cartão em branco por não dizer
+"abra para escrever".
+
+**A barra do topo tinha três linhas e 175px em 390px.** Cada controle novo empurrava o
+crachá para uma linha própria, porque `.topbar-actions` quebrava por dentro. Agora ela é
+`nowrap` e ocupa a segunda linha inteira: **113px**, uma fileira de controles, todos com
+44px, sem rolagem horizontal. O nome do crachá deixou de ser cortado em 8ch; ele só se
+esconde abaixo de 460px **e** com a barra cheia (`:has(.plate-action + .plate-action)`), o
+que é a máquina e não o álbum — e se esconde do olho, não da árvore de acessibilidade.
+
+**As oito ordens do álbum viraram o seletor do sistema no celular.** Em texto elas ocupavam
+três fileiras e 150px (194px em 320) antes do primeiro cartão: agora são 48px. As duas
+formas convivem no DOM, a que não vale está escondida — elemento escondido não pega foco —,
+e `orderByValue` confere o valor contra a lista antes de virar ordem, porque um `value`
+inventado deixaria a parede sem régua e sem cartão.
+
 A rodada de 2026-09-07, parte 2, fecha um defeito e abre uma porta.
 
 **O defeito era um só, e aparecia como dois.** `seatsOf()` sentava a mesa em `spin.eligible`,
@@ -304,7 +360,7 @@ como fichas de coleção e faz o critério de ordenação comandar o destaque do
 e na imagem. `album-metrics.ts` centraliza essa seleção. O PNG também respeita o lacre e
 calcula o resumo só sobre os cartões filtrados. O rolamento tem atrito contínuo e 168
 tiques; o contexto de áudio é destravado antes da espera pela rede e o mute corta a cena.
-O script de acabamento guarda capturas e um WAV em `.impeccable/review/2026-09-06/`.
+O script de acabamento guarda capturas e um WAV em `.impeccable/review/2026-09-07/`.
 Validação desta rodada: 355 unitários, 118 regras, 48 integrações, 13 verificações de
 migração, 86 E2E, 17 fluxos e 14 verificações de acabamento. Acessibilidade: 15 telas ×
 3 larguras, zero achados. O áudio renderizado teve pico de 0,283 (limite 1) e sinal nos

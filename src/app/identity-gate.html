@@ -42,8 +42,7 @@
 
       <h1 id="gate-bench-title">Sua cápsula</h1>
       <p class="capsule-lede">
-        A cor identifica você no globo, no registro e no álbum inteiro. O emoji é o que sai
-        como confete quando a sua cápsula cair na bandeja.
+        O emoji sai como confete quando a sua cápsula cair na bandeja.
       </p>
 
       <fieldset class="style-field">
@@ -121,6 +120,19 @@
     </div>
   } @else {
   <div class="gate-copy">
+    <!-- Quem está trocando de pessoa tem para onde voltar, e voltar é uma SAÍDA, não uma
+         das opções da pergunta: no meio da fileira de ações, "continuar como estou" lia
+         como uma terceira resposta a "quem está na mesa?". No alto da coluna ele é o que
+         é — a mesma seta que a bancada usa para voltar à porta. -->
+    @if (changing()) {
+      <p class="gate-back-row">
+        <button type="button" class="capsule-back gate-back" (click)="cancel()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          Voltar
+        </button>
+      </p>
+    }
+
     <h1 id="gate-title">
       @if (changing()) {
         Quem está<br /><strong>na mesa?</strong>
@@ -196,14 +208,9 @@
             {{ changing() ? 'Passar a vez' : 'Entrar na mesa' }}
           </button>
         }
-        @if (changing()) {
-          <button class="text-link" type="button" (click)="cancel()">Continuar como estou</button>
-        }
       </div>
 
-      <p class="gate-note" id="gate-note">
-        Não é uma conta e não tem senha: fica só neste aparelho, e você troca quando quiser.
-      </p>
+      <p class="gate-note" id="gate-note">Não é uma conta: você troca quando quiser.</p>
     </form>
 
     <!-- Quando o globo reconhece o crachá, a porta deixa de ser só uma pergunta sobre
@@ -242,29 +249,6 @@
       </div>
     }
 
-    <!-- O modo cego mora na porta porque é a mesma classe de coisa que o crachá: uma
-         escolha que fica neste aparelho, não entra no registro e ninguém mais vê. E mora
-         aqui, e não na máquina, porque é uma decisão sobre COMO esta pessoa julga — ela se
-         toma uma vez, não a cada visita. O som, que se liga e desliga no meio de uma noite,
-         fica na própria máquina. Nenhum dos dois aparece na primeira visita: ela é uma
-         pergunta só, e uma chave ao lado dela transformaria a porta num painel. -->
-    @if (changing()) {
-      <div class="gate-prefs">
-        <p class="gate-prefs-title">Neste aparelho</p>
-
-        <button type="button" class="gate-switch" [class.is-on]="blind()"
-                [attr.aria-pressed]="blind()" (click)="toggleBlind()">
-          <span class="gate-switch-track" aria-hidden="true"><i></i></span>
-          <span class="gate-switch-copy">
-            <strong>Modo cego</strong>
-            <small>
-              A nota do clube fica lacrada nos jogos que você jogou e ainda não resenhou.
-              Ler "9,2" antes de dar a sua nota move a sua nota.
-            </small>
-          </span>
-        </button>
-      </div>
-    }
   </div>
   }
 </section>

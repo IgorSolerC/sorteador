@@ -56,8 +56,7 @@ export class CreateGroup {
       this.progress.set('');
       this.error.set(
         error instanceof UsageBlockedError
-          ? 'A máquina parou por segurança: o uso do dia bateu no limite que protege a cota ' +
-            'gratuita. Ela volta sozinha na virada do dia.'
+          ? 'A máquina parou por segurança: muitos pedidos hoje. Ela volta na virada do dia.'
           : (error as Error)?.message ?? 'Não consegui falar com o servidor.',
       );
     } finally {

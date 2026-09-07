@@ -8,29 +8,26 @@
     <span>Mesa do Mês</span>
   </a>
 
-  <nav class="topbar-actions" aria-label="Você">
-    <button type="button" class="who-chip" (click)="changeIdentity.emit()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="color()"
-            [style.--capsule-ink]="ink()">{{ authorInitials() }}</span>
-      <span class="who-name">{{ author() }}</span>
-      <span class="visually-hidden">— trocar de pessoa</span>
-    </button>
-  </nav>
+  <button type="button" class="who-chip" (click)="changeIdentity.emit()">
+    <span class="who-mark" aria-hidden="true" [style.--capsule]="color()"
+          [style.--capsule-ink]="ink()">{{ authorInitials() }}</span>
+    <span class="who-name">{{ author() }}</span>
+    <span class="visually-hidden">— trocar de pessoa</span>
+  </button>
 </header>
 
 <section class="home-stage" aria-labelledby="home-title">
   <div class="home-copy">
     <h1 id="home-title">Oi, <strong>{{ greeting() }}</strong>.<br />Qual mesa hoje?</h1>
     <p class="home-lede">
-      Uma máquina de cápsulas por clube. Ela tira uma pessoa por vez e não repete ninguém
-      até que todos tenham saído — e cada giro fica gravado com quem girou e o que foi jogado.
+      Uma máquina de cápsulas por clube: ela tira uma pessoa por vez e não repete ninguém
+      até que todos tenham saído.
     </p>
     <div class="home-actions">
       <a class="primary-action" href="#/novo">Montar uma máquina</a>
     </div>
     <p class="home-note">
-      Para entrar numa máquina que já existe, abra o link que o grupo mandou. O link é o
-      grupo: não há conta, senha nem convite.
+      Para entrar numa máquina que já existe, abra o link que o grupo mandou.
     </p>
   </div>
 
@@ -67,20 +64,13 @@
           </li>
         }
       </ul>
-      <p class="home-shelf-note">
-        A lista fica só neste aparelho e não dá acesso a nada: quem abre uma máquina é o
-        link, não esta prateleira.
-      </p>
     } @else {
       <div class="home-empty">
         <div class="empty-globe" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
         </div>
         <h2>Nenhuma máquina<br /><strong>por aqui ainda</strong></h2>
-        <p>
-          As máquinas que você abrir aparecem nesta prateleira, para você voltar a elas sem
-          procurar o link.
-        </p>
+        <p>As máquinas que você abrir aparecem aqui.</p>
       </div>
     }
   </div>
@@ -88,5 +78,5 @@
 
 <footer>
   <span>Mesa do Mês</span>
-  <p>Sem conta, sem senha, e uma cápsula por vez para definir o jogo do clube.</p>
+  <p>Uma cápsula por vez para definir o jogo do clube.</p>
 </footer>

@@ -57,7 +57,7 @@ describe('App', () => {
     fixture.destroy();
   });
 
-  it('o crachá do topo reabre a porta, agora com jeito de desistir', () => {
+  it('o crachá do topo reabre a porta, agora com jeito de voltar', () => {
     TestBed.inject(Identity).remember('Igor Soler');
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
@@ -67,8 +67,9 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(raiz.querySelector('.gate')).toBeTruthy();
-    // Quem já está dentro pode voltar; quem nunca entrou, não tem para onde voltar.
-    expect(raiz.textContent).toContain('Continuar como estou');
+    // Quem já está dentro pode voltar; quem nunca entrou, não tem para onde voltar. E
+    // voltar é uma saída no alto, não uma terceira resposta no meio das ações.
+    expect(raiz.querySelector('.gate-back')).toBeTruthy();
     fixture.destroy();
   });
 

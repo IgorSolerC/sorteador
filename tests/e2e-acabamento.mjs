@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 // Áudio e impressão pedem um navegador: mocks não provam que há sinal nem pixels.
 const base = 'http://localhost:4200/?emu=1';
-const output = '.impeccable/review/2026-09-06';
+const output = '.impeccable/review/2026-09-07';
 mkdirSync(output, { recursive: true });
 const chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', [
   '--headless=new', '--hide-scrollbars', '--remote-debugging-port=9373',
@@ -33,6 +33,15 @@ const ev = async (expression) => {
   if (response.result?.exceptionDetails) throw new Error(JSON.stringify(response.result.exceptionDetails));
   return response.result?.result?.value;
 };
+/** Espera por uma condição na página em vez de por um número de segundos. */
+const esperar = async (expressao, oQue, tentativas = 40) => {
+  for (let i = 0; i < tentativas; i += 1) {
+    if (await ev(expressao)) return;
+    await sleep(500);
+  }
+  const onde = await ev(`location.href + ' | ' + document.readyState + ' | ' + document.body.innerText.slice(0, 120)`);
+  throw new Error(`esperei ${tentativas * 0.5}s por ${oQue} e não veio — ${onde}`);
+};
 let failures = 0, checks = 0;
 const check = (name, ok, detail = '') => { checks++; failures += !ok; console.log(`${ok ? 'ok' : 'FALHOU'} ${name} ${detail}`); };
 const shot = async (name) => {
@@ -44,7 +53,11 @@ try {
   await send('Page.navigate', { url: base }); await sleep(2000);
   await ev(`localStorage.setItem('mesa-do-mes:autor:v1', 'Ana'); localStorage.setItem('mesa-do-mes:som:v1', '1')`);
   await send('Page.navigate', { url: base + '#/g/demo' });
-  await send('Page.reload'); await sleep(8000);
+  await send('Page.reload');
+  // A primeira carga da máquina é a mais lenta da sessão: o chunk do Firebase, o SDK e o
+  // registro do grupo. Um número fixo de segundos aqui derrubava a suíte inteira de vez em
+  // quando, e a falha vinha oito passos depois, no primeiro `ng.getComponent`.
+  await esperar(`!!document.querySelector('app-synced-group') && !!document.querySelector('.machine')`, 'a máquina abrir', 80);
   const audio = await ev(`(async () => {
     const component = ng.getComponent(document.querySelector('app-synced-group'));
     const sound = component.machineSound;
@@ -110,7 +123,15 @@ try {
   const single = await ev(`new Promise(resolve => { const r=new FileReader(); r.onload=()=>resolve(r.result); r.readAsDataURL(window.posterBlob) })`);
   writeFileSync(`${output}/album-filtrado.png`, Buffer.from(single.split(',')[1], 'base64'));
   await ev(`document.querySelector('.people-chip.is-all').click()`); await sleep(200);
-  await ev(`document.querySelector('.album-card').click()`); await sleep(400);
+  // O que este trecho testa é a REAÇÃO, então ele precisa de uma ficha ABERTA: nem a
+  // primeira cápsula da ordem por dificuldade (que pode não ter resenha nenhuma) nem uma
+  // lacrada servem. O lacre não tem interruptor — vale para todo jogo que esta pessoa
+  // jogou e não resenhou —, e num jogo lacrado não há resenha na tela para reagir.
+  await ev(`(() => {
+    const alvo = [...document.querySelectorAll('.album-card')]
+      .find((c) => c.querySelector('.album-score') && !c.querySelector('.album-sealed'));
+    (alvo ?? document.querySelector('.album-card')).click();
+  })()`); await sleep(500);
   await ev(`document.querySelector('.review-reactions').scrollIntoView({block:'center'})`); await sleep(150);
   await shot('reacoes-mobile');
   check('resenha usa apenas um controle compacto', await ev(`document.querySelectorAll('.review:first-child .reaction').length === 0 && document.querySelectorAll('.review:first-child .reaction-trigger').length === 1`));
@@ -167,13 +188,93 @@ try {
   check('clicar fora fecha o seletor', await ev(`!document.querySelector('.reaction-popover:popover-open')`));
   // O clique fora também pode fechar a ficha: abra-a de novo para o teste do lacre.
   await ev(`if(!document.querySelector('#sheet-card')) document.querySelector('.album-card').click()`); await sleep(150);
-  await ev(`document.querySelector('#sheet-close').click(); localStorage.setItem('mesa-do-mes:cego:v1','1')`);
+  // --- as duas barras do celular, e a ordem ---
+  // A barra do topo chegou a ter TRÊS linhas e 175px num aparelho de 390px, com todos os
+  // controles apertados no canto superior direito. Agora o alto carrega só quem eu sou e
+  // por onde eu saio, e o que se FAZ mora numa barra fixa embaixo, sob o polegar. Nada
+  // disso um teste de componente vê: é altura, posição e largura de célula.
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 780, deviceScaleFactor: 1, mobile: true });
+  await ev(`window.scrollTo(0, 0)`); await sleep(400);
+  const barraAlbum = await ev(`(() => {
+    const bar = document.querySelector('.topbar');
+    const r = bar.getBoundingClientRect();
+    const filhos = [...bar.children].map((e) => e.getBoundingClientRect());
+    const voltar = document.querySelector('.back-link');
+    return { altura: Math.round(r.height), linhas: new Set(filhos.map((f) => Math.round(f.top))).size,
+      voltar: voltar ? voltar.innerText.trim() : null,
+      alvoVoltar: voltar ? Math.round(voltar.getBoundingClientRect().height) : 0,
+      semNav: !document.querySelector('.topbar-actions'),
+      nomeInteiro: (() => { const n = document.querySelector('.who-name'); return n ? n.scrollWidth <= n.clientWidth + 1 : false; })(),
+      overflowX: document.documentElement.scrollWidth > innerWidth };
+  })()`);
+  check('o álbum tem uma barra de uma linha, com voltar e sem barra de baixo',
+    barraAlbum.altura <= 68 && barraAlbum.linhas === 1 && barraAlbum.semNav && !barraAlbum.overflowX,
+    JSON.stringify(barraAlbum));
+  check('o voltar do álbum diz para onde vai, com alvo de 44px',
+    /MÁQUINA/i.test(barraAlbum.voltar ?? '') && barraAlbum.alvoVoltar >= 44, JSON.stringify(barraAlbum));
+  check('o nome do crachá caber inteiro no álbum', barraAlbum.nomeInteiro, JSON.stringify(barraAlbum));
+  await shot('barra-album-celular');
+
+  const ordem = await ev(`(() => {
+    const sel = document.querySelector('.sort-select select');
+    const r = sel.getBoundingClientRect();
+    return { texto: !!document.querySelector('.sort-options').getClientRects().length,
+      select: !!sel.getClientRects().length, alvo: Math.round(r.height), opcoes: sel.options.length,
+      bloco: Math.round(document.querySelector('.album-sort').getBoundingClientRect().height),
+      focaveis: [...document.querySelectorAll('.album-sort button, .album-sort select')].filter((e) => e.getClientRects().length).length };
+  })()`);
+  check('no celular a ordem é um seletor só, com as oito opções', ordem.select && !ordem.texto && ordem.opcoes === 8 && ordem.focaveis === 1, JSON.stringify(ordem));
+  check('o seletor tem alvo de 48px e cabe em uma fileira', ordem.alvo >= 48 && ordem.bloco <= 100, JSON.stringify(ordem));
+  await ev(`document.querySelector('.album-sort').scrollIntoView({block:'center'})`); await sleep(250);
+  await shot('ordem-celular');
+  await ev(`(() => { const s = document.querySelector('.sort-select select'); s.value = 'nota'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`); await sleep(400);
+  check('escolher no seletor reordena a parede', await ev(`document.querySelector('.round-rule span').textContent.includes('nota do clube')`));
+
+  // A máquina é a tela com controles, e é ela que ganha a barra de baixo.
+  await send('Page.navigate', { url: base + '#/g/demo' });
+  await send('Page.reload');
+  await esperar(`!!document.querySelector('.topbar-actions') && !!document.querySelector('.machine')`, 'a máquina voltar');
+  const barraMaquina = await ev(`(() => {
+    const bar = document.querySelector('.topbar').getBoundingClientRect();
+    const nav = document.querySelector('.topbar-actions');
+    const n = nav.getBoundingClientRect();
+    const cells = [...nav.children].map((e) => e.getBoundingClientRect());
+    return { topo: Math.round(bar.height), fixa: getComputedStyle(nav).position,
+      base: Math.round(innerHeight - n.bottom), larguraCheia: Math.round(n.width) === innerWidth,
+      celulas: cells.map((c) => [Math.round(c.width), Math.round(c.height)]),
+      iguais: new Set(cells.map((c) => Math.round(c.width))).size === 1,
+      chao: parseFloat(getComputedStyle(document.body).paddingBottom),
+      cracha: !nav.querySelector('.who-chip'),
+      overflowX: document.documentElement.scrollWidth > innerWidth };
+  })()`);
+  check('a máquina põe os controles numa barra fixa embaixo',
+    barraMaquina.fixa === 'fixed' && barraMaquina.base === 0 && barraMaquina.larguraCheia,
+    JSON.stringify(barraMaquina));
+  check('as três células são iguais e têm 56px',
+    barraMaquina.celulas.length === 3 && barraMaquina.iguais && barraMaquina.celulas.every((c) => c[1] >= 56),
+    JSON.stringify(barraMaquina));
+  check('o alto fica com uma linha e o crachá sai da nav',
+    barraMaquina.topo <= 68 && barraMaquina.cracha && !barraMaquina.overflowX, JSON.stringify(barraMaquina));
+  check('a página ganha chão para não terminar debaixo da barra', barraMaquina.chao >= 56, JSON.stringify(barraMaquina));
+  await shot('barra-maquina-celular');
+  const aviso = await ev(`(() => { const t = document.querySelector('.toast'); return Math.round(parseFloat(getComputedStyle(t).bottom)); })()`);
+  check('o aviso flutuante sobe acima da barra', aviso >= 56, String(aviso));
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await sleep(400);
+  check('no desktop os controles voltam para o cabeçalho',
+    await ev(`getComputedStyle(document.querySelector('.topbar-actions')).position === 'static' && !!document.querySelector('.topbar-actions .plate-action')`));
+  await send('Page.navigate', { url: base + '#/g/demo/album' }); await sleep(5000);
+  check('no desktop a ordem continua em texto', await ev(`!!document.querySelector('.sort-options').getClientRects().length && !document.querySelector('.sort-select select').getClientRects().length`));
+
+  await ev(`document.querySelector('#sheet-close')?.click()`);
   await send('Page.reload'); await sleep(3000);
 
   // O lacre pelo caminho de verdade, e não com `sealedOf` trocado: quem foi sorteado numa
-  // rodada continua jogando os jogos seguintes dela, e o modo cego tem de lacrar a nota
-  // deles. Enquanto a mesa saía do globo do giro, esta pessoa não devia resenha nenhuma
-  // depois de sair — e o modo cego "não fazia nada" para ela, que é o defeito relatado.
+  // rodada continua jogando os jogos seguintes dela, e a nota deles tem de ficar lacrada.
+  // Enquanto a mesa saía do globo do giro, esta pessoa não devia resenha nenhuma depois de
+  // sair — e o lacre "não fazia nada" para ela, que é o defeito relatado. Não há mais
+  // interruptor a ligar: basta ser quem jogou e não escreveu.
   const sorteada = await ev(`(() => {
     const app = ng.getComponent(document.querySelector('app-group-history'));
     const spins = app.snapshot().state.spins;
@@ -187,7 +288,7 @@ try {
     const alvo = cartoes.find((c) => c.querySelector('.album-title')?.textContent.includes('Lethal Company'));
     return { achou: !!alvo, lacrado: !!alvo?.querySelector('.album-sealed'), nota: !!alvo?.querySelector('.album-score') };
   })()`);
-  check('o modo cego lacra o jogo que quem já foi sorteada ainda deve', lacre.lacrado && !lacre.nota, JSON.stringify(lacre));
+  check('o lacre pega o jogo que quem já foi sorteada ainda deve', lacre.lacrado && !lacre.nota, JSON.stringify(lacre));
   await ev(`document.querySelector('.album-card .album-sealed').closest('.album-card').click()`); await sleep(300);
   check('a ficha desse jogo também abre lacrada', await ev(`!!document.querySelector('.sheet-seal') && !document.querySelector('.scoreboard')`));
   await shot('lacre-de-quem-ja-saiu');

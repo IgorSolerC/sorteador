@@ -1,4 +1,12 @@
 <header class="topbar">
+  <!-- O álbum é uma tela em que se entra, então ela tem por onde sair, e a saída fica onde
+       a mão procura: no alto e à esquerda. Antes "A máquina" era um comprimido do lado
+       direito, no meio das ações — o mesmo lugar de uma ação qualquer, e não de um voltar. -->
+  <a class="back-link" [href]="machineUrl()">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+    A máquina
+  </a>
+
   <a class="brand" [href]="machineUrl()" aria-label="Mesa do Mês — voltar à máquina">
     <svg viewBox="0 0 40 40" aria-hidden="true">
       <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
@@ -7,15 +15,13 @@
     </svg>
     <span>Mesa do Mês</span>
   </a>
-  <nav class="topbar-actions" aria-label="O álbum">
-    <a class="plate-action" [href]="machineUrl()">A máquina</a>
-    <button type="button" class="who-chip" (click)="askIdentityChange()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
-            [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
-      <span class="who-name">{{ author() }}</span>
-      <span class="visually-hidden">— trocar de pessoa</span>
-    </button>
-  </nav>
+
+  <button type="button" class="who-chip" (click)="askIdentityChange()">
+    <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
+          [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
+    <span class="who-name">{{ author() }}</span>
+    <span class="visually-hidden">— trocar de pessoa</span>
+  </button>
 </header>
 
 @if (loading() && !snapshot()) {
@@ -25,7 +31,6 @@
     </div>
     <div>
       <h1>Abrindo o<br /><strong>álbum</strong></h1>
-      <p>Buscando o registro deste grupo.</p>
     </div>
   </section>
 } @else if (snapshot(); as snap) {
@@ -34,11 +39,11 @@
       <h1 id="album-title">O álbum</h1>
       <p class="album-lede">
         @if (spins().length) {
-          Todo jogo que a máquina de <strong>{{ snap.name }}</strong> já entregou, com a nota
-          que o clube deu. Abra qualquer um para ler as resenhas ou escrever a sua.
+          Todo jogo que a máquina de <strong>{{ snap.name }}</strong> já entregou, com a
+          nota que o clube deu.
         } @else {
           O álbum de <strong>{{ snap.name }}</strong> guarda cada jogo que a máquina
-          entregar, com a nota do clube e as resenhas. Ele começa no primeiro giro.
+          entregar, com a nota do clube e as resenhas.
         }
       </p>
     </div>
@@ -79,7 +84,7 @@
       <button type="button" class="plate-action" [disabled]="saving()" (click)="savePoster()">
         {{ saving() ? 'Desenhando…' : 'Salvar como imagem' }}
       </button>
-      <span>Uma folha com as cápsulas desta parede. O link do grupo não vai nela.</span>
+      <span>O link do grupo não vai na imagem.</span>
     </p>
   }
 
@@ -162,6 +167,23 @@
             </button>
           }
         </div>
+
+        <!-- No celular as mesmas oito ordens são um seletor: em texto elas ocupavam três
+             fileiras e 150px de altura antes do primeiro cartão, e o dedo escolhia entre
+             alvos colados. Aqui o picker é o do sistema, que é onde a mão já sabe mexer.
+             As duas formas existem juntas, e a que não vale está escondida — elemento
+             escondido não recebe foco, então não há dois caminhos para o teclado. -->
+        <label class="sort-select">
+          <span class="visually-hidden">Ordenar por</span>
+          <select [value]="sort()" (change)="orderByValue($event)">
+            @for (option of SORTS; track option.key) {
+              <option [value]="option.key" [selected]="sort() === option.key">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </label>
       </div>
 
       @for (section of rounds(); track section.label) {
@@ -211,7 +233,7 @@
                 <span class="album-perf" aria-hidden="true"></span>
 
                 @if (sealedOf(spin)) {
-                  <!-- Lacrado: a nota do clube é exatamente o que o modo cego esconde de
+                  <!-- Lacrado: a nota do clube é exatamente o que o lacre esconde de
                        quem ainda vai dar a dela, e o cartão é onde ela apareceria antes
                        de qualquer clique. O jogo e a pessoa continuam à vista. -->
                   <span class="album-sealed">
@@ -271,9 +293,6 @@
                   <span class="album-description">{{ spin.note!.description }}</span>
                 }
 
-                @if (!spin.note) {
-                  <span class="album-meta">Abra para escrever o jogo</span>
-                }
               </button>
             </li>
           }
@@ -286,10 +305,7 @@
         </div>
         <div>
           <h2>O álbum está<br /><strong>sem cápsulas</strong></h2>
-          <p>
-            Nenhum giro foi registrado neste grupo ainda. A primeira cápsula chega quando
-            alguém girar a manivela.
-          </p>
+          <p>Nenhum giro ainda. A primeira cápsula chega quando alguém girar.</p>
           <a class="primary-action" [href]="machineUrl()">Ir para a máquina</a>
         </div>
       </div>
@@ -298,11 +314,6 @@
 
   <footer class="album-foot">
     <span>O álbum</span>
-    <p>
-      Os jogos e as resenhas ficam no mesmo registro dos giros: nada aqui pode ser apagado,
-      só reescrito — e cada versão anterior continua guardada. A nota do clube nunca é
-      gravada: ela é recontada a partir das resenhas toda vez que esta página abre.
-    </p>
   </footer>
 } @else {
   <!-- Sem snapshot e sem carga em curso, a página não pode ficar em branco: o que houve
@@ -314,7 +325,7 @@
     <div>
       <h1>Álbum não<br /><strong>encontrado</strong></h1>
       <p class="album-error" role="alert">
-        {{ error() || 'O link pode estar incompleto ou o grupo pode ter sido criado noutro projeto.' }}
+        {{ error() || 'O link pode estar incompleto.' }}
       </p>
       <a class="primary-action" href=".">Voltar ao início</a>
     </div>

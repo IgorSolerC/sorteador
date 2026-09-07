@@ -1,4 +1,9 @@
 <header class="topbar">
+  <a class="back-link" href=".">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+    Início
+  </a>
+
   <a class="brand" href="." aria-label="Mesa do Mês — início">
     <svg viewBox="0 0 40 40" aria-hidden="true">
       <path class="brand-dome" d="M20 4a13 13 0 0 1 13 13v3H7v-3A13 13 0 0 1 20 4Z" />
@@ -17,10 +22,7 @@
 
   <div>
     <h1 id="create-title">Uma máquina<br /><strong>para o clube</strong></h1>
-    <p>
-      A máquina guarda a lista e cada giro num registro compartilhado. O link passa a ser o
-      grupo: mexer nos nomes não gera link novo, e girar não espera o mês virar.
-    </p>
+    <p>Dê um nome ao clube. Depois, mande o link para quem joga.</p>
 
     <form class="create-form" (ngSubmit)="create()" novalidate>
       <label class="create-field">
@@ -48,7 +50,7 @@
           />
           <span>
             Entrar como a primeira cápsula
-            <small>{{ author() }} já fica no globo, com cor e emoji para escolher depois.</small>
+            <small>{{ author() }} já entra no globo.</small>
           </span>
         </label>
       }
@@ -65,15 +67,10 @@
       }
       @if (usageStopped()) {
         <p class="synced-error" role="alert">
-          O uso deste aparelho bateu no limite que protege a cota gratuita. A criação volta
-          na virada do dia.
+          Muitos pedidos deste aparelho hoje. A criação volta na virada do dia.
         </p>
       }
     </form>
 
-    <p class="create-note">
-      A rodada 1 abre vazia e o primeiro giro é o começo do registro. Depois de montada,
-      mande o link para o clube — ele é a única credencial que existe.
-    </p>
   </div>
 </section>

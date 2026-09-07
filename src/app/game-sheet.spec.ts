@@ -583,7 +583,7 @@ describe('a mesa de um jogo', () => {
 
     expect(linhas[0].querySelector('.seat-out')).toBeNull();
     expect(linhas[1].querySelector('.seat-out')).not.toBeNull();
-    expect(el(fixture).querySelector('.seats-foot')!.textContent).toContain('retirar a resenha');
+    expect(el(fixture).querySelector('.seats-foot')!.textContent).toContain('não sai da mesa');
     fixture.destroy();
   });
 
@@ -714,10 +714,9 @@ describe('reagir a uma resenha', () => {
   });
 });
 
-describe('o modo cego', () => {
-  // A preferência é escrita direto no armazenamento porque `Preferences` só nasce quando o
-  // componente a injeta — e injetá-la antes instanciaria o TestBed antes de configurá-lo.
-  beforeEach(() => window.localStorage.setItem('mesa-do-mes:cego:v1', '1'));
+describe('o lacre da nota do clube', () => {
+  // Ele não tem interruptor: lacrar é como o produto funciona, e não uma escolha por
+  // aparelho. Era a única preferência que mudava a conta que o clube lê.
   afterEach(() => {
     window.localStorage.clear();
     TestBed.resetTestingModule();
@@ -778,10 +777,12 @@ describe('o modo cego', () => {
     fixture.destroy();
   });
 
-  it('desligado, nada lacra', async () => {
+  it('não há interruptor que o desligue', async () => {
+    // A chave antiga em `localStorage` não volta a valer nada: um aparelho que a tinha
+    // desligada continua vendo o lacre.
     window.localStorage.removeItem('mesa-do-mes:cego:v1');
     const fixture = await render(jogado());
-    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
+    expect(el(fixture).querySelector('.sheet-seal')).not.toBeNull();
     fixture.destroy();
   });
 });

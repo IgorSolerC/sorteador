@@ -8,14 +8,29 @@
     <span>Mesa do Mês</span>
   </a>
 
+  <!-- No celular esta nav é a barra de BAIXO, sob o polegar, e no desktop ela continua
+       no cabeçalho. É a mesma nav nos dois: o crachá saiu de dentro dela para que a
+       fileira inteira possa descer sem levar a identidade junto — quem eu sou fica no
+       alto, o que eu posso fazer aqui fica embaixo. -->
   <nav class="topbar-actions" aria-label="A máquina">
     <button id="roster-button" type="button" class="plate-action" (click)="openRoster()">
-      Integrantes
-      <b>{{ members().length }}</b>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11Z" />
+        <path d="M2.6 19.4c0-3 2.9-4.6 6.4-4.6s6.4 1.6 6.4 4.6" />
+        <path d="M16.2 10.6a2.6 2.6 0 1 0 0-5.2" />
+        <path d="M18 14.6c2.1.4 3.4 1.7 3.4 3.6" />
+      </svg>
+      <span class="plate-text">Integrantes <b>{{ members().length }}</b></span>
     </button>
-    <a class="plate-action" [href]="albumUrl()">O álbum</a>
-    <!-- O som mora na máquina, e não na porta: liga-se e desliga-se no meio de uma noite,
-         diferente do modo cego, que é uma decisão sobre como esta pessoa julga. -->
+    <a class="plate-action" [href]="albumUrl()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4.5 5.5h15v13h-15z" />
+        <path d="M4.5 10.5h15M9.5 10.5v8" />
+      </svg>
+      <span class="plate-text">O álbum</span>
+    </a>
+    <!-- O som mora na máquina: liga-se e desliga-se no meio de uma noite. É a única
+         preferência que sobrou por aparelho — o lacre da nota deixou de ser escolha. -->
     <button
       type="button"
       class="sound-toggle"
@@ -34,25 +49,25 @@
           <path d="m16.4 9.6 4.6 4.8M21 9.6l-4.6 4.8" />
         }
       </svg>
-    </button>
-    <button type="button" class="who-chip" (click)="askIdentityChange()">
-      <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
-            [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
-      <span class="who-name">{{ author() }}</span>
-      <span class="visually-hidden">— trocar de pessoa</span>
+      <span class="tab-label">Som</span>
     </button>
   </nav>
+
+  <button type="button" class="who-chip" (click)="askIdentityChange()">
+    <span class="who-mark" aria-hidden="true" [style.--capsule]="authorColor()"
+          [style.--capsule-ink]="authorInk()">{{ authorInitials() }}</span>
+    <span class="who-name">{{ author() }}</span>
+    <span class="visually-hidden">— trocar de pessoa</span>
+  </button>
 </header>
 
 @if (usage().state !== 'ok') {
   <p class="usage-note" [class.is-stopped]="usage().state === 'stopped'" role="status">
     @if (usage().state === 'stopped') {
-      <strong>Parada de segurança.</strong> O uso deste aparelho bateu no limite que protege
-      a cota gratuita, então a máquina parou de falar com o servidor. Ela volta sozinha em
-      {{ usage().stoppedUntil }}.
+      <strong>Parada de segurança.</strong> Muitos pedidos deste aparelho hoje. A máquina
+      volta em {{ usage().stoppedUntil }}.
     } @else {
-      <strong>Uso alto hoje.</strong> {{ usage().reads }} leituras e {{ usage().writes }}
-      escritas neste aparelho. Perto do limite, a máquina para sozinha para não gerar custo.
+      <strong>Uso alto hoje.</strong> Perto do limite, a máquina para sozinha por um tempo.
     }
   </p>
 }
@@ -64,7 +79,6 @@
     </div>
     <div>
       <h1>Abrindo a<br /><strong>máquina</strong></h1>
-      <p>Buscando o registro deste grupo.</p>
     </div>
   </section>
 } @else if (snapshot(); as snap) {
@@ -89,7 +103,7 @@
         [restRotation]="targetRotation()"
         [busy]="isSpinning()"
         (replay)="replayScene()"
-        caption="Toque no globo para ver a entrega de novo — a cápsula é sempre a mesma."
+        caption="Toque no globo para ver a entrega de novo."
       />
     </div>
 
@@ -110,22 +124,16 @@
           </h1>
           <p class="result-copy">
             {{ last.winnerName }} escolhe o jogo.
-            @if (pool().length === 1) {
-              Resta 1 cápsula no globo antes de todos terem saído.
-            } @else if (pool().length) {
-              Restam {{ pool().length }} no globo antes de todos terem saído.
-            } @else {
-              Todos já saíram: a próxima rodada abre com o globo cheio.
+            @if (!pool().length) {
+              Todos já saíram — a próxima rodada abre com o globo cheio.
             }
           </p>
         } @else if (members().length >= MIN_MEMBERS) {
           <h1 id="synced-title">Pronta para<br /><strong>girar</strong></h1>
-          <p class="result-copy">{{ members().length }} cápsulas no globo e nenhum giro ainda. Gire para tirar a primeira.</p>
+          <p class="result-copy">Gire para tirar a primeira cápsula.</p>
         } @else {
           <h1 id="synced-title">O globo está<br /><strong>quase vazio</strong></h1>
-          <p class="result-copy">
-            Carregue pelo menos {{ MIN_MEMBERS }} cápsulas para a máquina ter o que entregar.
-          </p>
+          <p class="result-copy">Carregue pelo menos {{ MIN_MEMBERS }} cápsulas.</p>
         }
       </div>
 
@@ -178,9 +186,7 @@
           >
             <span class="note-serial">Cápsula sem jogo</span>
             <span class="note-title">Escrever o jogo desta cápsula</span>
-            <span class="note-description">
-              Diga o que o clube jogou. Depois, cada um escreve a resenha dele.
-            </span>
+            <span class="note-description">Diga o que o clube jogou.</span>
           </button>
         }
       }
@@ -209,9 +215,7 @@
              (keydown.escape)="cancelSpin()" (keydown.tab)="trapConfirmFocus($event)">
           <h2 id="confirm-title">Tem certeza que deseja girar a roleta?</h2>
           <p id="confirm-body">
-            Isso irá afetar a roleta de todos os integrantes do grupo permanentemente.
-            O giro fica gravado no registro e não pode ser desfeito, e consome uma das
-            {{ pool().length }} cápsulas que ainda estão no globo nesta rodada.
+            Isso afeta a roleta de todo o grupo e não pode ser desfeito.
           </p>
           <div class="confirm-actions">
             <button class="primary-action" id="confirm-spin" type="button" (click)="confirmSpin()">
@@ -248,10 +252,6 @@
   <section class="chart-section" id="registro" aria-labelledby="log-title">
     <div class="section-heading">
       <h2 id="log-title">O registro</h2>
-      <p>
-        Clique em um registro para escrever uma resenha!
-        <b>No globo agora: {{ pool().length }}.</b>
-      </p>
       <p class="log-freshness">
         <button type="button" class="refresh-button" (click)="refresh()" [disabled]="busy() || loading()">
           {{ loading() ? 'Buscando…' : 'Atualizar' }}
@@ -332,16 +332,12 @@
         <svg viewBox="0 0 28 14" aria-hidden="true"><path d="M1 7h24M19 1l6 6-6 6"></path></svg>
       </p>
     } @else {
-      <p class="roster-empty">Nenhum giro ainda. O registro começa no primeiro.</p>
+      <p class="roster-empty">Nenhum giro ainda.</p>
     }
   </section>
 
   <footer>
     <span>{{ snap.name }}</span>
-    <p>
-      O link é o grupo. Cada giro, cada jogo e cada resenha ficam num registro que ninguém pode
-      reescrever nem apagar.
-    </p>
   </footer>
 } @else {
   <section class="empty-stage">
@@ -350,7 +346,7 @@
     </div>
     <div>
       <h1>Grupo não<br /><strong>encontrado</strong></h1>
-      <p>{{ error() || 'O link pode estar incompleto ou o grupo pode ter sido criado noutro projeto.' }}</p>
+      <p>{{ error() || 'O link pode estar incompleto.' }}</p>
       <a class="primary-action" href=".">Voltar ao início</a>
     </div>
   </section>

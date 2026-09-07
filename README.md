@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 374 unitários e de componente
+npm test -- --watch=false   # 381 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -189,9 +189,9 @@ A resenha de cada um pode receber **nove reações** dos outros — 😯 🔥 �
 Um único controle mostra os emoji mais usados e a contagem; as escolhas se abrem por
 clique, toque, teclado ou hover, sem ocupar uma fileira permanente.
 Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
-atalho para a mais recente. E quem quiser pode ligar o **modo cego**, que lacra a nota do
-clube justamente nos jogos que a pessoa ainda vai julgar: ler `9,2` antes de dar a própria
-nota move a própria nota.
+atalho para a mais recente. E a nota do clube fica **lacrada** justamente nos jogos que a
+pessoa ainda vai julgar — ler `9,2` antes de dar a própria nota move a própria nota. Não é
+opcional; ela pode espiar, e espiar vale só enquanto aquela ficha está aberta.
 
 Editar é gravar outro evento: o replay faz o último valer, e os anteriores continuam no
 registro com quem escreveu cada um. Nenhum dos três altera o vencedor, e **corrigir a mesa
@@ -262,8 +262,8 @@ git push origin main   # o workflow publica o site
 - **As máquinas que você abriu**, para voltar a elas sem procurar o link. A lista não dá
   acesso a nada: quem abre uma máquina é o link.
 - **Uma cópia do log** de cada grupo, para que abrir custe 1 leitura em vez de N.
-- **Duas preferências:** se a máquina faz som, e se o modo cego está ligado. As duas começam
-  desligadas. O som se liga na própria máquina; o modo cego, no crachá.
+- **Uma preferência:** se a máquina faz som. Começa desligada e se liga na própria máquina.
+  O lacre da nota não é preferência — era a única que mudava a conta que o clube lê.
 
 Nada disso sai do aparelho por outro caminho, e o servidor não sabe que essas listas
 existem.

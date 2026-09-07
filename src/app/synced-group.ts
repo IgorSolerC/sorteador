@@ -325,7 +325,7 @@ export class SyncedGroup {
   protected async removeFromBench(member: GroupMember): Promise<void> {
     await this.act(
       () => this.store.removeMember(this.groupId(), member.id, this.author()),
-      `${member.name} saiu do globo, mas continua no histórico.`,
+      `${member.name} saiu do globo.`,
       this.rosterError,
     );
   }
@@ -420,20 +420,18 @@ export class SyncedGroup {
     return spinSummary(spin, this.sealed(spin));
   }
 
-  // --- o modo cego e as resenhas que esta pessoa deve ---
-
-  protected readonly blind = this.preferences.blind;
+  // --- o lacre e as resenhas que esta pessoa deve ---
 
   /** A chave desta pessoa, a mesma que assina as resenhas dela. */
   private readonly myKey = computed(() => participantKey(this.author()));
 
   /**
-   * Se a nota do clube deste jogo fica lacrada para quem está olhando: só no modo cego, e
-   * só nos jogos que ela jogou e ainda não resenhou. Um jogo de antes de ela entrar no
-   * clube nunca lacra — não há nota dela para ancorar.
+   * Se a nota do clube deste jogo fica lacrada para quem está olhando: nos jogos que ela
+   * jogou e ainda não resenhou. Um jogo de antes de ela entrar no clube nunca lacra — não
+   * há nota dela para ancorar. Sempre, e não sob um interruptor: ver `game-sheet.ts`.
    */
   protected sealed(spin: SpinRecord): boolean {
-    return this.blind() && owesReview(spin, this.myKey());
+    return owesReview(spin, this.myKey());
   }
 
   /** Os jogos que esta pessoa jogou e ainda não resenhou, do mais recente para trás. */
@@ -689,12 +687,11 @@ export class SyncedGroup {
 
   private explain(error: unknown): string {
     if (error instanceof UsageBlockedError) {
-      return 'A máquina parou por segurança: o uso do dia bateu no limite que protege a cota gratuita. ' +
-        'Ela volta sozinha na virada do dia.';
+      return 'A máquina parou por segurança: muitos pedidos hoje. Ela volta na virada do dia.';
     }
     const code = (error as { code?: string })?.code;
     if (code === 'permission-denied') {
-      return 'O servidor recusou a operação. Se foi um giro, a espera entre giros ainda não passou.';
+      return 'O servidor recusou a operação. Se foi um giro, espere alguns segundos.';
     }
     return (error as Error)?.message ?? 'Algo deu errado ao falar com o servidor.';
   }

@@ -282,6 +282,27 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São três ocorrências, e as três se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista; a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre; e a bancada da porta, que é a bancada da gaveta no lugar onde a cápsula já está desenhada em 340px, com o mesmo evento por baixo. Uma quarta superfície clara precisa antes provar que é administração — e provar, aqui, quer dizer gravar o mesmo tipo de evento que as outras três.
 
+**A Regra do Texto que Não Explica a Máquina.** A interface diz **o que uma coisa é** e
+**o que vai acontecer**. Ela não diz como o produto guarda o que guarda — log, evento,
+registro que não se reescreve, nota que é recontada em vez de gravada, preferência que fica
+no aparelho, cota gratuita — e não repete o que a própria tela já diz. Um cartão que é um
+botão não precisa de "abra para escrever"; uma célula que se clica não precisa de "clique
+para resenhar"; um campo somente-leitura não precisa explicar de onde o número veio.
+
+Três coisas sobrevivem ao corte, e sempre pelo mesmo motivo — quem lê **decide** algo com
+elas:
+
+- **A consequência de um gesto irreversível.** A confirmação do giro diz que ele afeta o
+  grupo inteiro e não volta atrás. Onde o giro fica gravado não muda a decisão de quem está
+  com o dedo no botão; que ele não volta atrás, muda.
+- **O erro, com o problema e a saída.** "Não deu para pintar a cápsula. Tente de novo."
+- **O que um controle faz, quando não se vê pelo desenho.** A chave do som diz se a máquina
+  fala; ela não precisa argumentar por quê.
+
+O porquê deste produto — o log append-only, o vencedor derivado, a nota nunca gravada —
+continua inteiro, e o lugar dele é `PRODUCT.md`, `HANDOFF.md` e este arquivo. A tela é onde
+o clube joga, não onde ele lê a documentação.
+
 **A Regra do Amarelo de Ação.** O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (`button-secondary`) ou o link de texto.
 
 ## Typography
@@ -324,13 +345,74 @@ A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr)
 
 A página tem duas faixas e um rodapé, e mais nada: o palco e o registro. **A administração não é uma seção — é uma gaveta.** A lista de integrantes ocupava a metade de baixo de toda visita para uma tarefa que se faz uma vez por mês; agora ela abre pelo cabeçalho e some quando acaba.
 
-**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a barra do topo quebra em duas linhas, a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, e o rodapé empilha.
+**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a barra do topo quebra em **exatamente duas linhas** (ver A Regra das Duas Linhas da Barra), a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, o seletor de ordem do álbum troca de forma (ver A Regra da Ordem que Cabe na Mão), e o rodapé empilha.
 
 ### Named Rules
 
 **A Regra do Alvo de 44px.** Todo controle interativo tem no mínimo 44px de altura, e os campos e ações primárias, 48px. Vale igualmente no trilho do registro, nas linhas da gaveta e nos comprimidos de cor e emoji, que têm 44px de altura mesmo quando a coluna é mais estreita. O alvo de uma caixa de seleção é o rótulo que a envolve, e é ele que precisa cumprir a medida.
 
 **A Regra do Decalque de Bancada.** Os decalques com linha-guia na máquina são desktop-only: ocultos abaixo de 980px, porque a linha-guia precisa de espaço lateral para apontar sem cruzar a peça. A placa da máquina no cabeçalho some abaixo de 620px por ser plaqueta de identificação, não conteúdo.
+
+**A Regra das Duas Linhas da Barra.** No celular a barra é a marca em cima e **uma
+fileira só** de controles embaixo. A fileira não quebra por dentro: quebrando, o cabeçalho
+chegou a três linhas e `175px` num aparelho de 390×780 — um quarto da tela para uma barra —
+porque cada controle novo (o som foi o último) empurrava o crachá para uma linha própria.
+Os comprimidos de navegação não encolhem; o **nome** do crachá é o que cede, porque ele é o
+único conteúdo variável ali.
+
+E ele cede pela barra cheia, não pela largura sozinha: abaixo de `460px` **e** com dois
+comprimidos na fileira — a máquina —, sobra o disco da cápsula, que já é a pessoa neste
+produto e já tem 44px. O álbum tem um comprimido só e mostra o nome inteiro na mesma
+largura. Escondido, o nome sai do olho e **não** da árvore de acessibilidade: com
+`display: none` o botão passaria a se anunciar como "trocar de pessoa" sem dizer de quem.
+
+**A Regra das Duas Barras.** No desktop o cabeçalho é uma plaqueta só. No celular ele é
+**duas**: em cima quem eu sou e por onde eu saio; embaixo, fixo no pé da tela, o que eu posso
+fazer aqui. A barra de baixo tem células iguais de 56px, ícone desenhado sobre a palavra em
+mono `tick`, e o estado marcado em amarelo.
+
+O motivo é medido: com tudo no alto, a barra da máquina tinha três linhas e `175px` num
+aparelho de 390×780 — um quarto da tela —, o nome do crachá vinha cortado em `8ch`, e os
+alvos ficavam no canto mais longe do polegar. No pé, as mesmas três coisas ganham `130px` de
+largura cada em 390 e `107px` em 320, e o alto cai para `60px`.
+
+**É a mesma nav nos dois, movida por CSS, e nunca duplicada no DOM.** É por isso que o crachá
+é irmão de `.topbar-actions` e não filho dela: a fileira inteira precisa descer sem levar a
+identidade junto. Duplicar os controles daria id repetido — `#roster-button` é o foco de
+volta da gaveta — e dois caminhos de teclado para a mesma coisa. A página ganha chão
+(`body:has(.topbar-actions:not(:empty))`) para não terminar debaixo da barra, e o aviso
+flutuante sobe acima dela.
+
+Onde há por onde voltar, o rótulo do **voltar** é o que interessa — ele diz para onde — e o
+nome do produto cede a vez: a cápsula da marca continua ali, e continua sendo o link para o
+início. Sem isso, "A MÁQUINA" quebrava em duas linhas e "Mesa do Mês" virava "Mesa do …" na
+mesma barra.
+
+**A Regra da Saída no Alto.** Toda tela em que se **entra** tem por onde sair, e a saída fica
+no alto e à esquerda, antes da marca: um comprimido em mono com a seta e o **destino escrito**
+— `A MÁQUINA`, `INÍCIO`, `VOLTAR`. A prateleira e a máquina não têm: são onde se está, não
+telas em que se entrou.
+
+Voltar **não é uma das respostas da tela**. Na porta, "Continuar como estou" ficava no meio da
+fileira de ações, ao lado de "Passar a vez", e lia como uma terceira resposta a "quem está na
+mesa?". No alto ele é o que é — a mesma seta que a bancada usa para voltar à porta.
+
+**A Regra da Ordem que Cabe na Mão.** As oito ordens da parede são comprimidos de texto no
+desktop e **o seletor do sistema** no celular. Em texto elas ocupavam três fileiras e
+`150px` de altura — `194px` em 320 — antes do primeiro cartão, com oito alvos colados uns
+nos outros; a escolha entre oito coisas mutuamente exclusivas é o que um `<select>` faz
+melhor do que qualquer coisa que se desenhe.
+
+Ele é uma **plaqueta da máquina**, e não um campo de papel: sobre o esmalte um campo branco
+seria uma superfície clara fora de onde se administra. Pílula de `48px` em
+`rgba(200, 220, 255, .06)` com hairline de linha forte, tipografia de display, e a seta
+desenhada em SVG de traço como todo ícone do produto.
+
+As duas formas convivem no DOM e a que não vale está **escondida**, não desmontada — e
+elemento escondido não recebe foco, então o teclado nunca encontra dois caminhos para a
+mesma escolha. O valor que volta de um `<select>` é uma string qualquer: ele é conferido
+contra a lista antes de virar ordem, porque uma ordem inventada deixaria a parede sem régua
+e sem cartão nenhum.
 
 **A Regra da Grade que Fecha.** Uma grade de escolhas se divide em fileiras cheias. Vinte e quatro cores em onze colunas deixam duas sobrando numa terceira fileira, e a sobra lê como engano; doze colunas fecham em duas, oito em três. `auto-fit` é para conteúdo de tamanho livre, não para um conjunto de tamanho conhecido.
 
@@ -347,6 +429,17 @@ O sistema é material, não empilhado: a profundidade vem de gradientes de acrí
 - **Brilho da cápsula escolhida** (`saturate(1.25) brightness(1.14) drop-shadow(0 0 12px …)`): a cunha vencedora acende no aro.
 
 ### Named Rules
+
+**A Regra do Lábio Moldado.** As peças grandes da máquina são plástico moldado, e não
+retângulos pintados: a caixa da roleta (`.body-plate`) e o disco da manivela
+(`.crank-plate`) levam um **lábio duro de 6 unidades em cima** — `drop-shadow(0 -6px 0
+#1e2531)` — que diz que a peça está à frente do que vem atrás dela, mais a sombra ambiente
+que diz que ela é grossa.
+
+O lábio nunca vem sozinho, pela Regra da Parede Moldada: deslocamento sem desfoque, sozinho,
+é adesivo e não moldagem. Ele fica na tinta do esmalte mesmo quando a chapa é repintada com a
+cor da cápsula vencedora — é sombra da carcaça, e não um elemento montado na chapa, então a
+Regra da Repintura Total não o alcança.
 
 **A Regra da Parede Moldada.** O botão tem uma parede lateral de plástico moldado — preenchimento sólido mais escuro em `0 Npx 0`, acompanhado de uma sombra ambiente real e desfocada — e essa parede colapsa sob um `translateY` no `:active`, como plástico que afunda. É moldagem, não a sombra diagonal dura de bloco: nunca use deslocamento em X, e nunca use a parede sem a sombra ambiente que a acompanha.
 
@@ -385,7 +478,10 @@ A barra superior é a plaqueta rebitada no gabinete: fundo de esmalte profundo, 
 
 **O crachá** é quem está mexendo, sempre à vista: um disco de cápsula com as iniciais, na cor tirada do próprio nome, mais o nome truncado em `12ch`. Ele é um botão, e o que ele faz é reabrir a porta para passar a vez. Não é um menu de conta e não tem submenu: o produto não tem contas.
 
-Abaixo de 620px a barra quebra em duas linhas e o nome do crachá encolhe para `8ch`, mas nada some — a navegação é a única saída de cada página.
+**No celular a barra é OUTRA barra** (ver A Regra das Duas Barras). No alto ficam só a
+saída e a identidade — voltar, a marca, o crachá — numa linha de 56px. O que se **faz** na
+tela desce para uma barra fixa no pé, em células iguais de 56px com o ícone sobre a palavra,
+sob o polegar. Nada some: é a mesma nav, movida por CSS.
 
 ### Toast
 Aviso fixo no canto inferior direito sobre esmalte elevado, borda de linha forte, raio `12px`, com botão amarelo de desfazer e fechar em cromo. Entra com `translateY(1rem)` → 0 em `.2s`. É `role="status"` e `aria-live="polite"`.
@@ -407,7 +503,7 @@ Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a 
   Cápsula Que É Você): aí a cúpula recebe a cor que a pessoa mesma escolheu e o emoji
   dela em `56` unidades, e a peça de 340px passa a ser a maior aparição da cápsula em
   todo o produto. Digitar OUTRO nome a devolve ao ensaio na hora.
-- **Duas faces:** quem nunca entrou vê "Quem é **você?**" e um só botão. Quem está trocando vê "Quem está **na mesa?**" e ganha um "Continuar como estou" — só quem já está dentro tem para onde voltar.
+- **Duas faces:** quem nunca entrou vê "Quem é **você?**" e um só botão. Quem está trocando vê "Quem está **na mesa?**" e ganha a saída no alto — só quem já está dentro tem para onde voltar.
 - **A costura é cromo chapado**, e não o degradê do aro da máquina: um `linearGradient` em caixa delimitadora de altura zero não pinta nada, e a linha simplesmente sumia.
 - **As cápsulas do grupo, quando há um grupo** (ver A Regra da Cápsula Oferecida): uma
   fileira de comprimidos de 48px, cada um com a cápsula real da pessoa — a cor que ela
@@ -418,8 +514,9 @@ Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a 
   mesma linha da gaveta — cápsula, o que ela é por extenso em mono, e a seta que anda
   3px no hover — num alvo de 56px com raio `12px`. Só existe para quem o globo
   reconhece, e é a porta da bancada.
-- **As preferências deste aparelho**, atrás de uma hairline, só para quem já entrou uma
-  vez (ver A Regra do Lacre). A primeira visita é uma pergunta só.
+- **A saída no alto**, para quem está trocando de pessoa: a seta com `VOLTAR` acima do
+  título (ver A Regra da Saída no Alto). Não há painel de preferência na porta — o lacre
+  deixou de ser escolha, e o som mora na própria máquina.
 - **Três faces, nunca três camadas:** a pergunta, a bancada da cápsula, e o campo de
   texto que a pergunta abre. A bancada toma o lugar da coluna da direita e o `Esc`
   volta uma face por vez — a porta não recebe um modal por cima de si mesma.
@@ -507,8 +604,8 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
 - **A reação compacta**, no pé de cada resenha: um resumo numa linha e nove escolhas sob
   demanda, sempre com `44px` de alvo (ver A Regra da Reação que se Abre).
-- **O lacre**, no lugar do boletim inteiro quando o modo cego está ligado e esta pessoa
-  ainda deve a resenha daquele jogo (ver A Regra do Lacre).
+- **O lacre**, no lugar do boletim inteiro quando esta pessoa ainda deve a resenha daquele
+  jogo (ver A Regra do Lacre).
 - **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
   antigo subtítulo, e é o oposto dele: não se escreve, se recebe — e descrição.
 - **Face 4, a mesa:** quem jogou, com a saída para quem não resenhou e o convite para quem do
@@ -593,16 +690,22 @@ julgada, e só inverte quando não há espaço. As rules ainda aceitam os doze v
 👍 🎮 e 🏆 foram aposentados na interface sem apagar o log nem quebrar abas antigas. A lista
 continua fechada no servidor — um emoji livre viraria uma segunda caixa de texto.
 
-**A Regra do Lacre.** No **modo cego** — desligado por padrão, ligado na porta —, a nota do
-clube fica lacrada exatamente nos jogos que esta pessoa **jogou e ainda não resenhou**: no
-boletim da ficha, no cartão do álbum e na linha do registro. Ler `9,2` antes de dar a própria
-nota move a própria nota, e o produto inteiro existe para que a conta do clube seja honesta.
+**A Regra do Lacre.** A nota do clube fica lacrada exatamente nos jogos que esta pessoa
+**jogou e ainda não resenhou**: no boletim da ficha, no cartão do álbum e na linha do
+registro. Ler `9,2` antes de dar a própria nota move a própria nota, e o produto inteiro
+existe para que a conta do clube seja honesta.
 
-O lacre não é erro nem alerta: é uma escolha que a pessoa fez. Por isso não usa a tinta de
-erro nem a de alerta — é papel silencioso com o fio tracejado do que ainda não foi escrito, o
-mesmo da cápsula sem jogo. Ele traz as duas saídas: **escrever a minha** e **ver assim
-mesmo**, que vale só enquanto aquela ficha está aberta. E lacra só o que tem nota a ancorar:
-um jogo de antes de a pessoa entrar no clube nunca lacra.
+**Não há interruptor.** Ele era uma chave por aparelho na porta, desligada por padrão, e foi a
+única preferência que mudava a conta que o clube lê — uma conta que depende de um interruptor
+por aparelho não é a mesma conta para todos, e a que valia por padrão era justamente a que
+deixa a média nascer ancorada. Agora lacrar é como o produto funciona, e a porta ficou uma
+pergunta só de novo.
+
+O lacre não é erro nem alerta. Por isso não usa a tinta de erro nem a de alerta — é papel
+silencioso com o fio tracejado do que ainda não foi escrito, o mesmo da cápsula sem jogo. Ele
+traz as duas saídas: **escrever a minha** e **ver assim mesmo**, que vale só enquanto aquela
+ficha está aberta — espiar continua sendo de quem lê. E lacra só o que tem nota a ancorar: um
+jogo de antes de a pessoa entrar no clube nunca lacra.
 
 **A Regra do Denominador de Quem Jogou.** "X resenhas de Y" e a barra de completude são sobre
 quem **jogou**, e não sobre quem escreveu: quem está na mesa e ainda não resenhou entra como
@@ -619,7 +722,7 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
 
 - **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
-- **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca.
+- **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca. No celular a mesma escolha é o seletor do sistema (ver A Regra da Ordem que Cabe na Mão).
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
 - **Cartão:** jogo em Fredoka `1.42rem` e medida em foco em `2.7rem` abrem a leitura, lado a lado. A cápsula, o nome de quem escolheu e a data assinam abaixo, antes do picote. Os critérios ficam em duas colunas de pares rótulo–valor: rótulos em Atkinson `0.82rem`, valores em Martian Mono `0.74rem`. Dificuldade e tempo ocupam linhas inteiras para acomodar palavras e unidades. A completude reúne a contagem de resenhas, a barra e os percentuais em três colunas. A descrição encerra o cartão **inteira, sem corte por linhas**. Nenhum dado exige hover ou expansão. As duas medidas da platina continuam na ficha, conforme A Regra da Platina Perguntada. A grade usa colunas de no mínimo `20rem`, limitadas à largura disponível; o celular mantém uma coluna. O cartão inteiro continua abrindo a ficha, com inclinação fixa por giro (`-1.7°` a `1.8°`). Os estilos específicos vivem em `group-history.scss`, sem alterar a completude da ficha aberta.
 - **Hover:** o cartão **endireita** para `0°` e sobe 4px, com a sombra crescendo — o gesto de descolar uma figurinha da parede. É transição de estado, não movimento autônomo: a Regra do Momento Único continua valendo. Abaixo de 620px a inclinação cai à metade, para que a borda do cartão não beire a goteira.
@@ -645,7 +748,7 @@ rodada, título em até três linhas, medida principal, seis medidas secundária
 completude com porcentagens e descrição. Fredoka usa o nome real `Fredoka Variable` no
 canvas. A composição começa em uma ou duas colunas e cresce com a coleção; a rasterização
 fica limitada a 32 milhões de pixels e 16.384px por dimensão. O resumo é do filtro atual,
-e o modo cego lacra também a imagem.
+e o lacre vale também na imagem.
 
 **A Regra da Medida em Foco.** Ordenar muda tanto a posição quanto o destaque do cartão:
 o critério escolhido ocupa a escala maior, e a nota geral passa ao resumo. Rodada e nota
@@ -718,6 +821,12 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Do** construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.
 - **Do** manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.
 - **Do** acompanhar toda cor de estado com texto — o registro marca "Último", a gaveta nomeia a cor por extenso, e os erros de campo trazem mensagem.
+- **Do** escrever a consequência de um gesto irreversível, e não o mecanismo dele: "não pode
+  ser desfeito" decide algo para quem lê; "fica gravado no registro" não.
+- **Do** dar a toda tela em que se entra uma saída no alto e à esquerda, com o destino
+  escrito por extenso.
+- **Do** dar às peças grandes da máquina o lábio duro em cima mais a sombra ambiente: é o que
+  faz plástico moldado em vez de retângulo pintado.
 - **Do** honrar `prefers-reduced-motion` em CSS e em JS ao mesmo tempo.
 
 ### Don't:
@@ -738,3 +847,17 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Don't** deixar uma correção de elenco alcançar o globo de um giro: o vencedor sai dele, e
   ele é imutável.
 - **Don't** falar em sorte, azar ou aleatoriedade na interface: o registro e a coleção completa são a prova.
+- **Don't** explicar a máquina na tela: nem como o log guarda, nem que a nota é recontada,
+  nem que a preferência fica no aparelho, nem o que o próprio desenho já diz. Só a
+  consequência de um gesto irreversível, o erro com a saída, e o que um controle faz.
+- **Don't** deixar a fileira de controles da barra quebrar por dentro no celular: são duas
+  linhas, e o nome do crachá é o que cede.
+- **Don't** oferecer oito alvos de texto colados onde o sistema tem um seletor: uma escolha
+  entre muitas coisas exclusivas, num aparelho pequeno, é do picker nativo.
+- **Don't** empilhar os controles da tela no canto superior direito no celular: no pé eles
+  ficam sob o polegar, e o alto fica com a identidade e a saída.
+- **Don't** duplicar uma nav no DOM para mudá-la de lugar entre desktop e celular: id
+  repetido e dois caminhos de teclado para a mesma coisa. Move-se por CSS.
+- **Don't** pôr o voltar no meio das ações da tela: ele é a saída, não uma das respostas.
+- **Don't** usar o lábio moldado sem a sombra ambiente que o acompanha — sozinho ele é
+  adesivo, não plástico.

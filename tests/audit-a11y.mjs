@@ -131,13 +131,13 @@ const paginas = [
   ['seletor de reações', 'http://localhost:4200/?emu=1#/g/demo', { clique: '.cell-open|.reaction-trigger' }],
   ['ficha: minha resenha', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .secondary-action' }],
-  // A resenha com a platina marcada é uma tela por si: ela abre duas fileiras que não
-  // existem nas outras, e é o único ponto do formulário com a tinta fria da platina.
-  // O lacre do modo cego é uma tela por si: papel silencioso, fio tracejado e duas ações.
+  // O lacre é uma tela por si: papel silencioso, fio tracejado e duas ações. Ele não tem
+  // interruptor — basta ser alguém que jogou e não resenhou, e Cecília é essa pessoa no
+  // grupo semeado. A resenha com a platina marcada também é uma tela por si: ela abre duas
+  // fileiras que não existem nas outras, e é o único ponto do formulário com a tinta fria.
   ['ficha lacrada', 'http://localhost:4200/?emu=1#/g/demo',
-    { clique: '.chart-cell:nth-child(4) .cell-open', cego: true, autor: 'Cecília' }],
-  ['álbum lacrado', 'http://localhost:4200/?emu=1#/g/demo/album',
-    { cego: true, autor: 'Cecília' }],
+    { clique: '.chart-cell:nth-child(4) .cell-open', autor: 'Cecília' }],
+  ['álbum lacrado', 'http://localhost:4200/?emu=1#/g/demo/album', { autor: 'Cecília' }],
   ['ficha: a platina', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .secondary-action|.status-choice.is-platinado' }],
   ['ficha: o jogo', 'http://localhost:4200/?emu=1#/g/demo',
@@ -160,12 +160,16 @@ for (const [nome, url, opcoes = {}] of paginas) {
     await ev(opcoes.anonimo
       ? `localStorage.removeItem('mesa-do-mes:autor:v1')`
       : `localStorage.setItem('mesa-do-mes:autor:v1', ${JSON.stringify(opcoes.autor ?? 'Igor Soler')})`);
-    // O modo cego troca o boletim inteiro por um lacre; sem ligá-lo, essa tela não existe.
-    await ev(opcoes.cego
-      ? `localStorage.setItem('mesa-do-mes:cego:v1', '1')`
-      : `localStorage.removeItem('mesa-do-mes:cego:v1')`);
     await send('Page.navigate', { url });
-    await sleep(url.includes('/g/') ? 11000 : 5000);
+    // Espera pela PÁGINA, e não por um número de segundos. Toda tela deste produto tem um
+    // h1; enquanto não há nenhum, o que está na tela não é a tela — e medir aí acusava
+    // "h1 na página: 0" na máquina em 390px de vez em quando, porque a coluna do resultado
+    // ainda não havia desenhado quando os 11s acabavam.
+    for (let i = 0; i < 60; i += 1) {
+      if (await ev(`document.querySelectorAll('h1').length >= 1`)) break;
+      await sleep(500);
+    }
+    await sleep(url.includes('/g/') ? 2500 : 900);
     for (const seletor of (opcoes.clique ?? '').split('|').filter(Boolean)) {
       await ev(`(document.querySelector(${JSON.stringify(seletor)}) ?? {}).click?.()`);
       await sleep(900);

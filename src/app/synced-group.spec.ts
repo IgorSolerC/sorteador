@@ -219,6 +219,28 @@ async function render(store: FakeStore, guard = memoryGuard()) {
 describe('modo sincronizado', () => {
   afterEach(() => TestBed.resetTestingModule());
 
+  it('o crachá é irmão da nav, e não filho dela', async () => {
+    // É disto que a barra do celular depende: a nav inteira desce para o pé da tela por
+    // CSS, e a identidade fica no alto. Com o crachá dentro dela, ele descia junto — e a
+    // alternativa seria duplicar os três controles no DOM, com id repetido e dois
+    // caminhos de teclado para a mesma coisa.
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    const raiz = fixture.nativeElement as HTMLElement;
+    const nav = raiz.querySelector('.topbar-actions')!;
+
+    expect(nav.querySelector('.who-chip')).toBeNull();
+    expect(raiz.querySelector('.topbar > .who-chip')).not.toBeNull();
+    expect([...nav.children].map((e) => e.className.split(' ')[0]))
+      .toEqual(['plate-action', 'plate-action', 'sound-toggle']);
+    fixture.destroy();
+  });
+
+  it('a máquina não tem voltar: ela é a tela em que se está', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno']));
+    expect((fixture.nativeElement as HTMLElement).querySelector('.back-link')).toBeNull();
+    fixture.destroy();
+  });
+
   it('um aviso novo não herda o relógio do anterior', async () => {
     // Corrigir duas cadeiras da mesa seguidas mostra dois avisos em poucos segundos. Com um
     // relógio por aviso em vez de um relógio por vez, o primeiro apagava o segundo no meio.
@@ -491,7 +513,10 @@ describe('modo sincronizado', () => {
 
     const aviso = (fixture.nativeElement as HTMLElement).querySelector('[role="alertdialog"]');
     expect(aviso?.textContent).toContain('Tem certeza');
-    expect(aviso?.textContent).toContain('permanentemente');
+    // O aviso diz a CONSEQUÊNCIA, e não como o giro é guardado: afeta o grupo inteiro e
+    // não volta atrás. Onde ele fica gravado não muda a decisão de quem está com o dedo
+    // no botão.
+    expect(aviso?.textContent).toContain('não pode ser desfeito');
     expect(store.calls).not.toContain('spin');
     fixture.destroy();
   });

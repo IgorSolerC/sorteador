@@ -38,7 +38,16 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 * { scrollbar-width: thin; scrollbar-color: var(--chrome-dim) var(--enamel-deep); }
 
 /* ---- Machine plate: the header is the badge riveted to the cabinet ---- */
-.topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 5vw; background: var(--enamel-deep); border-bottom: 1px solid var(--line); }
+.topbar { min-height: 64px; display: flex; align-items: center; gap: 1rem; padding: 0 5vw; background: var(--enamel-deep); border-bottom: 1px solid var(--line); }
+/* A marca empurra o resto para a direita. Antes era `space-between` com o crachá dentro da
+   nav; agora que ele é irmão dela, quem separa os grupos é a marca. */
+.topbar > .brand { margin-right: auto; }
+/* A saída de uma tela em que se entra: no alto e à esquerda, antes da marca, onde a mão
+   procura. Ela não é uma ação da página — é por onde se sai dela. */
+.back-link { min-height: 44px; display: inline-flex; align-items: center; gap: .3rem; margin-left: -.4rem; padding: 0 .5rem 0 .3rem; background: transparent; border: 0; border-radius: 999px; color: var(--chrome); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: color .16s ease, background .16s ease; }
+.back-link { white-space: nowrap; }
+.back-link svg { width: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.back-link:hover { background: rgba(200, 220, 255, .08); color: var(--white); }
 .brand { min-height: 44px; display: inline-flex; align-items: center; gap: .62rem; color: var(--white); font-family: var(--display); font-size: 1.32rem; font-weight: 600; letter-spacing: -.02em; text-decoration: none; }
 .brand svg { width: 30px; height: 30px; }
 .brand-dome { fill: var(--yellow); }
@@ -62,7 +71,11 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 // contra uma caixa inline e encolhe. `contents` devolve SVG e legenda ao grid da máquina.
 app-machine { display: contents; }
 .machine-front { width: min(100%, 452px); height: auto; }
-.body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .6s ease, stroke .6s ease; }
+/* A caixa da roleta é plástico moldado, e não um retângulo pintado: um lábio duro de 6
+   unidades em cima diz que a chapa está À FRENTE do poço do globo, e a sombra ambiente
+   embaixo diz que ela é grossa. Pela Regra da Parede Moldada, o lábio nunca vem sozinho —
+   deslocamento sem desfoque é adesivo, não moldagem. */
+.body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; filter: drop-shadow(0 -6px 0 #1e2531) drop-shadow(0 12px 20px rgba(4, 10, 22, .45)); transition: fill .6s ease, stroke .6s ease; }
 .is-live .body-plate { fill: var(--live); stroke: color-mix(in srgb, var(--live-ink) 34%, transparent); }
 .body-seam { fill: rgba(200, 220, 255, .2); }
 .is-live .body-seam { fill: color-mix(in srgb, var(--live-ink) 30%, transparent); }
@@ -93,7 +106,10 @@ app-machine { display: contents; }
 .hub-pin { fill: var(--live); transition: fill .5s ease; }
 .chute-mouth { fill: var(--enamel-deep); }
 .chute-lip { fill: none; stroke: var(--live); stroke-width: 3; stroke-linecap: round; transition: stroke .5s ease; }
-.crank-plate { filter: drop-shadow(0 6px 12px rgba(4, 10, 22, .5)); }
+/* O disco da manivela é uma peça cromada assentada num rebaixo: o lábio escuro em cima é
+   a borda do rebaixo caindo sobre ele, e a sombra difusa embaixo é a peça saindo da chapa.
+   As duas juntas são o que faz um botão de máquina parecer que gira. */
+.crank-plate { filter: drop-shadow(0 -6px 0 #1e2531) drop-shadow(0 6px 12px rgba(4, 10, 22, .5)); }
 .crank-arm { transform-box: view-box; transform-origin: 106px 452px; }
 .crank-bar { fill: none; stroke: var(--enamel-deep); stroke-width: 9; stroke-linecap: round; }
 .crank-knob { fill: var(--live); stroke: var(--enamel-deep); stroke-width: 2.5; transition: fill .5s ease; }
@@ -689,6 +705,16 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .sort-options button { min-height: 44px; padding: 0 .55rem; background: transparent; border: 0; color: var(--sky); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: color .16s ease; }
 .sort-options button:hover { color: var(--white); }
 .sort-options button.is-on { color: var(--white); text-decoration: underline; text-underline-offset: .38em; text-decoration-thickness: 2px; }
+/* A mesma escolha, no picker do sistema. Ela vive sobre o esmalte, então NÃO usa o campo
+   branco de papel: seria uma superfície clara fora de onde se administra. É uma plaqueta
+   da máquina, como os comprimidos de navegação — só que com a seta que diz que abre. */
+.sort-select { position: relative; display: none; min-width: 0; }
+.sort-select select { width: 100%; min-height: 48px; padding: 0 2.6rem 0 .9rem; appearance: none; background: rgba(200, 220, 255, .06); color: var(--white); border: 1px solid var(--line-strong); border-radius: 999px; font-family: var(--display); font-size: 1rem; font-weight: 600; letter-spacing: -.02em; }
+.sort-select select:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+/* A lista aberta é desenhada pelo sistema, e no Android ela herda a cor do texto do
+   controle: sem isto, tinta branca sobre o fundo branco do menu. */
+.sort-select option { background: var(--enamel-deep); color: var(--white); }
+.sort-select svg { position: absolute; top: 50%; right: 1rem; width: 18px; fill: none; stroke: var(--chrome-dim); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transform: translateY(-50%); }
 .round-rule { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: clamp(2.4rem, 5vw, 3.6rem) 0 1.5rem; padding-top: .7rem; border-top: 2px solid var(--line-strong); color: var(--white); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .round-rule:first-child { margin-top: 0; }
 .round-rule b { flex: none; color: var(--sky); font-variant-numeric: tabular-nums; }
@@ -847,6 +873,10 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 /* ---- A plaqueta virou barra de navegação ---- */
 .topbar-actions { display: flex; align-items: center; gap: .55rem; }
 .plate-action { min-height: 44px; display: inline-flex; align-items: center; gap: .5rem; padding: .34rem .8rem; background: rgba(200, 220, 255, .06); color: var(--chrome); border: 1px solid var(--line); border-radius: 999px; font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; text-decoration: none; transition: background .16s ease, border-color .16s ease; }
+.plate-action > svg { width: 17px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.plate-text { display: inline-flex; align-items: center; gap: .4rem; min-width: 0; }
+/* A palavra do som só aparece na barra de baixo, onde as três células têm de ler igual. */
+.tab-label { display: none; }
 .plate-action:hover { background: rgba(200, 220, 255, .14); border-color: var(--line-strong); }
 .plate-action b { color: var(--white); font-variant-numeric: tabular-nums; }
 /* O som é um ícone e não um comprimido com palavra: ele é o único controle do cabeçalho
@@ -981,12 +1011,53 @@ app-confetti { display: contents; }
      o mesmo intervalo nos dois lugares, o rótulo de uma cola na régua da anterior. */
   .criterion-rows { gap: .9rem; }
   .status-choices { grid-template-columns: 1fr; }
-  .topbar { flex-wrap: wrap; padding-block: .6rem; }
-  /* Em 390px os comprimidos, o som e o crachá passam 14px da tela e criam rolagem
-     horizontal na página inteira. A fileira quebra em vez de empurrar: o cabeçalho ganha
-     uma linha, que é o que ele já faz com a marca. */
-  .topbar-actions { flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
-  .who-name { max-width: 8ch; }
+  /* A BARRA DO CELULAR É OUTRA BARRA. No alto fica só quem eu sou e por onde eu saio —
+     voltar, marca, crachá, numa linha de 56px. O que se FAZ nesta tela desce para uma
+     barra fixa embaixo, sob o polegar, com células iguais de 56px.
+     Antes tudo isso era uma fileira só de comprimidos apertados no canto superior
+     direito: três linhas e 175px de cabeçalho num aparelho de 390×780, o nome do crachá
+     cortado em 8ch, e os alvos mais longe da mão do que qualquer outro controle do
+     produto. A nav é a MESMA nos dois — ela desce por CSS, sem DOM duplicado, então não
+     há id repetido nem dois caminhos para o teclado. */
+  .topbar { flex-wrap: nowrap; gap: .6rem; padding-block: .4rem; }
+  .topbar > .brand { min-width: 0; font-size: 1.1rem; }
+  .topbar > .brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar > .brand svg { width: 26px; height: 26px; }
+  .who-chip { min-width: 0; padding-right: .6rem; }
+  /* Sem teto em `ch`: o nome ocupa o que sobra e só vira reticências quando de fato não
+     cabe. Um teto fixo cortava "Ana Paula Rodrigues" numa linha que tinha espaço. */
+  .who-name { max-width: none; }
+  /* Onde a barra tem as TRÊS coisas — voltar, marca e crachá —, o nome do produto cede a
+     vez: o rótulo do voltar diz para onde se vai e o crachá diz quem está mexendo, e a
+     cápsula da marca continua ali como link para o início. Sem isto, "A MÁQUINA" quebrava
+     em duas linhas e "Mesa do Mês" virava "Mesa do …" na mesma barra.
+     A oficina tem voltar e nenhum crachá, e nela o nome cabe inteiro. */
+  .topbar:has(.back-link):has(.who-chip) > .brand span { display: none; }
+
+  .topbar-actions:not(:empty) {
+    position: fixed; z-index: 20; bottom: 0; left: 0; right: 0;
+    display: flex; gap: 0; padding: 0 0 env(safe-area-inset-bottom);
+    background: var(--enamel-deep); border-top: 1px solid var(--line-strong);
+    box-shadow: 0 -10px 24px rgba(4, 10, 22, .4);
+  }
+  /* Células iguais: a fileira é a largura da tela dividida pelo que há para fazer. */
+  .topbar-actions > * { flex: 1 1 0; min-width: 0; }
+  .plate-action, .sound-toggle {
+    height: 56px; min-height: 56px; width: auto; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: .18rem; padding: .3rem .2rem;
+    background: transparent; border: 0; border-radius: 0;
+    font-family: var(--mono); font-size: .55rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--sky);
+  }
+  .plate-action.is-on, .sound-toggle.is-on { color: var(--yellow); }
+  .plate-action > svg, .sound-toggle svg { width: 21px; }
+  .plate-action:hover, .sound-toggle:hover { background: rgba(200, 220, 255, .08); }
+  .plate-action b { font-size: .62rem; }
+  .tab-label { display: block; }
+  /* A barra fica sobre a página, então o fim dela precisa de chão para não ficar
+     debaixo dela — e o aviso flutuante sobe para não ser tapado. */
+  body:has(.topbar-actions:not(:empty)) { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 1rem); }
+  .toast { bottom: calc(56px + env(safe-area-inset-bottom) + .8rem); }
   .gate, .home-stage { padding-inline: 1.1rem; }
   .gate-plate { left: 1.1rem; }
   .gate-field input { width: 100%; }
@@ -1025,6 +1096,22 @@ app-confetti { display: contents; }
 
 @media (max-width: 620px) {
   .roster-close { top: .5rem; right: .5rem; }
+  /* Oito ordens em texto ocupavam três fileiras e 150px antes do primeiro cartão. */
+  .sort-options { display: none; }
+  .sort-select { display: block; flex: 1 1 14rem; }
+  .album-sort { align-items: center; gap: .5rem .9rem; }
+}
+
+/* Numa tela de 320px o nome não cabe ao lado do voltar, e "Ana P…" não diz mais do que a
+   cápsula colorida com as iniciais dela já diz — então sobra o disco, que continua sendo um
+   alvo de 44px. Vale só onde há voltar: a máquina tem a barra do alto quase vazia.
+   E o nome não é REMOVIDO, é escondido do olho: com `display: none` ele sairia também do
+   nome acessível, e o botão se anunciaria só como "trocar de pessoa", sem dizer de quem. */
+@media (max-width: 380px) {
+  .topbar:has(.back-link) .who-name {
+    position: absolute; width: 1px; height: 1px; max-width: none; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
 }
 
 /* A caixa de seleção da oficina: 20px é o padrão do navegador e some ao lado do texto. */

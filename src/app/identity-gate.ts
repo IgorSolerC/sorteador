@@ -14,7 +14,6 @@ import { FormsModule } from '@angular/forms';
 
 import { Identity, MAX_AUTHOR } from './identity';
 import { MAX_EMOJI, emojiText } from './group-log';
-import { Preferences } from './preferences';
 import {
   CAPSULE_COLORS,
   CAPSULE_COLOR_COUNT,
@@ -137,7 +136,6 @@ export class IdentityGate {
   readonly cancelled = output<void>();
 
   private readonly identity = inject(Identity);
-  private readonly preferences = inject(Preferences);
   private readonly lookup = inject(ROSTER_LOOKUP);
   private readonly paint = inject(CAPSULE_PAINT);
   private readonly document = inject(DOCUMENT);
@@ -154,8 +152,6 @@ export class IdentityGate {
   protected readonly looking = signal(false);
   /** Quem já digitou um nome fora da lista continua vendo o campo aberto. */
   protected readonly typing = signal(false);
-
-  protected readonly blind = this.preferences.blind;
 
   /** A chave de quem está entrando, para marcar a própria cápsula na lista. */
   protected readonly currentKey = computed(() => participantKey(this.identity.name()));
@@ -206,10 +202,6 @@ export class IdentityGate {
   protected openField(): void {
     this.typing.set(true);
     window.setTimeout(() => document.getElementById('gate-name')?.focus(), 0);
-  }
-
-  protected toggleBlind(): void {
-    this.preferences.setBlind(!this.blind());
   }
 
   protected readonly clean = computed(() => normalizeName(this.draft()));
@@ -350,7 +342,7 @@ export class IdentityGate {
       this.painting.set(false);
       window.setTimeout(() => this.document.getElementById('gate-paint')?.focus(), 0);
     } catch {
-      this.paintError.set('Não deu para pintar a cápsula agora. Tente de novo — a cor que você escolheu continua aqui.');
+      this.paintError.set('Não deu para pintar a cápsula. Tente de novo.');
     } finally {
       this.saving.set(false);
     }

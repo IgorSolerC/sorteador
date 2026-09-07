@@ -296,11 +296,32 @@ describe('as quatro tintas da nota no álbum', () => {
   });
 
   it('a cápsula sem jogo escrito não repete que também não tem nota', async () => {
+    // O cartão em branco diz a ausência UMA vez, e não duas: "sem jogo escrito" já é a
+    // notícia. Que ele abre para escrever é o cartão inteiro ser um botão, não uma frase.
     const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
     const cartao = el(fixture).querySelector('.album-card')!;
 
     expect(cartao.querySelector('.album-score')).toBeNull();
-    expect(cartao.textContent).toContain('Abra para escrever o jogo');
+    expect(cartao.textContent).toContain('Sem jogo escrito');
+    expect(cartao.textContent).not.toContain('Abra para escrever');
+    fixture.destroy();
+  });
+});
+
+describe('a saída do álbum', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('a volta para a máquina é um voltar no alto, e não um comprimido no meio das ações', async () => {
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
+    const voltar = el(fixture).querySelector('.back-link') as HTMLAnchorElement;
+
+    expect(voltar).not.toBeNull();
+    expect(voltar.textContent?.trim()).toBe('A máquina');
+    expect(voltar.getAttribute('href')).toContain('#/g/');
+    expect(voltar.getAttribute('href')).not.toContain('/album');
+    // A barra do álbum não tem mais nav: sobra a saída, a marca e o crachá.
+    expect(el(fixture).querySelector('.topbar-actions')).toBeNull();
+    expect(el(fixture).querySelector('.topbar .plate-action')).toBeNull();
     fixture.destroy();
   });
 });
@@ -327,6 +348,50 @@ describe('a ordem da parede', () => {
     fixture.detectChanges();
     expect(texts(fixture, '.album-score b')).toEqual(['—']);
     expect(texts(fixture, '.album-criteria').join()).toContain('Nota do clube 9,0');
+    fixture.destroy();
+  });
+
+  it('no celular as mesmas oito ordens são um seletor, e só um dos dois pega foco', async () => {
+    // Oito comprimidos de texto ocupavam três fileiras e 150px de altura antes do primeiro
+    // cartão. As duas formas convivem no DOM; a que não vale fica escondida, e elemento
+    // escondido não recebe foco — senão o teclado teria dois caminhos para a mesma escolha.
+    const fixture = await render(wall());
+    const seletor = el(fixture).querySelector('.sort-select select') as HTMLSelectElement;
+
+    expect([...seletor.options].map((o) => o.textContent?.trim()))
+      .toEqual(['Rodada', 'Nota do clube', 'Diversão', 'História', 'Qualidade',
+        'Jogabilidade', 'Dificuldade', 'Tempo de jogo']);
+    expect(seletor.value).toBe('rodada');
+    expect(el(fixture).querySelectorAll('.sort-options button').length).toBe(8);
+    fixture.destroy();
+  });
+
+  it('escolher no seletor reordena a parede como o comprimido reordena', async () => {
+    const fixture = await render(wall());
+    const seletor = el(fixture).querySelector('.sort-select select') as HTMLSelectElement;
+
+    seletor.value = 'nota';
+    seletor.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(titulos(fixture)).toEqual(['Segundo', 'Terceiro', 'Primeiro']);
+    expect(el(fixture).querySelector('.round-rule span')?.textContent?.trim())
+      .toBe('Por nota do clube');
+    fixture.destroy();
+  });
+
+  it('um valor que não é ordem nenhuma não desmancha a parede', async () => {
+    // O `value` de um `<select>` é uma string qualquer, e uma ordem inventada deixaria a
+    // parede sem régua e sem cartão — por isso ela é conferida contra a lista.
+    const fixture = await render(wall());
+    const seletor = el(fixture).querySelector('.sort-select select') as HTMLSelectElement;
+
+    seletor.value = 'inventada';
+    seletor.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelectorAll('.album-card').length).toBe(3);
+    expect(el(fixture).querySelector('.round-rule')).not.toBeNull();
     fixture.destroy();
   });
 

@@ -44,6 +44,7 @@ O que continua sendo contrato:
 ## Capabilities and Constraints
 
 - Pedir o nome de quem está usando antes de abrir qualquer rota, e trocá-lo a um clique.
+- Sair de qualquer tela em que se entrou por um voltar no alto, com o destino escrito.
 - Guardar, só no aparelho, as máquinas que ele já abriu, para voltar a elas sem procurar o link.
 - Montar um grupo novo, já entrando quem montou como a primeira cápsula.
 - Adicionar e remover participantes numa gaveta, sem que a administração ocupe a página.
@@ -76,8 +77,10 @@ O que continua sendo contrato:
   escolhas só aparecem quando alguém quer reagir. A lista é fechada no servidor.
 - **Avisar o que esta pessoa deve**: quantos jogos ela jogou (está na mesa) e ainda não
   resenhou, com o atalho para escrever o mais recente.
-- **Modo cego**, opcional e por aparelho: a nota do clube fica lacrada nos jogos que esta
-  pessoa jogou e ainda não resenhou, para que a nota dela não nasça ancorada na do clube.
+- **A nota do clube fica lacrada** nos jogos que esta pessoa jogou e ainda não resenhou,
+  para que a nota dela não nasça ancorada na do clube. Não é opcional: era a única escolha
+  por aparelho que mudava a conta que o clube lê. Ela pode espiar, e espiar vale só enquanto
+  aquela ficha está aberta.
 - **Som da máquina**, opcional e por aparelho, sintetizado: só toca quando houve um gesto.
 - **Salvar o álbum como imagem**, com o que está na tela. **O link do grupo não vai nela**:
   ele é a credencial, e uma imagem compartilhada é pública para sempre.
@@ -117,6 +120,15 @@ Não há marca, logotipo, imagens, depoimentos ou dados reais fornecidos. A inte
   número que alguém escreve à mão.
 - Quem descreve o jogo não decide nada: jogo, resenha e mesa descrevem um giro e nunca
   entram nele.
+
+## Voice
+
+A interface diz o que uma coisa é e o que vai acontecer. Ela não explica como o produto
+guarda o que guarda, e não repete o que a tela já mostra: um cartão que é um botão não pede
+"abra para escrever". O que sempre fica: a consequência de um gesto que não volta atrás, o
+erro com a saída, e o que um controle faz quando não se vê pelo desenho. As razões do
+produto — o log que ninguém reescreve, o vencedor derivado, a nota recontada — moram nesta
+documentação, e não na tela.
 
 ## Accessibility & Inclusion
 

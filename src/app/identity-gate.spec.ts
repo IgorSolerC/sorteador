@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing';
 import { Identity } from './identity';
 import { CAPSULE_PAINT, CapsulePaint, GateCapsule, IdentityGate, ROSTER_LOOKUP } from './identity-gate';
 import { capsuleColor } from './palette';
-import { Preferences } from './preferences';
 
 /**
  * A porta é a única tela que todo mundo vê, e a única que não pode ser pulada. O que se
@@ -146,7 +145,7 @@ describe('a porta', () => {
 
     let desistiu = 0;
     fixture.componentInstance.cancelled.subscribe(() => (desistiu += 1));
-    (el(fixture).querySelector('.gate-actions .text-link') as HTMLButtonElement).click();
+    (el(fixture).querySelector('.gate-back') as HTMLButtonElement).click();
 
     expect(desistiu).toBe(1);
     expect(TestBed.inject(Identity).name()).toBe('Igor Soler');
@@ -235,16 +234,26 @@ describe('a porta oferece as cápsulas que o grupo já tem', () => {
     fixture.destroy();
   });
 
-  it('quem já entrou uma vez encontra o modo cego ao trocar de pessoa', async () => {
+  it('a porta não tem mais painel de preferência nenhuma', async () => {
+    // O lacre da nota deixou de ser um interruptor por aparelho, e o som mora na máquina.
     const fixture = await render({ changing: true });
-    const chave = el(fixture).querySelector('.gate-switch') as HTMLButtonElement;
-    expect(chave.getAttribute('aria-pressed')).toBe('false');
+    expect(el(fixture).querySelector('.gate-switch')).toBeNull();
+    expect(el(fixture).querySelector('.gate-prefs')).toBeNull();
+    fixture.destroy();
+  });
 
-    chave.click();
+  it('quem está trocando de pessoa volta por um botão de voltar, e não por uma terceira resposta', async () => {
+    const fixture = await render({ changing: true });
+    TestBed.inject(Identity).remember('Igor Soler');
     fixture.detectChanges();
+    let desistiu = 0;
+    fixture.componentInstance.cancelled.subscribe(() => (desistiu += 1));
 
-    expect(TestBed.inject(Preferences).blind()).toBe(true);
-    expect(chave.getAttribute('aria-pressed')).toBe('true');
+    expect(el(fixture).textContent).not.toContain('Continuar como estou');
+    (el(fixture).querySelector('.gate-back') as HTMLButtonElement).click();
+
+    expect(desistiu).toBe(1);
+    expect(TestBed.inject(Identity).name()).toBe('Igor Soler');
     fixture.destroy();
   });
 });

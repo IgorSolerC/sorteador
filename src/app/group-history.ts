@@ -29,7 +29,6 @@ import { GroupSnapshot, UsageBlockedError } from './group-store';
 import { GROUP_STORE } from './firebase-app';
 import { Identity } from './identity';
 import { participantKey } from './naming';
-import { Preferences } from './preferences';
 import { renderAlbumPoster } from './album-poster';
 import { capsuleColor, capsuleInk } from './palette';
 import { rememberGroup } from './recent-groups';
@@ -97,7 +96,6 @@ export class GroupHistory {
   private readonly document = inject(DOCUMENT);
   private readonly store = inject(GROUP_STORE);
   private readonly identity = inject(Identity);
-  private readonly preferences = inject(Preferences);
 
   protected readonly author = this.identity.name;
   protected readonly authorInitials = this.identity.initials;
@@ -294,6 +292,17 @@ export class GroupHistory {
     this.sort.set(key);
   }
 
+  /**
+   * A mesma escolha vinda do seletor do celular. O valor de um `<select>` é uma string
+   * qualquer, então ele é conferido contra a lista antes de virar ordem: um `value`
+   * inventado no console deixaria a parede sem régua e sem cartão nenhum.
+   */
+  protected orderByValue(event: Event): void {
+    const value = (event.target as HTMLSelectElement | null)?.value ?? '';
+    const option = ALBUM_SORTS.find((sort) => sort.key === value);
+    if (option) this.sort.set(option.key);
+  }
+
   protected metricsOf(spin: SpinRecord) {
     return albumMetrics(spin, this.sort());
   }
@@ -350,15 +359,16 @@ export class GroupHistory {
     return completionShare(spinScores(spin));
   }
 
-  // --- o modo cego e o que esta pessoa deve ---
-
-  protected readonly blind = this.preferences.blind;
+  // --- o lacre e o que esta pessoa deve ---
 
   private readonly myKey = computed(() => participantKey(this.identity.name()));
 
-  /** Um cartão fica lacrado quando esta pessoa jogou aquele jogo e ainda não resenhou. */
+  /**
+   * Um cartão fica lacrado quando esta pessoa jogou aquele jogo e ainda não resenhou.
+   * Sempre, e não sob um interruptor: ver `sealed` em `game-sheet.ts`.
+   */
   protected sealedOf(spin: SpinRecord): boolean {
-    return this.blind() && owesReview(spin, this.myKey());
+    return owesReview(spin, this.myKey());
   }
 
   protected readonly pending = computed(() => {
@@ -406,7 +416,7 @@ export class GroupHistory {
       link.click();
       // Sem revogar, cada salvamento deixa a imagem inteira presa na memória da aba.
       window.setTimeout(() => URL.revokeObjectURL(url), 2000);
-      this.showNotice('O álbum foi salvo como imagem. O link do grupo não vai nela.');
+      this.showNotice('O álbum foi salvo como imagem.');
     } catch {
       this.showNotice('Não deu para desenhar a imagem do álbum neste navegador.');
     } finally {
@@ -512,8 +522,7 @@ export class GroupHistory {
 
 function explain(error: unknown): string {
   if (error instanceof UsageBlockedError) {
-    return 'O álbum parou por segurança: o uso do dia bateu no limite que protege a cota ' +
-      'gratuita. Ele volta sozinho na virada do dia.';
+    return 'O álbum parou por segurança: muitos pedidos hoje. Ele volta na virada do dia.';
   }
   if ((error as { code?: string })?.code === 'permission-denied') {
     return 'O servidor recusou a operação.';

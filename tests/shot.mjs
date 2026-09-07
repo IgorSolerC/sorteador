@@ -83,11 +83,9 @@ if (process.env['SHOT_AUTOR']) {
   await send('Runtime.evaluate', {
     expression: `localStorage.setItem('mesa-do-mes:autor:v1', ${JSON.stringify(process.env['SHOT_AUTOR'])})`,
   });
-  // As preferências deste aparelho — modo cego e som — mudam o que a tela mostra, então
-  // uma captura precisa conseguir ligá-las antes de a página existir.
-  if (process.env['SHOT_CEGO']) {
-    await send('Runtime.evaluate', { expression: `localStorage.setItem('mesa-do-mes:cego:v1', '1')` });
-  }
+  // O som muda o que a tela mostra, então uma captura precisa conseguir ligá-lo antes de a
+  // página existir. O lacre da nota não tem interruptor: quem quer capturá-lo usa o crachá
+  // de alguém que jogou e não resenhou.
   if (process.env['SHOT_SOM']) {
     await send('Runtime.evaluate', { expression: `localStorage.setItem('mesa-do-mes:som:v1', '1')` });
   }

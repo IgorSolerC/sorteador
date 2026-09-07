@@ -42,9 +42,9 @@
 
     <!-- ======================= A FICHA: o boletim do clube ======================= -->
     @case ('ficha') {
-      <!-- No modo cego, o boletim inteiro fica lacrado nos jogos que esta pessoa jogou e
-           ainda não resenhou: a nota do clube, as médias, a completude e o que os outros
-           escreveram. Não é um enfeite — é a única forma de a nota dela não nascer
+      <!-- O boletim inteiro fica lacrado nos jogos que esta pessoa jogou e ainda não
+           resenhou: a nota do clube, as médias, a completude e o que os outros escreveram.
+           Não é um enfeite nem um interruptor — é a única forma de a nota dela não nascer
            ancorada na do clube. Espiar continua sendo dela, e vale só até fechar a ficha. -->
       @if (sealed()) {
         <div class="sheet-seal">
@@ -52,9 +52,7 @@
           <div>
             <h3>Lacrado até você escrever</h3>
             <p>
-              Você jogou este e ainda não resenhou. No modo cego, a nota do clube e as
-              resenhas dos outros só aparecem depois da sua: ler o que o clube achou antes
-              de dar a sua nota move a sua nota.
+              A nota do clube e as resenhas dos outros aparecem depois da sua.
             </p>
             <div class="sheet-seal-actions">
               <button class="secondary-action" type="button" (click)="go('resenha')">
@@ -135,21 +133,10 @@
                   </span>
                 }
               </p>
-              @if (conta.pending) {
-                <p class="completion-note">
-                  A conta é sobre quem jogou, e não só sobre quem escreveu:
-                  {{ conta.pending }}{{ conta.pending === 1 ? ' pessoa ainda não resenhou' :
-                  ' pessoas ainda não resenharam' }} e {{ conta.pending === 1 ? 'entra' :
-                  'entram' }} como incompleto.
-                </p>
-              }
             </div>
           </div>
         } @else {
-          <p class="score-empty">
-            Ninguém resenhou este jogo ainda. A nota do clube aparece assim que a primeira
-            resenha for escrita.
-          </p>
+          <p class="score-empty">Ninguém resenhou este jogo ainda.</p>
         }
       }
 
@@ -441,15 +428,11 @@
         </div>
       </ng-template>
 
-      <p class="sheet-history">
-        @if (mine(); as minha) {
-          Escrita por você em {{ minha.at | date: 'dd/MM/yy HH:mm' }}. Reescrever é gravar
-          outra: a anterior continua no registro, e a nota do clube se refaz sozinha.
-        } @else {
-          Só a nota final e a completude são obrigatórias. A resenha é sua e você pode
-          reescrevê-la quando quiser — o registro guarda todas as versões.
-        }
-      </p>
+      @if (mine(); as minha) {
+        <p class="sheet-history">
+          Escrita por você em {{ minha.at | date: 'dd/MM/yy HH:mm' }}.
+        </p>
+      }
     }
 
     <!-- ======================= A MESA ======================= -->
@@ -457,10 +440,7 @@
       <p class="sheet-face">A mesa</p>
 
       <p class="sheet-note">
-        Quem jogou este jogo. Ela começa igual ao globo do dia do giro e pode ser corrigida
-        — quem entrou no clube depois e jogou assim mesmo, quem estava no globo e não
-        apareceu. <strong>Corrigir aqui não muda o sorteio:</strong> o globo daquele giro é
-        imutável, e é dele que a cápsula saiu.
+        Quem jogou este jogo. <strong>Corrigir aqui não muda o sorteio.</strong>
       </p>
 
       @if (error()) {
@@ -496,9 +476,7 @@
       </ul>
 
       @if (reviews().length) {
-        <p class="seats-foot">
-          Quem já resenhou não sai da mesa: para sair, é preciso retirar a resenha.
-        </p>
+        <p class="seats-foot">Quem já resenhou não sai da mesa.</p>
       }
 
       @if (away().length) {
@@ -568,7 +546,7 @@
                 do clube
               </span>
             } @else {
-              <span>Ela aparece assim que alguém resenhar este jogo.</span>
+              <span>Aparece quando alguém resenhar.</span>
             }
           </p>
         </div>
@@ -614,19 +592,15 @@
         </div>
       </form>
 
-      <p class="sheet-history">
-        @if (spin().note; as note) {
+      @if (spin().note; as note) {
+        <p class="sheet-history">
           @if (note.revision > 1) {
             Reescrito {{ note.revision }} vezes.
           }
           A última foi {{ note.actor ? 'de ' + note.actor : 'sem assinatura' }}, em
-          {{ note.at | date: 'dd/MM/yy HH:mm' }}. O jogo é de todo mundo, e retirá-lo não
-          apaga resenha nenhuma.
-        } @else {
-          O jogo é compartilhado: quem tem o link escreve e reescreve. Ele descreve o giro
-          e nunca muda o vencedor.
-        }
-      </p>
+          {{ note.at | date: 'dd/MM/yy HH:mm' }}.
+        </p>
+      }
     }
   }
 </div>

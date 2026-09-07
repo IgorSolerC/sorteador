@@ -35,7 +35,6 @@ import {
   spinScores,
 } from './group-log';
 import { NoteDraft, ReviewDraft, SheetFace } from './game-bench';
-import { Preferences } from './preferences';
 import { ReviewReactions } from './review-reactions';
 import { trapFocusWithin } from './focus-trap';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
@@ -82,7 +81,6 @@ export class GameSheet {
   readonly dismiss = output<void>();
 
   private readonly document = inject(DOCUMENT);
-  private readonly preferences = inject(Preferences);
 
   protected readonly MAX_NOTE_TITLE = MAX_NOTE_TITLE;
   protected readonly MAX_NOTE_DESCRIPTION = MAX_NOTE_DESCRIPTION;
@@ -129,7 +127,7 @@ export class GameSheet {
 
   protected readonly reviews = computed(() => this.spin().reviews);
 
-  // --- o modo cego ---
+  // --- o lacre da nota do clube ---
 
   /** A chave de quem está com a ficha aberta: a mesma que assina as resenhas dela. */
   private readonly myKey = computed(() => participantKey(this.author()));
@@ -138,12 +136,16 @@ export class GameSheet {
   protected readonly peeked = signal(false);
 
   /**
-   * Se o boletim fica lacrado: só no modo cego, e só num jogo que esta pessoa jogou e
-   * ainda não resenhou. Ler "9,2" antes de dar a própria nota move a própria nota — e um
-   * jogo de antes de ela entrar no clube não tem nota dela para ancorar, então não lacra.
+   * Se o boletim fica lacrado: num jogo que esta pessoa jogou e ainda não resenhou. Ler
+   * "9,2" antes de dar a própria nota move a própria nota — e um jogo de antes de ela
+   * entrar no clube não tem nota dela para ancorar, então não lacra.
+   *
+   * Não há interruptor: era a única preferência por aparelho que mudava a conta que o
+   * clube lê, e uma conta que depende de um interruptor não é a mesma conta para todos.
+   * Espiar continua sendo de quem está lendo, e vale só enquanto esta ficha está aberta.
    */
   protected readonly sealed = computed(() =>
-    this.preferences.blind() && !this.peeked() && owesReview(this.spin(), this.myKey()),
+    !this.peeked() && owesReview(this.spin(), this.myKey()),
   );
 
   // --- as reações ---
