@@ -1,0 +1,59 @@
+/* O álbum compara jogos: título e medida abrem a ficha; a cápsula assina logo abaixo.
+   As regras locais evitam repintar o boletim e a completude da ficha aberta. */
+.album-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+.album-card {
+  --intervalo-blocos: .9rem;
+  --intervalo-detalhes: .55rem;
+  gap: 0;
+  padding: 1.4rem;
+}
+.album-resumo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(5.5rem, auto);
+  align-items: start;
+  gap: var(--intervalo-blocos);
+}
+.album-resumo:not(:has(.album-score)),
+.album-resumo:has(.is-word) { grid-template-columns: minmax(0, 1fr); }
+.album-title { font-size: 1.42rem; line-height: 1.2; text-wrap: pretty; }
+.album-title-blank { font-family: var(--display); font-size: 1.1rem; letter-spacing: -.02em; text-transform: none; }
+.album-score { flex-direction: column; align-items: flex-end; gap: var(--intervalo-detalhes); margin: 0; }
+.album-score > span { max-width: 12ch; font-family: var(--body); font-size: .82rem; line-height: 1.2; letter-spacing: normal; text-transform: none; text-align: right; }
+.album-score.is-word { align-items: flex-start; gap: var(--intervalo-detalhes); }
+.album-score.is-word > span { max-width: none; text-align: left; }
+.album-score.is-empty { font-family: var(--body); font-size: .82rem; font-weight: 400; line-height: 1.5; letter-spacing: normal; text-transform: none; }
+.album-card-head { gap: var(--intervalo-detalhes); margin-top: var(--intervalo-blocos); }
+.album-who { gap: .25rem; }
+.album-name { font-family: var(--body); font-size: .92rem; font-weight: 700; line-height: 1.2; letter-spacing: normal; }
+.album-serial { font-size: .62rem; line-height: 1.5; letter-spacing: normal; }
+.album-perf { flex: none; margin: var(--intervalo-blocos) 0; }
+.album-criteria {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--intervalo-detalhes) var(--intervalo-blocos);
+  margin: 0;
+  font-family: var(--body);
+  font-size: .82rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.album-criterio { display: flex; align-items: baseline; justify-content: space-between; gap: .25rem; min-width: 0; }
+.album-criterio > span { overflow-wrap: anywhere; }
+.album-criterio b { flex: none; font-family: var(--mono); font-size: .74rem; font-weight: 700; }
+.album-criterio.linha-inteira { grid-column: 1 / -1; }
+.album-card .completion { display: grid; gap: var(--intervalo-detalhes); margin-top: var(--intervalo-blocos); padding-top: var(--intervalo-blocos); border-top: 1px solid var(--line-paper); }
+.album-completude-titulo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem var(--intervalo-detalhes); color: var(--ink-quiet); font-family: var(--body); font-size: .82rem; line-height: 1.5; }
+.album-card .completion-bar { height: 9px; }
+.album-card .completion-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--intervalo-detalhes); margin: 0; font-family: var(--body); font-size: .82rem; font-weight: 400; line-height: 1.5; letter-spacing: normal; text-transform: none; }
+.album-card .completion-legend > span { display: grid; gap: .25rem; }
+.album-card .completion-legend span::before { display: none; }
+.album-card .completion-legend b { font-family: var(--mono); font-size: .74rem; }
+.album-description { display: block; margin-top: var(--intervalo-blocos); overflow: visible; -webkit-line-clamp: unset; }
+.album-sealed { margin: 0; padding: 0; background: none; box-shadow: none; font-family: var(--body); font-size: .82rem; letter-spacing: normal; text-transform: none; }
+.album-card.is-blank .album-perf:last-child { display: none; }
+
+@media (max-width: 620px) {
+  .album-card { padding: 1.15rem; }
+}

@@ -87,6 +87,7 @@ const TILTS = [-1.7, 1.1, -0.7, 1.8, -1.3, 0.8] as const;
   selector: 'app-group-history',
   imports: [CommonModule, GameSheet],
   templateUrl: './group-history.html',
+  styleUrl: './group-history.scss',
 })
 export class GroupHistory {
   readonly groupId = input.required<string>();

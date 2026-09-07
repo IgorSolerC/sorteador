@@ -494,7 +494,7 @@ check('o giro antigo ganha o jogo pelo álbum',
 // a minha entra na conta que já existia — não que ela vire a conta inteira.
 const resenhasAntes = Number(await ev(`(() => {
   const c = [...document.querySelectorAll('.album-card')];
-  const texto = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/);
+  const texto = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/i);
   return texto ? texto[1] : 0;
 })()`));
 
@@ -513,7 +513,7 @@ check('o giro antigo aceita resenha pelo álbum',
   await texto('.reviews'));
 check('a minha resenha entra na conta que já existia, sem virar a conta inteira',
   (await ev(`document.querySelector('.score-hero b').textContent.trim()`)) !== '4,0' &&
-  Number(await ev(`document.querySelector('.score-hero').innerText.match(/(\\d+) RESENHAS?/)[1]`))
+  Number(await ev(`document.querySelector('.score-hero').innerText.match(/(\\d+) RESENHAS?/i)[1]`))
     === resenhasAntes + 1,
   `${resenhasAntes} -> ${await texto('.score-hero')}`);
 await ev(`document.querySelector('#sheet-close').click()`);
@@ -533,7 +533,7 @@ check('retirar o jogo devolve a cápsula ao estado sem jogo escrito',
 check('retirar o jogo não apagou as resenhas dele',
   Number(await ev(`(() => {
     const c = [...document.querySelectorAll('.album-card')];
-    const achado = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/);
+    const achado = c[c.length - 1].innerText.match(/(\\d+) RESENHAS?/i);
     return achado ? achado[1] : 0;
   })()`)) === resenhasAntes + 1);
 await ev(`document.querySelector('#sheet-close').click()`);

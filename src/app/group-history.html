@@ -186,21 +186,29 @@
                   (sealedOf(spin) ? ', lacrado até você resenhar' : ', ' + metricsOf(spin).hero.label + ' ' + metricsOf(spin).hero.value)
                 "
               >
+                <span class="album-resumo">
+                  @if (spin.note; as note) {
+                    <span class="album-title">{{ note.title }}</span>
+                  } @else {
+                    <span class="album-title album-title-blank">Sem jogo escrito</span>
+                  }
+                  @if (!sealedOf(spin) && scoresOf(spin).count) {
+                    <span [class]="'album-score is-' + metricsOf(spin).hero.tone" [class.is-word]="sort() === 'dificuldade'">
+                      <b>{{ metricsOf(spin).hero.value }}</b>
+                      <span>{{ metricsOf(spin).hero.label }}</span>
+                    </span>
+                  }
+                </span>
+
                 <span class="album-card-head">
                   <span class="album-capsule" aria-hidden="true">{{ emojiOf(spin) }}</span>
                   <span class="album-who">
-                    <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
                     <span class="album-name">{{ spin.winnerName }}</span>
+                    <span class="album-serial">Cápsula {{ spin.index + 1 }} · {{ spin.at | date: 'dd/MM/yy' }}</span>
                   </span>
                 </span>
 
                 <span class="album-perf" aria-hidden="true"></span>
-
-                @if (spin.note; as note) {
-                  <span class="album-title">{{ note.title }}</span>
-                } @else {
-                  <span class="album-title album-title-blank">Sem jogo escrito</span>
-                }
 
                 @if (sealedOf(spin)) {
                   <!-- Lacrado: a nota do clube é exatamente o que o modo cego esconde de
@@ -212,26 +220,23 @@
                   </span>
                 } @else if (scoresOf(spin); as conta) {
                   @if (conta.count) {
-                    <span [class]="'album-score is-' + metricsOf(spin).hero.tone" [class.is-word]="sort() === 'dificuldade'">
-                      <b>{{ metricsOf(spin).hero.value }}</b>
-                      <span>
-                        {{ metricsOf(spin).hero.label }}
-                        <br />{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }}
-                        de {{ spin.seated.length }}
-                      </span>
-                    </span>
-
                     @if (metricsOf(spin).secondary; as medias) {
                       @if (medias.length) {
                         <span class="album-criteria">
                           @for (media of medias; track media.label) {
-                            <span>{{ media.label }} <b>{{ media.value }}</b></span>
+                            <span class="album-criterio" [class.linha-inteira]="media.key === 'dificuldade' || media.key === 'tempo'">
+                              <span>{{ media.label + ' ' }}</span><b>{{ media.value }}</b>
+                            </span>
                           }
                         </span>
                       }
                     }
 
                     <span class="completion">
+                      <span class="album-completude-titulo">
+                        <span>Completude</span>
+                        <span>{{ conta.count }}{{ conta.count === 1 ? ' resenha' : ' resenhas' }} de {{ spin.seated.length }}</span>
+                      </span>
                       <span class="completion-bar" aria-hidden="true">
                         @if (shareOf(spin).platinado) {
                           <i class="is-platinado" [style.width.%]="shareOf(spin).platinado"></i>
@@ -247,7 +252,7 @@
                         @for (option of STATUSES; track option) {
                           @if (shareOf(spin)[option]) {
                             <span [class]="'is-' + option">
-                              {{ STATUS_LABELS[option] }} <b>{{ shareOf(spin)[option] }}%</b>
+                              <span>{{ STATUS_LABELS[option] + ' ' }}</span><b>{{ shareOf(spin)[option] }}%</b>
                             </span>
                           }
                         }
