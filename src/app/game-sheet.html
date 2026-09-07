@@ -173,6 +173,10 @@
       </div>
       }
 
+      @if (!sealed() && error()) {
+        <p class="field-error" role="alert">{{ error() }}</p>
+      }
+
       @if (!sealed() && reviews().length) {
         <h3 class="reviews-title">
           As resenhas
@@ -219,26 +223,8 @@
                 <p class="review-text">{{ review.text }}</p>
               }
 
-              <p class="review-reactions" role="group" [attr.aria-label]="'Reagir à resenha de ' + review.author">
-                @for (tally of reactionsOf(review); track tally.emoji) {
-                  <button
-                    type="button"
-                    class="reaction"
-                    [class.is-on]="tally.mine"
-                    [class.is-empty]="!tally.count"
-                    [attr.aria-pressed]="tally.mine"
-                    [attr.aria-label]="reactionLabel(tally)"
-                    [attr.title]="reactionLabel(tally)"
-                    [disabled]="saving()"
-                    (click)="toggleReaction(review, tally)"
-                  >
-                    <span aria-hidden="true">{{ tally.emoji }}</span>
-                    @if (tally.count) {
-                      <b aria-hidden="true">{{ tally.count }}</b>
-                    }
-                  </button>
-                }
-              </p>
+              <app-review-reactions [tallies]="reactionsOf(review)" [author]="review.author"
+                [saving]="saving()" (selectReaction)="toggleReaction(review, $event)" />
             </li>
           }
         </ul>

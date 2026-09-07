@@ -614,14 +614,15 @@ describe('reagir a uma resenha', () => {
     reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9, text: 'Grito muito.', reactions })],
   });
 
-  it('a fileira oferece doze reações mesmo sem ninguém ter reagido', async () => {
-    // Ela também É o controle: uma fileira que só mostra o que já existe não teria onde a
-    // primeira pessoa apertar.
+  it('começa compacto e abre nove escolhas, sem troféu, controle ou joinha', async () => {
     const fixture = await render(comResenha());
+    expect(el(fixture).querySelectorAll('.reaction').length).toBe(0);
+    (el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
     const botoes = [...el(fixture).querySelectorAll('.review-reactions .reaction')];
 
-    expect(botoes.length).toBe(12);
-    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆']);
+    expect(botoes.length).toBe(9);
+    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂', '❤️', '👏', '🤔', '🤯', '💀']);
     expect(botoes.every((b) => b.classList.contains('is-empty'))).toBe(true);
     fixture.destroy();
   });
@@ -631,6 +632,8 @@ describe('reagir a uma resenha', () => {
       { emoji: '🔥', author: 'Ana', authorKey: 'ana' },
       { emoji: '🔥', author: 'Cecília', authorKey: 'cecilia' },
     ]));
+    (el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
     const fogo = el(fixture).querySelector('.reaction:nth-child(2)') as HTMLButtonElement;
 
     expect(fogo.textContent).toContain('2');
@@ -640,18 +643,72 @@ describe('reagir a uma resenha', () => {
     fixture.destroy();
   });
 
+  it('explica a escolha em foco e anuncia quando está salvando', async () => {
+    const fixture = await render(comResenha());
+    const trigger = el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+    const surpresa = el(fixture).querySelector('.reaction') as HTMLButtonElement;
+    surpresa.focus();
+    fixture.detectChanges();
+
+    expect(surpresa.dataset['name']).toBe('Surpresa');
+
+    fixture.componentRef.setInput('saving', true);
+    fixture.detectChanges();
+    expect(trigger.getAttribute('aria-busy')).toBe('true');
+    expect(trigger.getAttribute('aria-label')).toBe('Salvando reação na resenha de Breno');
+    fixture.destroy();
+  });
+
   it('apertar liga a minha, e apertar de novo desliga só a minha', async () => {
     const fixture = await render(comResenha([{ emoji: '😂', author: 'Ana', authorKey: 'ana' }]));
     const pedidos: unknown[] = [];
     fixture.componentInstance.commitReaction.subscribe((valor) => pedidos.push(valor));
-
+    (el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
     (el(fixture).querySelector('.reaction:nth-child(4)') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement).click();
+    fixture.detectChanges();
     (el(fixture).querySelector('.reaction:nth-child(1)') as HTMLButtonElement).click();
 
     expect(pedidos).toEqual([
       { target: 'breno', emoji: '😂', reacted: false },
       { target: 'breno', emoji: '😯', reacted: true },
     ]);
+    fixture.destroy();
+  });
+
+  it('resume por popularidade e distingue reações de pessoas', async () => {
+    const fixture = await render(comResenha([
+      { emoji: '😯', author: 'Ana', authorKey: 'ana' },
+      { emoji: '🔥', author: 'Ana', authorKey: 'ana' },
+      { emoji: '🔥', author: 'Bia', authorKey: 'bia' },
+    ]));
+    const trigger = el(fixture).querySelector('.reaction-trigger')!;
+    expect(trigger.querySelector('.reaction-summary')?.textContent).toBe('🔥😯');
+    expect(trigger.querySelector('b')?.textContent).toBe('3');
+    expect(trigger.getAttribute('aria-label')).toContain('3 reações de 2 pessoas');
+    expect(trigger.classList.contains('is-on')).toBe(true);
+    fixture.destroy();
+  });
+
+  it('reações aposentadas não aparecem no resumo nem nas opções', async () => {
+    const fixture = await render(comResenha([{ emoji: '🏆', author: 'Ana', authorKey: 'ana' }]));
+    expect(el(fixture).querySelector('.reaction-trigger')!.textContent).toContain('Reagir');
+    expect(el(fixture).querySelector('.reaction-trigger')!.textContent).not.toContain('🏆');
+    fixture.destroy();
+  });
+
+  it('mostra a falha de gravação sem tirar a pessoa da ficha', async () => {
+    const fixture = await render(comResenha());
+    fixture.componentRef.setInput('error', 'Não foi possível salvar a reação. Tente novamente.');
+    fixture.detectChanges();
+
+    const alerta = el(fixture).querySelector('.field-error[role="alert"]');
+    expect(alerta?.textContent).toContain('Não foi possível salvar a reação');
+    expect(el(fixture).querySelector('#sheet-card')).toBeTruthy();
     fixture.destroy();
   });
 });

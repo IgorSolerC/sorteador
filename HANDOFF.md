@@ -1,6 +1,6 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-06**, na rodada de som, reações e álbum.
+Estado em **2026-09-07**, na rodada de acabamento das reações.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -129,8 +129,9 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
   alternando quase junto chegariam a contagens diferentes a partir do mesmo log. O `alvo` é
   a **chave de participante** de quem escreveu a resenha, e não um `memberId` — quem assina
-  uma resenha não precisa ser do grupo. Os doze emoji são validados **na rule**; ampliar a lista
-  exige publicar as rules antes do site.
+  uma resenha não precisa ser do grupo. As rules ainda validam os doze emoji históricos;
+  a interface oferece nove e aposenta 👍, 🎮 e 🏆 sem apagar o log nem quebrar abas antigas.
+  Ampliar a lista aceita pelo servidor exige publicar as rules antes do site.
 - **Os dois critérios da platina pendem do status.** `dificuldadePlatina` e `diversaoPlatina`
   só existem numa resenha `platinado`: a rule os recusa em qualquer outro status e o replay
   os descarta se aparecerem. Isso é a outra ponta da invariante 7 — recusar chave nova não
@@ -154,11 +155,11 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 355 unitários e de componente
+npm test -- --watch=false   # 359 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
-npm run test:a11y           # 15 telas x 3 larguras — precisa de npm start + emulador
+npm run test:a11y           # 16 telas x 3 larguras — precisa de npm start + emulador
 npm run test:etiqueta       # 86 de ponta a ponta num navegador real — idem
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
 node tests/e2e-acabamento.mjs # áudio real, hierarquia, PNG e reações; emulador semeado
@@ -249,6 +250,14 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-07 troca a antiga grade permanente por `ReviewReactions`: fechado, um
+controle de uma linha mostra até três emoji por frequência e a contagem total; aberto,
+oferece nove escolhas com alvos de 44px. O painel prefere nascer abaixo para preservar a
+resenha, usa 4px de respiro vertical, centraliza a segunda linha móvel e revela o nome da
+reação em hover, foco ou pressão. Mouse exige 280ms de intenção; clique, toque, teclado,
+`Esc`, clique fora, scroll e resize têm caminhos medidos. 👍, 🎮 e 🏆 continuam válidos no
+histórico e nas rules, mas não aparecem nem entram no resumo novo.
 
 A rodada de 2026-09-06 amplia as reações para 12 (rules antes do site), redesenha o PNG
 como fichas de coleção e faz o critério de ordenação comandar o destaque do card, na tela

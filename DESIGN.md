@@ -470,8 +470,8 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
-- **A fileira de reações**, no pé de cada resenha: doze emoji, `44px` de alvo e desenho
-  contido (ver A Regra das Doze Reações).
+- **A reação compacta**, no pé de cada resenha: um resumo numa linha e nove escolhas sob
+  demanda, sempre com `44px` de alvo (ver A Regra da Reação que se Abre).
 - **O lacre**, no lugar do boletim inteiro quando o modo cego está ligado e esta pessoa
   ainda deve a resenha daquele jogo (ver A Regra do Lacre).
 - **Face 3, o jogo:** nome, **nota média em somente leitura** — o campo que ocupou o lugar do
@@ -542,18 +542,21 @@ No boletim da ficha elas aparecem inteiras, atrás de um picote e com a faísca 
 ali o denominador delas é outro — só quem platinou pôde respondê-las — e lidas na mesma
 corrida das cinco de cima pareceriam critérios que metade do clube deixou em branco.
 
-**A Regra das Doze Reações.** O clube pode reagir com 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆.
-A lista é fechada **nas rules**, e não só na tela: um campo de emoji livre
-viraria uma segunda caixa de texto, e o produto já tem uma, assinada, que é a resenha.
+**A Regra da Reação que se Abre.** A resenha não carrega uma grade permanente. Sem reação,
+ela termina num único controle `Reagir`; com reações, esse mesmo controle resume até três
+emoji pela frequência e a contagem total. A participação de quem está lendo ganha um ponto
+de tinta, sem disputar com o amarelo reservado à ação principal.
 
-O desenho encolhe, o alvo não. Sem reação nenhuma o emoji fica sozinho e a `.75` de opacidade
-— um convite, não uma contagem. Quem já recebeu ganha a cápsula de papel com a contagem em
-mono tabular; a minha é a única com tinta cheia, e é a **tinta do papel**, nunca o amarelo de
-ação, que sobre papel viraria um botão pedindo para ser apertado de novo. A fileira aparece
-inteira mesmo vazia, porque ela também **é** o controle: uma fileira que só mostrasse o que
-já existe não teria onde a primeira pessoa apertar. São seis colunas no desktop e quatro
-abaixo de 620px, sempre fileiras completas. A ordem dos doze é fixa — uma fileira
-que se reordena pela contagem faz o dedo errar o alvo entre duas visitas.
+Ao clicar, tocar ou permanecer `280ms` com o mouse, o controle abre 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀
+na ordem fixa. Cada escolha conserva `44 × 44px`; o invólucro usa só `4px` de respiro. No
+celular são cinco escolhas na primeira linha e quatro **centradas** na segunda. O nome da
+reação aparece ao focar, pousar ou pressionar, e continua inteiro no nome acessível. `Esc`,
+clique fora, scroll e resize recolhem a camada; pelo teclado, o foco volta ao controle.
+
+A camada prefere nascer **depois** do controle para não cobrir a resenha que está sendo
+julgada, e só inverte quando não há espaço. As rules ainda aceitam os doze valores históricos:
+👍 🎮 e 🏆 foram aposentados na interface sem apagar o log nem quebrar abas antigas. A lista
+continua fechada no servidor — um emoji livre viraria uma segunda caixa de texto.
 
 **A Regra do Lacre.** No **modo cego** — desligado por padrão, ligado na porta —, a nota do
 clube fica lacrada exatamente nos jogos que esta pessoa **jogou e ainda não resenhou**: no

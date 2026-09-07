@@ -328,18 +328,35 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .sheet-seal p { max-width: 46ch; margin: 0; color: var(--ink-quiet); font-size: .82rem; line-height: 1.55; }
 .sheet-seal-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem 1.2rem; margin-top: 1rem; }
 
-/* Quatro emoji e nada mais: é o mínimo que faz um clube ler o que o outro escreveu. A
-   fileira inteira aparece sempre, mesmo com zero, porque ela também É o controle — uma
-   fileira que só mostra o que já existe não teria onde a primeira pessoa apertar. */
-.review-reactions { display: grid; grid-template-columns: repeat(6, minmax(44px, 1fr)); gap: .25rem; max-width: 22rem; margin: .9rem 0 0; }
-/* O alvo tem os 44px de sempre; o DESENHO é que encolhe. Quatro cápsulas de contorno
-   embaixo de cada resenha viravam dezesseis peças de interface numa lista de quatro, e a
-   folha deixava de ser papel escrito para virar painel. Sem reação, o emoji fica sozinho
-   e apagado — um convite, não uma contagem. */
+/* A resenha continua sendo papel escrito: as nove escolhas só aparecem quando há intenção.
+   Fechado, o controle resume os emoji mais usados e a quantidade de reações numa linha. */
+.review-reactions { display: block; min-width: 0; margin: .55rem 0 0; }
+.reaction-popover .reaction { width: 44px; flex: 0 0 44px; padding: 0; }
+.reaction-trigger { display: inline-flex; align-items: center; gap: .55rem; min-height: 44px; padding: 0 .7rem; border: 1px solid var(--line-paper); border-radius: 999px; background: transparent; color: var(--ink-quiet); font-family: var(--body); font-size: .82rem; cursor: pointer; transition: background .16s ease, border-color .16s ease; }
+.reaction-trigger svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+.reaction-trigger b { font-family: var(--mono); font-size: .74rem; font-variant-numeric: tabular-nums; }
+.reaction-trigger:hover:not(:disabled), .reaction-trigger[aria-expanded="true"] { background: var(--paper); color: var(--ink); border-color: var(--ink-quiet); }
+.reaction-trigger.is-on { color: var(--ink); border-color: var(--ink-quiet); }
+.reaction-own { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.reaction-summary { display: inline-flex; align-items: center; gap: 2px; font-size: 1rem; }
+.reaction-trigger:focus-visible { outline: 3px solid var(--field-focus); outline-offset: 2px; }
+.reaction-trigger:disabled { cursor: default; opacity: .6; }
+.reaction-popover { position: fixed; inset: auto; overflow: visible; margin: 0; padding: .25rem; max-width: calc(100vw - 16px); border: 0; border-radius: 12px; background: var(--paper); color: var(--ink); box-shadow: 0 8px 24px rgba(4, 10, 22, .3); }
+.reaction-popover:popover-open { display: flex; flex-wrap: wrap; gap: 4px; width: max-content; max-width: calc(100vw - 16px); }
+@media (max-width: 620px) {
+  /* Cinco escolhas fecham a primeira fileira; as quatro restantes ficam centradas abaixo. */
+  .reaction-popover:popover-open { justify-content: center; width: 244px; }
+}
+/* O alvo tem os 44px de sempre; o desenho é que encolhe. Nove cápsulas permanentes em cada
+   resenha fariam a folha virar painel, por isso esta fileira só existe dentro do popover. */
 /* A tinta é dita, e não herdada: o botão nasce com o branco do esmalte, e sobre papel isso
    é 1.21:1. O emoji é glifo colorido e não se importa — mas num sistema que o desenhe em
    monocromático ele sumiria, e a contagem ao lado seria branco sobre creme. */
-.reaction { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; padding: 0 .5rem; background: transparent; border: 1.5px solid transparent; border-radius: 999px; color: var(--ink); font-size: .95rem; line-height: 1; cursor: pointer; transition: background .16s ease, border-color .16s ease, opacity .16s ease; }
+.reaction { position: relative; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; padding: 0 .5rem; background: transparent; border: 1.5px solid transparent; border-radius: 999px; color: var(--ink); font-size: .95rem; line-height: 1; cursor: pointer; transition: background .16s ease, border-color .16s ease, opacity .16s ease; }
+.reaction::after { content: attr(data-name); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 1; max-width: calc(100vw - 24px); padding: .25rem .5rem; overflow: hidden; border-radius: 4px; background: var(--ink); color: var(--paper); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .02em; line-height: 1.35; opacity: 0; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; transform: translate(-50%, -2px); transition: opacity .12s ease, transform .12s ease; }
+.reaction:is(:hover, :focus, :active)::after { opacity: 1; transform: translate(-50%, 0); }
+.reaction-popover.is-above .reaction::after { top: auto; bottom: calc(100% + 8px); transform: translate(-50%, 2px); }
+.reaction-popover.is-above .reaction:is(:hover, :focus, :active)::after { transform: translate(-50%, 0); }
 .reaction b { color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .reaction.is-empty { opacity: .75; }
 .reaction:hover:not(:disabled) { background: var(--paper-quiet); border-color: var(--line-paper); opacity: 1; }
@@ -701,9 +718,6 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .album-score.is-empty { display: block; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .album-score.is-word { align-items: flex-start; flex-direction: column; gap: .55rem; }
 .album-score.is-word b { font-size: 2.4rem; line-height: 1.1; overflow-wrap: anywhere; }
-@media (max-width: 620px) {
-  .review-reactions { grid-template-columns: repeat(4, minmax(44px, 1fr)); max-width: 100%; }
-}
 .album-criteria { display: flex; flex-wrap: wrap; gap: .2rem .8rem; margin-top: .6rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .album-criteria b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .album-card .completion { margin-top: .75rem; }

@@ -113,12 +113,63 @@ try {
   await ev(`document.querySelector('.album-card').click()`); await sleep(400);
   await ev(`document.querySelector('.review-reactions').scrollIntoView({block:'center'})`); await sleep(150);
   await shot('reacoes-mobile');
-  check('12 reações com alvo de ao menos 44px', await ev(`(() => {const b=[...document.querySelectorAll('.review:first-child .reaction')];return b.length===12 && b.every(e=>e.getBoundingClientRect().width>=44 && e.getBoundingClientRect().height>=44)})()`));
-  // Uma reação nova precisa atravessar o servidor, não só aparecer no teclado.
-  await ev(`document.querySelector('.review:first-child .reaction:last-child').click()`); await sleep(1800);
-  check('troféu é aceito e marcado após gravar', await ev(`document.querySelector('.review:first-child .reaction:last-child').getAttribute('aria-pressed') === 'true'`));
+  check('resenha usa apenas um controle compacto', await ev(`document.querySelectorAll('.review:first-child .reaction').length === 0 && document.querySelectorAll('.review:first-child .reaction-trigger').length === 1`));
+  for (const width of [1440, 900, 390]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await ev(`document.querySelector('.review:first-child .reaction-trigger').scrollIntoView({block:'center'})`); await sleep(200);
+    await shot('reacoes-compactas-' + width);
+    await ev(`document.querySelector('.review:first-child .reaction-trigger').click()`); await sleep(200);
+    const bounds = await ev(`(() => { const el=document.querySelector('.reaction-popover:popover-open'); const r=el.getBoundingClientRect(); const t=document.querySelector('.review:first-child .reaction-trigger').getBoundingClientRect(); const s=getComputedStyle(el); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:innerWidth,height:innerHeight,triggerBottom:t.bottom,paddingTop:parseFloat(s.paddingTop),paddingBottom:parseFloat(s.paddingBottom)} })()`);
+    check('seletor cabe na tela de ' + width, bounds.left >= 0 && bounds.right <= bounds.width && bounds.top >= 0 && bounds.bottom <= bounds.height, JSON.stringify(bounds));
+    check('seletor preserva a resenha em ' + width, bounds.top >= bounds.triggerBottom, JSON.stringify(bounds));
+    check('moldura vertical é enxuta em ' + width, bounds.paddingTop <= 4.1 && bounds.paddingBottom <= 4.1, JSON.stringify(bounds));
+    await shot('reacoes-abertas-' + width);
+    check('nove escolhas com alvos de 44px em ' + width, await ev(`(() => {const b=[...document.querySelectorAll('.review:first-child .reaction')];return b.length===9 && b.every(e=>e.getBoundingClientRect().width>=44 && e.getBoundingClientRect().height>=44)})()`));
+    check('opções aposentadas estão ausentes em ' + width, await ev(`![...document.querySelectorAll('.review:first-child .reaction')].some(b => /🏆|🎮|👍/.test(b.textContent))`));
+    if (width === 390) {
+      check('segunda fileira móvel fica centralizada', await ev(`(() => { const p=document.querySelector('.reaction-popover:popover-open').getBoundingClientRect(); const buttons=[...document.querySelectorAll('.review:first-child .reaction')].map(el=>el.getBoundingClientRect()); const last=buttons.slice(5); return Math.abs(last.reduce((sum,r)=>sum+r.left+r.width/2,0)/last.length-(p.left+p.width/2))<1 })()`));
+    }
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(200);
+    check('Esc fecha só o seletor em ' + width, await ev(`!!document.querySelector('#sheet-card') && !document.querySelector('.reaction-popover:popover-open') && document.activeElement.classList.contains('reaction-trigger')`));
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  await ev(`document.querySelector('.review:first-child .reaction-trigger').scrollIntoView({block:'center'})`); await sleep(250);
+  const triggerRect = await ev(`(() => { const r=document.querySelector('.review:first-child .reaction-trigger').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2} })()`);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...triggerRect }); await sleep(160);
+  check('passagem breve do mouse não abre o seletor', await ev(`!document.querySelector('.reaction-popover:popover-open')`));
+  await sleep(180);
+  check('hover abre sem deslocar o foco', await ev(`!!document.querySelector('.reaction-popover:popover-open') && !document.querySelector('.reaction-popover').contains(document.activeElement)`));
+  const pickerRect = await ev(`(() => {const r=document.querySelector('.reaction-popover:popover-open').getBoundingClientRect();return {x:r.x+20,y:r.y+20}})()`);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...pickerRect }); await sleep(350);
+  check('o seletor continua aberto ao levar o mouse até ele', await ev(`!!document.querySelector('.reaction-popover:popover-open')`));
+  check('o nome da escolha aparece junto ao emoji', await ev(`(() => { const b=document.querySelector('.reaction:hover'); const s=getComputedStyle(b,'::after'); return b?.dataset.name==='Surpresa' && s.content.includes('Surpresa') && Number(s.opacity)===1 })()`));
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 10, y: 10 }); await sleep(300);
+  check('sair do seletor recolhe a interface', await ev(`!document.querySelector('.reaction-popover:popover-open')`));
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 1000, deviceScaleFactor: 1, mobile: true });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+  await ev(`document.querySelector('.review:first-child .reaction-trigger').scrollIntoView({block:'center'})`); await sleep(200);
+  const touchRect = await ev(`(() => { const r=document.querySelector('.review:first-child .reaction-trigger').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2} })()`);
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...touchRect, radiusX: 2, radiusY: 2, force: 1, id: 1 }] });
+  await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(180);
+  check('toque abre o seletor sem depender de hover', await ev(`!!document.querySelector('.reaction-popover:popover-open')`));
+  // A escolha segue o mesmo caminho depois de toque ou mouse; fazê-la aqui também garante
+  // que o painel não fica preso num estado intermediário da emulação móvel.
+  await ev(`document.querySelector('.review:first-child .reaction:last-child').click()`);
+  await send('Emulation.setTouchEmulationEnabled', { enabled: false });
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+  // Uma reação nova precisa atravessar o servidor, não só aparecer sob o dedo.
+  await sleep(1800);
+  check('escolher recolhe o seletor e atualiza o resumo', await ev(`!document.querySelector('.reaction-popover:popover-open') && document.querySelector('.review:first-child .reaction-trigger').classList.contains('is-on')`));
+  await ev(`document.querySelector('.review:first-child .reaction-trigger').click()`); await sleep(100);
+  check('a reação escolhida está marcada ao reabrir', await ev(`document.querySelector('.review:first-child .reaction:last-child').getAttribute('aria-pressed') === 'true'`));
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 10, y: 10, button: 'left', clickCount: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 10, y: 10, button: 'left', clickCount: 1 }); await sleep(100);
+  check('clicar fora fecha o seletor', await ev(`!document.querySelector('.reaction-popover:popover-open')`));
+  // O clique fora também pode fechar a ficha: abra-a de novo para o teste do lacre.
+  await ev(`if(!document.querySelector('#sheet-card')) document.querySelector('.album-card').click()`); await sleep(150);
   await ev(`document.querySelector('#sheet-close').click(); localStorage.setItem('mesa-do-mes:cego:v1','1')`);
   await send('Page.reload'); await sleep(3000);
+
   await ev(`const app=ng.getComponent(document.querySelector('app-group-history'));
     app.sealedOf=()=>true; window.posterTexts=[];
     const fill=CanvasRenderingContext2D.prototype.fillText;

@@ -67,8 +67,9 @@ O que continua sendo contrato:
 - **Oferecer as cápsulas do grupo na porta**, quando alguém abre o link de um grupo sem
   crachá: tocar numa delas entra com o nome exato do globo. Digitar continua existindo, como
   caminho secundário, para quem ainda não está na lista.
-- **Reagir à resenha de outra pessoa** com um de doze emoji — 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆 — e desfazer a
-  própria reação. A lista é fechada; um campo livre viraria uma segunda caixa de texto.
+- **Reagir à resenha de outra pessoa** com um de nove emoji — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 — e
+  desfazer a própria reação. Fechado, o controle resume os mais usados e a contagem; as
+  escolhas só aparecem quando alguém quer reagir. A lista é fechada no servidor.
 - **Avisar o que esta pessoa deve**: quantos jogos ela jogou (está na mesa) e ainda não
   resenhou, com o atalho para escrever o mais recente.
 - **Modo cego**, opcional e por aparelho: a nota do clube fica lacrada nos jogos que esta

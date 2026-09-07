@@ -124,6 +124,7 @@ const paginas = [
   ['gaveta', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button' }],
   ['bancada da cápsula', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button|.capsule-row' }],
   ['ficha do jogo', 'http://localhost:4200/?emu=1#/g/demo', { clique: '.cell-open' }],
+  ['seletor de reações', 'http://localhost:4200/?emu=1#/g/demo', { clique: '.cell-open|.reaction-trigger' }],
   ['ficha: minha resenha', 'http://localhost:4200/?emu=1#/g/demo',
     { clique: '.cell-open|.sheet-actions .secondary-action' }],
   // A resenha com a platina marcada é uma tela por si: ela abre duas fileiras que não
@@ -146,6 +147,7 @@ const larguras = [[1440, 1200], [900, 1200], [390, 844]];
 
 let problemas = 0;
 for (const [nome, url, opcoes = {}] of paginas) {
+  if (process.env.A11Y_FILTER && !new RegExp(process.env.A11Y_FILTER).test(nome)) continue;
   for (const [w, h] of larguras) {
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
     // A porta é a única tela que se quer ver sem crachá; todas as outras vivem atrás dela.

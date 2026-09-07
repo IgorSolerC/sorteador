@@ -18,7 +18,6 @@ import {
   MAX_SCORE,
   owesReview,
   PLATINUM_CRITERIA,
-  REACTION_LABELS,
   ReactionTally,
   reactionTally,
   REVIEW_CRITERIA,
@@ -37,6 +36,7 @@ import {
 } from './group-log';
 import { NoteDraft, ReviewDraft, SheetFace } from './game-bench';
 import { Preferences } from './preferences';
+import { ReviewReactions } from './review-reactions';
 import { trapFocusWithin } from './focus-trap';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 import { hashString, initialsOf, participantKey } from './naming';
@@ -55,7 +55,7 @@ import { hashString, initialsOf, participantKey } from './naming';
  */
 @Component({
   selector: 'app-game-sheet',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReviewReactions],
   templateUrl: './game-sheet.html',
 })
 export class GameSheet {
@@ -148,8 +148,6 @@ export class GameSheet {
 
   // --- as reações ---
 
-  protected readonly REACTION_LABELS = REACTION_LABELS;
-
   /** As reações de uma resenha, sempre na mesma ordem, e quais são minhas. */
   protected reactionsOf(review: SpinReview): readonly ReactionTally[] {
     return reactionTally(review, this.myKey());
@@ -163,13 +161,6 @@ export class GameSheet {
       emoji: tally.emoji,
       reacted: !tally.mine,
     });
-  }
-
-  /** "Fogo · 2 · Breno e Cecília" — o que um leitor de tela anuncia no lugar do emoji. */
-  protected reactionLabel(tally: ReactionTally): string {
-    const nome = this.REACTION_LABELS[tally.emoji];
-    if (!tally.count) return `${nome} — ninguém ainda`;
-    return `${nome} — ${tally.names.join(', ')}`;
   }
 
   // --- a mesa ---
@@ -426,6 +417,8 @@ export class GameSheet {
 
   /** Esc anda uma face por vez; da ficha, sai da ficha. */
   protected escape(): void {
+    const pickerTrigger = this.document.querySelector<HTMLButtonElement>('.reaction-trigger[aria-expanded="true"]');
+    if (pickerTrigger) { pickerTrigger.click(); return; }
     if (this.saving()) return;
     if (this.face() === 'ficha') this.dismiss.emit();
     else this.showFace.emit('ficha');
