@@ -25,6 +25,26 @@ export const CAPSULE_COLOR_NAMES = [
 export const CAPSULE_COLOR_COUNT = CAPSULE_COLORS.length;
 
 /**
+ * Um ponto de partida para quem não quer procurar um emoji: o mundo de um clube de jogos.
+ *
+ * Vive aqui, e não no componente, porque a cápsula se pinta em DOIS lugares — a bancada da
+ * gaveta e a bancada da porta — e duas listas de sugestão diferentes fariam a mesma escolha
+ * parecer duas escolhas. Fica em `palette.ts` por ser aparência de cápsula, como as cores, e
+ * porque este módulo já está nos dois pacotes: importar um do outro traria a gaveta inteira
+ * para o pacote inicial. São 24 para fechar as mesmas fileiras cheias das cores — doze
+ * colunas no desktop, oito no celular.
+ *
+ * A lista NÃO é validada no servidor: qualquer símbolo de até `MAX_EMOJI` unidades é aceito,
+ * e é por isso que os dois lugares também oferecem colar outro.
+ */
+export const SUGGESTED_EMOJI = [
+  '🎮', '🕹️', '🎲', '🃏', '♟️', '🎯',
+  '🏆', '🥇', '💥', '👾', '🚀', '⚡',
+  '🔥', '🌟', '🎨', '🎬', '🎧', '🎪',
+  '🍕', '🍻', '🦊', '🦄', '🐙', '🐸',
+] as const;
+
+/**
  * A paleta alterna neutros, frios, verdes, quentes e violetas. O passo 11 é primo com 24,
  * então percorre as vinte e quatro sem repetir e evita entregar aos primeiros membros uma
  * sequência inteira do mesmo trecho da lista.

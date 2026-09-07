@@ -8,7 +8,9 @@ import {
   capsuleTextOnEnamel,
   defaultColorIndex,
   isColorIndex,
+  SUGGESTED_EMOJI,
 } from './palette';
+import { MAX_EMOJI, emojiText } from './group-log';
 
 /** A legibilidade da paleta é medida nos dois lugares onde ela carrega texto. */
 
@@ -108,5 +110,25 @@ describe('a leitura de uma cor', () => {
     expect(isColorIndex(1.5)).toBe(false);
     expect(isColorIndex('3')).toBe(false);
     expect(isColorIndex(null)).toBe(false);
+  });
+});
+
+describe('os emoji sugeridos', () => {
+  it('são vinte e quatro, como as cores, para a grade fechar nas duas larguras', () => {
+    // Doze colunas no desktop e oito no celular só fecham fileiras cheias com um múltiplo
+    // dos dois. Uma sobra numa terceira fileira lê como engano, não como escolha.
+    expect(SUGGESTED_EMOJI.length).toBe(24);
+    expect(SUGGESTED_EMOJI.length % 12).toBe(0);
+    expect(SUGGESTED_EMOJI.length % 8).toBe(0);
+  });
+
+  it('cada um é um símbolo só, e nenhum se repete', () => {
+    // O servidor grava um símbolo. Uma sugestão que o corte encurtasse gravaria outra
+    // coisa do que a pessoa apertou, e ela nunca saberia por quê.
+    for (const emoji of SUGGESTED_EMOJI) {
+      expect(emojiText(emoji)).toBe(emoji);
+      expect(emoji.length).toBeLessThanOrEqual(MAX_EMOJI);
+    }
+    expect(new Set(SUGGESTED_EMOJI).size).toBe(SUGGESTED_EMOJI.length);
   });
 });

@@ -175,6 +175,59 @@ check('tocar numa cápsula entra com o nome exato do globo',
 check('entrar pela cápsula devolve a máquina do mesmo grupo',
   (await evaluate(`location.hash`)) === `#/g/${criado}`);
 
+// --- 2c. a porta repinta a cápsula de quem ela reconheceu ---
+
+// Trocar a própria cor pedia entrar no grupo, abrir os integrantes e se achar numa lista de
+// todo mundo. Aqui o crachá já é uma cápsula do globo, e a porta é onde ela está desenhada
+// em 340px — o caminho inteiro, do dedo até a rule e de volta pelo replay.
+await evaluate(`document.querySelector('.who-chip').click(); true`);
+await sleep(3000 * slow);
+const antesDePintar = await evaluate(`(() => ({
+  linha: document.querySelector('.gate-paint')?.innerText.replace(/\\n/g, ' | ') ?? '',
+  cupula: document.querySelector('.gate-dome')?.style.fill ?? '',
+}))()`);
+check('a porta reconhece o crachá e oferece a cápsula dele',
+  antesDePintar.linha.includes('Trocar a cor'), JSON.stringify(antesDePintar));
+
+await evaluate(`document.querySelector('.gate-paint').click(); true`);
+await sleep(1200 * slow);
+await evaluate(`document.querySelectorAll('.color-chip')[19].click();
+  document.querySelectorAll('.emoji-chip')[0].click(); true`);
+await sleep(600 * slow);
+const escolhendo = await evaluate(`(() => ({
+  cupula: document.querySelector('.gate-dome').style.fill,
+  marca: document.querySelector('.gate-initials').textContent,
+  legenda: document.querySelector('.style-field legend b').textContent.trim(),
+  porta: !!document.querySelector('.gate-copy'),
+}))()`);
+check('a peça de 340px é a prévia do que está sendo escolhido',
+  escolhendo.marca === '🎮' && escolhendo.legenda === 'Terracota'
+    && escolhendo.cupula !== antesDePintar.cupula && !escolhendo.porta,
+  JSON.stringify(escolhendo));
+
+await evaluate(`document.querySelector('.gate-bench .secondary-action').click(); true`);
+await sleep(4000 * slow);
+const pintou = await evaluate(`(() => ({
+  bancada: !!document.querySelector('.gate-bench'),
+  recado: document.querySelector('.gate-painted')?.textContent.trim() ?? '',
+  linha: document.querySelector('.gate-paint')?.innerText.replace(/\\n/g, ' | ') ?? '',
+}))()`);
+check('salvar volta para a porta e diz o que ficou gravado',
+  !pintou.bancada && pintou.recado.includes('terracota') && pintou.linha.includes('TERRACOTA'),
+  JSON.stringify(pintou));
+
+await evaluate(`document.querySelector('.gate-actions .text-link').click(); true`);
+await sleep(2000 * slow);
+await send('Page.reload');
+await sleep(8000 * slow);
+const noGlobo = await evaluate(`(() => {
+  const app = ng.getComponent(document.querySelector('app-synced-group'));
+  const eu = app.snapshot().state.members.find((m) => m.name === 'Teste de Fluxos');
+  return { cor: eu?.colorIndex, emoji: eu?.emoji };
+})()`);
+check('a pintura atravessou as rules e voltou pelo replay',
+  noGlobo.cor === 19 && noGlobo.emoji === '🎮', JSON.stringify(noGlobo));
+
 // --- 3. grupo inexistente ---
 await go('/#/g/naoexisteesse123', 8000);
 const inexistente = await evaluate(`(() => ({

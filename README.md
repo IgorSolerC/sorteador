@@ -120,13 +120,13 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 359 unitários e de componente
+npm test -- --watch=false   # 374 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
-npm run test:a11y           # 16 telas x 3 larguras, 0 achados
+npm run test:a11y           # 17 telas x 3 larguras, 0 achados
 npm run test:etiqueta       # 86 verificações de ponta a ponta num navegador real
-node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
+node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 21 fluxos
 npm run build -- --base-href=./
 ```
 
@@ -146,8 +146,10 @@ não há conta, senha nem convite. Antes de qualquer coisa o app pergunta **quem
 nome fica só no seu aparelho e acompanha tudo que você fizer no registro do grupo.
 
 Cada pessoa é uma **cápsula**, com uma cor escolhida numa roda de 24 e um emoji que sai
-como confete quando ela é sorteada. Uma rodada termina quando todos saíram; a próxima abre
-com o globo cheio de novo.
+como confete quando ela é sorteada. Ela se pinta na gaveta dos integrantes ou, quando o
+globo reconhece o crachá, na própria porta — onde a cápsula é desenhada em 340px e serve de
+prévia ao vivo. Uma rodada termina quando todos saíram; a próxima abre com o globo cheio de
+novo.
 
 O vencedor **não é lido de um campo**: ele é derivado de um log de eventos que ninguém pode
 reescrever nem apagar, e a única entrada imprevisível é o carimbo de hora do servidor, que
@@ -175,7 +177,9 @@ caem na prateleira inicial.
 Qualquer giro — o de agora ou o de um ano atrás — recebe o **jogo** que o clube jogou (nome e
 descrição, de todo mundo), uma **resenha por pessoa** (nota final e completude obrigatórias;
 tempo de jogo, quatro escalas, dificuldade e texto livre se ela quiser) e uma correção de
-**mesa**: quem de fato jogou aquilo. Quem marca **platinado** recebe mais duas perguntas, só
+**mesa**: quem de fato jogou aquilo. A mesa começa no clube daquele dia — o grupo inteiro,
+inclusive quem já tinha sido sorteado na rodada — e não no globo do giro, que só tem quem
+ainda não saiu. Quem marca **platinado** recebe mais duas perguntas, só
 dela: a diversão da platina e a dificuldade de platinar. As duas ficam fora do resumo do
 cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma linha, o jogo vira
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca

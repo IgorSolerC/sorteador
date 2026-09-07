@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { FormsModule } from '@angular/forms';
 
 import { GroupMember, MAX_EMOJI, emojiText } from './group-log';
-import { CAPSULE_COLORS, capsuleColor, capsuleColorName, capsuleInk } from './palette';
+import { CAPSULE_COLORS, SUGGESTED_EMOJI, capsuleColor, capsuleColorName, capsuleInk } from './palette';
 import { trapFocusWithin } from './focus-trap';
 import { initialsOf } from './naming';
 
@@ -23,14 +23,6 @@ export interface CapsuleStyle {
   readonly colorIndex: number;
   readonly emoji: string;
 }
-
-/** Um ponto de partida para quem não quer procurar um emoji: o mundo de um clube de jogos. */
-const SUGGESTED_EMOJI = [
-  '🎮', '🕹️', '🎲', '🃏', '♟️', '🎯',
-  '🏆', '🥇', '💥', '👾', '🚀', '⚡',
-  '🔥', '🌟', '🎨', '🎬', '🎧', '🎪',
-  '🍕', '🍻', '🦊', '🦄', '🐙', '🐸',
-] as const;
 
 @Component({
   selector: 'app-roster-bench',

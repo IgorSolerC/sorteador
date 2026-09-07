@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 
 import { Identity } from './identity';
-import { GateCapsule, IdentityGate, ROSTER_LOOKUP } from './identity-gate';
+import { CAPSULE_PAINT, CapsulePaint, GateCapsule, IdentityGate, ROSTER_LOOKUP } from './identity-gate';
+import { capsuleColor } from './palette';
 import { Preferences } from './preferences';
 
 /**
@@ -9,26 +10,40 @@ import { Preferences } from './preferences';
  * prova aqui é que ela não deixa passar em branco, que grava o nome normalizado, e que a
  * cápsula do lado é a mesma para o mesmo nome — a promessa que a coleção depois cumpre.
  */
-function capsule(name: string, emoji = ''): GateCapsule {
+function capsule(name: string, emoji = '', colorIndex = 4): GateCapsule {
   return {
     name,
-    color: '#5EE7FF',
+    color: capsuleColor(colorIndex),
     ink: '#0a1830',
     emoji,
     initials: name.slice(0, 1).toUpperCase(),
     key: name.toLowerCase(),
+    colorIndex,
+    memberId: `id-${name.toLowerCase()}`,
   };
 }
+
+/** As pinturas que a porta pediu ao servidor, para o teste conferir o que ela grava. */
+const pinturas: { memberId: string; colorIndex: number; emoji: string; actor: string }[] = [];
 
 async function render({
   groupId = '',
   changing = false,
   roster = [] as readonly GateCapsule[],
   lookup = null as null | (() => Promise<readonly GateCapsule[]>),
+  paint = null as null | CapsulePaint,
 } = {}) {
   await TestBed.configureTestingModule({
     imports: [IdentityGate],
-    providers: [{ provide: ROSTER_LOOKUP, useValue: lookup ?? (async () => roster) }],
+    providers: [
+      { provide: ROSTER_LOOKUP, useValue: lookup ?? (async () => roster) },
+      {
+        provide: CAPSULE_PAINT,
+        useValue: paint ?? (async (_id: string, memberId: string, style: { colorIndex: number; emoji: string }, actor: string) => {
+          pinturas.push({ memberId, ...style, actor });
+        }),
+      },
+    ],
   }).compileComponents();
   const fixture = TestBed.createComponent(IdentityGate);
   fixture.componentRef.setInput('groupId', groupId);
@@ -230,6 +245,181 @@ describe('a porta oferece as cápsulas que o grupo já tem', () => {
 
     expect(TestBed.inject(Preferences).blind()).toBe(true);
     expect(chave.getAttribute('aria-pressed')).toBe('true');
+    fixture.destroy();
+  });
+});
+
+describe('a bancada da porta: repintar a própria cápsula', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    pinturas.length = 0;
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  /** A porta de um grupo, com o crachá de alguém que o globo já conhece. */
+  async function comCracha(name = 'Ana Paula', roster = [capsule('Ana Paula', '🦄', 7), capsule('Breno')]) {
+    window.localStorage.setItem('mesa-do-mes:autor:v1', name);
+    return render({ groupId: 'demo', changing: true, roster });
+  }
+
+  it('quem o globo não conhece não recebe a bancada', async () => {
+    // A porta continua sendo uma pergunta só para quem chega: não há cápsula dela ainda.
+    const fixture = await comCracha('Zé de Fora');
+    expect(el(fixture).querySelector('.gate-paint')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('fora de um grupo não há cápsula a pintar', async () => {
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana Paula');
+    const fixture = await render({ changing: true });
+    expect(el(fixture).querySelector('.gate-paint')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('quem o globo reconhece vê a própria cápsula, e não um ensaio pelo nome', async () => {
+    // Era a única tela do produto onde a cor de uma pessoa não era a que ela escolheu:
+    // aqui ela saía de um hash do nome, e a máquina, o registro e o álbum diziam outra.
+    const fixture = await comCracha();
+    const componente = fixture.componentInstance as unknown as { color(): string };
+
+    expect(componente.color()).toBe(capsuleColor(7));
+    expect(el(fixture).querySelector('.gate-initials')?.textContent?.trim()).toBe('🦄');
+    expect(el(fixture).querySelector('.gate-paint')?.textContent).toContain('🦄');
+    fixture.destroy();
+  });
+
+  it('a cápsula grande é a prévia da pintura, enquanto ela é escolhida', async () => {
+    const fixture = await comCracha();
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const componente = fixture.componentInstance as unknown as { color(): string };
+
+    (el(fixture).querySelectorAll('.color-chip')[19] as HTMLButtonElement).click();
+    (el(fixture).querySelector('.emoji-grid .emoji-chip') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(componente.color()).toBe(capsuleColor(19));
+    expect(el(fixture).querySelector('.gate-initials')?.textContent?.trim()).toBe('🎮');
+    // A porta troca de face, e não de camada: a pergunta sai de cena em vez de ficar atrás.
+    expect(el(fixture).querySelector('.gate-copy')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('salvar grava a posição na paleta, assinada por quem escolheu', async () => {
+    const fixture = await comCracha();
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelectorAll('.color-chip')[19] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelector('.note-actions .secondary-action') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(pinturas).toEqual([
+      { memberId: 'id-ana paula', colorIndex: 19, emoji: '🦄', actor: 'Ana Paula' },
+    ]);
+    // Confirmado pelo servidor, a porta volta e já mostra a cápsula nova em toda parte.
+    expect(el(fixture).querySelector('.gate-bench')).toBeNull();
+    expect(el(fixture).querySelector('.gate-painted')?.textContent).toContain('terracota');
+    expect(el(fixture).querySelector('.gate-person-capsule')?.getAttribute('style')?.toUpperCase())
+      .toContain(capsuleColor(19).toUpperCase());
+    fixture.destroy();
+  });
+
+  it('sem mudar nada, não há o que gravar', async () => {
+    const fixture = await comCracha();
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const salvar = el(fixture).querySelector('.note-actions .secondary-action') as HTMLButtonElement;
+    expect(salvar.disabled).toBe(true);
+    fixture.destroy();
+  });
+
+  it('uma gravação que falha não leva embora a cor escolhida', async () => {
+    // Voltar para a porta ao falhar obrigaria a pessoa a escolher tudo de novo sem saber
+    // por quê. É a mesma regra da bancada da gaveta.
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana Paula');
+    const fixture = await render({
+      groupId: 'demo',
+      changing: true,
+      roster: [capsule('Ana Paula', '🦄', 7)],
+      paint: async () => { throw new Error('cota estourada'); },
+    });
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelectorAll('.color-chip')[19] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelector('.note-actions .secondary-action') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelector('.gate-bench')).not.toBeNull();
+    expect(el(fixture).querySelector('.gate-bench .field-error')?.textContent)
+      .toContain('Tente de novo');
+    expect((fixture.componentInstance as unknown as { color(): string }).color())
+      .toBe(capsuleColor(19));
+    fixture.destroy();
+  });
+
+  it('desistir da bancada apaga o erro dela', async () => {
+    // Um "Tente de novo" ao lado da linha de entrada alertaria sobre uma tentativa que a
+    // pessoa já abandonou — e que ela não tem como repetir sem reabrir a bancada.
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana Paula');
+    const fixture = await render({
+      groupId: 'demo',
+      changing: true,
+      roster: [capsule('Ana Paula', '🦄', 7)],
+      paint: async () => { throw new Error('cota estourada'); },
+    });
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelectorAll('.color-chip')[19] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelector('.note-actions .secondary-action') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el(fixture).querySelector('.gate-bench .field-error')).not.toBeNull();
+
+    (el(fixture).querySelector('.note-actions .note-cancel') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(el(fixture).querySelector('.gate-mine .field-error')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('voltar da bancada devolve a porta sem gravar nada', async () => {
+    const fixture = await comCracha();
+    (el(fixture).querySelector('.gate-paint') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (el(fixture).querySelectorAll('.color-chip')[19] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (el(fixture).querySelector('.note-actions .note-cancel') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(pinturas).toEqual([]);
+    expect(el(fixture).querySelector('.gate-copy')).not.toBeNull();
+    expect((fixture.componentInstance as unknown as { color(): string }).color())
+      .toBe(capsuleColor(7));
+    fixture.destroy();
+  });
+
+  it('digitar o nome de outra pessoa devolve a cápsula ao ensaio', async () => {
+    // Mostrar a MINHA cor debaixo do nome de outra pessoa mentiria sobre as duas.
+    const fixture = await comCracha();
+    (el(fixture).querySelector('.gate-otherwise') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await digitar(fixture, 'Zulmira');
+
+    expect((fixture.componentInstance as unknown as { color(): string }).color())
+      .not.toBe(capsuleColor(7));
+    expect(el(fixture).querySelector('.gate-initials')?.textContent?.trim()).toBe('Z');
     fixture.destroy();
   });
 });

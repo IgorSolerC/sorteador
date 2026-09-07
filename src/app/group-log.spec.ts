@@ -26,7 +26,7 @@ import {
   spinSummary,
 } from './group-log';
 import { isColorIndex } from './palette';
-import { initialsOf } from './naming';
+import { initialsOf, participantKey } from './naming';
 
 const GRUPO = 'g7x2k9';
 let clock = 1_700_000_000_000;
@@ -807,6 +807,18 @@ describe('o que esta pessoa ainda deve resenhar', () => {
     expect(pendingReviews(state, 'ana')).toEqual([]);
   });
 
+  it('quem foi sorteado deve a resenha dos jogos que vieram depois', () => {
+    // O buraco que este teste fecha: quem saiu do globo saía também da mesa, e com isso
+    // parava de dever resenha nenhuma pelo resto da rodada. Era o motivo real de o modo
+    // cego "não fazer nada" — sem dever resenha, não há nota a lacrar.
+    const state = replay(GRUPO, clube());
+    const sorteada = participantKey(state.spins[0].winnerName);
+
+    expect(pendingReviews(state, sorteada).map((spin) => spin.note?.title))
+      .toEqual(['Hollow Knight', 'Overcooked 2']);
+    expect(owesReview(state.spins[1], sorteada)).toBe(true);
+  });
+
   it('quem não está na mesa não deve nada', () => {
     const semAna = [
       ...clube(),
@@ -1171,6 +1183,23 @@ describe('a mesa de um jogo', () => {
   it('começa igual ao globo daquele giro', () => {
     const state = replay(GRUPO, jogo());
     expect(state.spins[0].seated.map((seat) => seat.name)).toEqual(['Ana', 'Breno', 'Cecília']);
+  });
+
+  it('quem já saiu nesta rodada continua na mesa dos jogos seguintes', () => {
+    // O globo do segundo giro não tem quem saiu no primeiro, e é assim que tem de ser: é a
+    // regra de não repetir. A mesa é outra coisa — ela é quem JOGOU —, e quem foi sorteado
+    // no mês passado sentou com o clube para jogar o jogo deste mês como todo mundo.
+    const state = replay(GRUPO, [...seed(['Ana', 'Breno', 'Cecília']), spin(), spin()]);
+
+    expect(state.spins[1].eligible.length).toBe(2);
+    expect(state.spins[1].seated.map((seat) => seat.name)).toEqual(['Ana', 'Breno', 'Cecília']);
+  });
+
+  it('quem entrou depois do jogo não senta nele sozinho', () => {
+    // A mesa é o clube daquele dia, e não o de hoje: um jogo de antes de a pessoa chegar
+    // não é dela. Ela entra por correção de mesa, que é uma escrita de alguém.
+    const state = replay(GRUPO, [...jogo(), add('Davi')]);
+    expect(state.spins[0].seated.map((seat) => seat.name)).not.toContain('Davi');
   });
 
   it('perde quem não apareceu e ganha quem chegou depois', () => {

@@ -170,6 +170,30 @@ try {
   await ev(`document.querySelector('#sheet-close').click(); localStorage.setItem('mesa-do-mes:cego:v1','1')`);
   await send('Page.reload'); await sleep(3000);
 
+  // O lacre pelo caminho de verdade, e não com `sealedOf` trocado: quem foi sorteado numa
+  // rodada continua jogando os jogos seguintes dela, e o modo cego tem de lacrar a nota
+  // deles. Enquanto a mesa saía do globo do giro, esta pessoa não devia resenha nenhuma
+  // depois de sair — e o modo cego "não fazia nada" para ela, que é o defeito relatado.
+  const sorteada = await ev(`(() => {
+    const app = ng.getComponent(document.querySelector('app-group-history'));
+    const spins = app.snapshot().state.spins;
+    return { nome: spins[0].winnerName, fora: !spins[3].eligible.includes(spins[0].winnerId) };
+  })()`);
+  check('quem ganhou o primeiro giro já saiu do globo do quarto', sorteada.fora, JSON.stringify(sorteada));
+  await ev(`localStorage.setItem('mesa-do-mes:autor:v1', ${JSON.stringify(sorteada.nome)})`);
+  await send('Page.reload'); await sleep(3000);
+  const lacre = await ev(`(() => {
+    const cartoes = [...document.querySelectorAll('.album-card')];
+    const alvo = cartoes.find((c) => c.querySelector('.album-title')?.textContent.includes('Lethal Company'));
+    return { achou: !!alvo, lacrado: !!alvo?.querySelector('.album-sealed'), nota: !!alvo?.querySelector('.album-score') };
+  })()`);
+  check('o modo cego lacra o jogo que quem já foi sorteada ainda deve', lacre.lacrado && !lacre.nota, JSON.stringify(lacre));
+  await ev(`document.querySelector('.album-card .album-sealed').closest('.album-card').click()`); await sleep(300);
+  check('a ficha desse jogo também abre lacrada', await ev(`!!document.querySelector('.sheet-seal') && !document.querySelector('.scoreboard')`));
+  await shot('lacre-de-quem-ja-saiu');
+  await ev(`document.querySelector('#sheet-close').click(); localStorage.setItem('mesa-do-mes:autor:v1','Ana')`);
+  await send('Page.reload'); await sleep(3000);
+
   await ev(`const app=ng.getComponent(document.querySelector('app-group-history'));
     app.sealedOf=()=>true; window.posterTexts=[];
     const fill=CanvasRenderingContext2D.prototype.fillText;

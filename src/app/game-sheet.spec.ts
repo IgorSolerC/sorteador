@@ -39,6 +39,7 @@ function spinRecord(overrides: Partial<SpinRecord> = {}): SpinRecord {
     round: 1,
     at: Date.parse('2026-08-02T19:30:00Z'),
     eligible: ['a', 'b'],
+    roster: ['a', 'b'],
     winnerId: 'a',
     winnerName: 'Gustavo',
     note: null,

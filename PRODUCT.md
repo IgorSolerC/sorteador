@@ -67,6 +67,10 @@ O que continua sendo contrato:
 - **Oferecer as cápsulas do grupo na porta**, quando alguém abre o link de um grupo sem
   crachá: tocar numa delas entra com o nome exato do globo. Digitar continua existindo, como
   caminho secundário, para quem ainda não está na lista.
+- **Pintar a própria cápsula na porta**, quando o globo reconhece o crachá: a mesma escolha
+  de cor e emoji da gaveta dos integrantes, no lugar onde a cápsula já está desenhada em
+  340px e servindo de prévia ao vivo. Sem reconhecimento não há bancada, e a primeira visita
+  continua sendo uma pergunta só.
 - **Reagir à resenha de outra pessoa** com um de nove emoji — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 — e
   desfazer a própria reação. Fechado, o controle resume os mais usados e a contagem; as
   escolhas só aparecem quando alguém quer reagir. A lista é fechada no servidor.
@@ -81,10 +85,12 @@ O que continua sendo contrato:
   a porcentagem de platinado, finalizado e incompleto. **Nada disso é gravado**: é recontado
   a partir das resenhas toda vez que a página abre. As duas médias da platina aparecem na
   ficha do jogo, e ficam de fora do resumo do cartão do álbum de propósito.
-- Corrigir a **mesa** de um giro: quem realmente jogou aquele jogo. Ela começa igual ao globo
-  do dia e aceita quem entrou no clube depois, ou perde quem não apareceu. É o denominador de
-  "X resenhas de Y", e quem jogou e ainda não escreveu conta como incompleto. **Corrigir a
-  mesa nunca toca no sorteio**: o globo daquele giro é imutável, e é dele que o vencedor sai.
+- Corrigir a **mesa** de um giro: quem realmente jogou aquele jogo. Ela começa igual ao
+  **clube daquele dia** — todo mundo que estava no grupo, inclusive quem já havia sido
+  sorteado na rodada — e aceita quem entrou depois, ou perde quem não apareceu. É o
+  denominador de "X resenhas de Y", e quem jogou e ainda não escreveu conta como incompleto.
+  **Corrigir a mesa nunca toca no sorteio**: o globo daquele giro é imutável, e é dele que o
+  vencedor sai.
 - Reunir num álbum todas as cápsulas já entregues por um grupo, agrupadas por rodada e
   filtráveis por pessoa, com o boletim de cada uma — e reordená-lo por nota do clube, por
   qualquer critério ou por tempo de jogo, quando a pergunta é comparar jogos de meses

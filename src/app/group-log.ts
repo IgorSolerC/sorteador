@@ -320,6 +320,14 @@ export interface SpinRecord {
   readonly actor?: string;
   /** Quem estava no bolo quando a manivela virou, para o histórico se ler daqui a anos. */
   readonly eligible: readonly string[];
+  /**
+   * O clube inteiro quando a manivela virou — inclusive quem já havia saído nesta rodada.
+   *
+   * É a base da mesa, e é diferente do globo de propósito: `eligible` é a entrada do
+   * SORTEIO e encolhe a cada giro, porque ninguém repete antes de todos saírem. Quem foi
+   * sorteado em março não deixa de jogar o jogo de abril com o clube.
+   */
+  readonly roster: readonly string[];
   readonly winnerId: string;
   readonly winnerName: string;
   /** O JOGO desta cápsula: título e descrição, quando alguém etiquetou. */
@@ -457,6 +465,7 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
           at: event.at,
           actor: event.actor,
           eligible: available,
+          roster: active,
           winnerId,
           winnerName: winner.name,
           note: null,
@@ -620,8 +629,12 @@ export function replay(groupId: string, events: readonly GroupEvent[]): GroupSta
 }
 
 /**
- * A mesa de um giro: quem estava no globo, mais quem foi posto depois, menos quem foi
+ * A mesa de um giro: o clube daquele dia, mais quem foi posto depois, menos quem foi
  * tirado — e sempre, por cima de tudo, quem resenhou.
+ *
+ * A base é `roster` e não `eligible`: o globo de um giro só tem quem ainda não saiu na
+ * rodada, e sentar a mesa nele tirava do jogo justamente quem já havia sido sorteado. O
+ * clube inteiro jogou; a pessoa sorteada em março jogou o jogo de abril como todo mundo.
  *
  * A ordem das três camadas é o que mantém "X resenhas de Y" honesto: uma resenha nunca
  * pode ficar de fora da conta, então tirar da mesa quem já escreveu não tem efeito. A
@@ -641,7 +654,7 @@ function seatsOf(
     if (key) seats.set(key, { key, name: member.name, memberId: member.id });
   };
 
-  for (const id of spin.eligible) {
+  for (const id of spin.roster) {
     const member = members.get(id);
     if (member) sit(member);
   }

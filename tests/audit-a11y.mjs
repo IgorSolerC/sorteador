@@ -119,6 +119,10 @@ const paginas = [
   // A porta de um grupo é outra tela: ela oferece as cápsulas que já existem nele, e é
   // por elas que se entra. As duas precisam passar por contraste e alvo de toque.
   ['porta do grupo', 'http://localhost:4200/?emu=1#/g/demo', { anonimo: true }],
+  // A bancada da porta é a única superfície de papel fora da máquina, e é a única tela em
+  // que a peça de 340px é a prévia de uma escolha em vez de um retrato.
+  ['bancada da porta', 'http://localhost:4200/?emu=1#/g/demo',
+    { clique: '.who-chip|.gate-paint', autor: 'Ana' }],
   ['prateleira', 'http://localhost:4200/?emu=1'],
   ['máquina', 'http://localhost:4200/?emu=1#/g/demo'],
   ['gaveta', 'http://localhost:4200/?emu=1#/g/demo', { clique: '#roster-button' }],

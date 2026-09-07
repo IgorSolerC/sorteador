@@ -280,7 +280,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha, botão da manivela — trocam para a tinta AA calculada daquela cápsula. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
 
-**A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. Uma terceira superfície clara precisa antes provar que é administração.
+**A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São três ocorrências, e as três se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista; a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre; e a bancada da porta, que é a bancada da gaveta no lugar onde a cápsula já está desenhada em 340px, com o mesmo evento por baixo. Uma quarta superfície clara precisa antes provar que é administração — e provar, aqui, quer dizer gravar o mesmo tipo de evento que as outras três.
 
 **A Regra do Amarelo de Ação.** O amarelo é a ação primária e o anel de foco. Um segundo botão amarelo na mesma dobra dissolve a hierarquia; a alternativa é o botão de esmalte (`button-secondary`) ou o link de texto.
 
@@ -308,7 +308,7 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 ### Named Rules
 
-**A Regra da Tipografia de Desenho.** Dentro de um SVG, `font-size` é coordenada, não passo tipográfico: as iniciais da cápsula da porta são 40 unidades num `viewBox` de 220, e escalam com o desenho junto com o resto da peça. A escala de tipos governa o texto do documento; a geometria de uma peça governa a si mesma.
+**A Regra da Tipografia de Desenho.** Dentro de um SVG, `font-size` é coordenada, não passo tipográfico: as iniciais da cápsula da porta são 40 unidades num `viewBox` de 220, e escalam com o desenho junto com o resto da peça. O emoji da mesma cúpula são 56 unidades com a linha de base em `92` em vez de `88`, porque um símbolo não é duas letras — em 40 unidades ele lê como a legenda da cápsula, e não como o desenho dela. Nenhum dos dois é um degrau da escala de tipos: a escala governa o texto do documento; a geometria de uma peça governa a si mesma.
 
 **A Regra da Mono de Série.** Martian Mono só aparece em valores de série e medição: grade de série, data de cada giro, subtítulo da etiqueta, nome da cor na gaveta, placa da máquina, decalques e a contagem de cápsulas ainda no globo. Nunca como fantasia "técnica" em texto corrido, botão ou título.
 
@@ -403,6 +403,10 @@ Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a 
 
 - **Palco:** a mesma assimetria do palco da máquina, em esmalte, com a plaqueta da marca no canto superior esquerdo. À esquerda a cápsula; à direita o título em display, um parágrafo em céu, um campo e o botão amarelo.
 - **A cápsula que se monta:** um SVG de 220×220 com o poço em gradiente radial, a cúpula na cor da pessoa, o brilho especular na curva de cima, a casca translúcida, o lábio interno e a costura em cromo chapado. As iniciais aparecem dentro da cúpula conforme se digita, e a cor sai de um hash do próprio nome — quem digita o mesmo nome vê a mesma cápsula toda vez. Vazia, a cúpula é âmbar: a primeira tela do produto não devia ser cinza.
+- **E que deixa de ser um ensaio** quando o globo reconhece o crachá (ver A Regra da
+  Cápsula Que É Você): aí a cúpula recebe a cor que a pessoa mesma escolheu e o emoji
+  dela em `56` unidades, e a peça de 340px passa a ser a maior aparição da cápsula em
+  todo o produto. Digitar OUTRO nome a devolve ao ensaio na hora.
 - **Duas faces:** quem nunca entrou vê "Quem é **você?**" e um só botão. Quem está trocando vê "Quem está **na mesa?**" e ganha um "Continuar como estou" — só quem já está dentro tem para onde voltar.
 - **A costura é cromo chapado**, e não o degradê do aro da máquina: um `linearGradient` em caixa delimitadora de altura zero não pinta nada, e a linha simplesmente sumia.
 - **As cápsulas do grupo, quando há um grupo** (ver A Regra da Cápsula Oferecida): uma
@@ -410,8 +414,15 @@ Ninguém entra na máquina sem dizer quem é. É a primeira tela do produto e a 
   escolheu e o emoji que vira o confete dela — num disco de `2.1rem`. O disco é maior que
   o comprimido do álbum de propósito: `1.15rem × .82rem` é pequeno demais para um símbolo
   ser lido, e foi por isso que lá o emoji ficou do lado de fora.
+- **A minha cápsula neste clube**, atrás de uma hairline e antes das preferências: a
+  mesma linha da gaveta — cápsula, o que ela é por extenso em mono, e a seta que anda
+  3px no hover — num alvo de 56px com raio `12px`. Só existe para quem o globo
+  reconhece, e é a porta da bancada.
 - **As preferências deste aparelho**, atrás de uma hairline, só para quem já entrou uma
   vez (ver A Regra do Lacre). A primeira visita é uma pergunta só.
+- **Três faces, nunca três camadas:** a pergunta, a bancada da cápsula, e o campo de
+  texto que a pergunta abre. A bancada toma o lugar da coluna da direita e o `Esc`
+  volta uma face por vez — a porta não recebe um modal por cima de si mesma.
 
 #### Named Rules
 
@@ -425,6 +436,30 @@ e decide a identidade; o clube só descobre meses depois, com o álbum dividido 
 A porta **nunca espera pela rede**: ela desenha primeiro e as cápsulas entram quando
 chegarem. Cota estourada, grupo inexistente ou rede caída não trancam a entrada — sem
 lista, ela volta a ser o campo de texto que sempre foi.
+
+**A Regra da Cápsula Que É Você.** A identidade visual de uma pessoa pertence a ela e é a
+mesma em toda parte do produto — e a porta era o único lugar onde não era: a cor saía de um
+hash do nome, enquanto a máquina, o registro e o álbum mostravam a que ela escolheu. Quando
+o globo **reconhece o crachá**, a cápsula grande deixa de ser um ensaio e passa a ser a dela,
+com o emoji dentro da cúpula.
+
+Reconhecida, a porta também **repinta**: a bancada da cápsula abre ali, e a peça de 340px é
+a prévia ao vivo da cor e do emoji sendo escolhidos. Trocar de cor era tarefa da gaveta da
+máquina, e chegar até lá pedia entrar no grupo, abrir os integrantes e se encontrar numa
+lista de todo mundo — para mexer só na própria. Aqui é só a sua, no maior tamanho que ela
+tem.
+
+O reconhecimento é a **única** condição, e é por construção que a primeira visita continua
+sendo uma pergunta só: sem crachá não há chave para achar no globo, e a bancada não existe.
+Fora de um grupo, também não.
+
+**A bancada da porta é papel**, pela Regra da Única Quebra: escolher cor e emoji é operar a
+lista, a mesma operação da gaveta, gravada pelo mesmo evento — mesmas grades de doze e oito
+colunas, mesmos comprimidos de 44px de altura, mesmo botão de esmalte para salvar, mesma
+escala de título de `2.4rem`. Ela é a MESMA bancada, e um desenho próprio diria que é outra
+coisa. Também herda a regra que mais importa: **salvar só volta para a porta quando o
+servidor confirma** — falhar e voltar levaria embora a cor recém-escolhida, e a pessoa teria
+de escolher tudo de novo sem saber por quê.
 
 ### A Prateleira
 
@@ -571,7 +606,10 @@ um jogo de antes de a pessoa entrar no clube nunca lacra.
 
 **A Regra do Denominador de Quem Jogou.** "X resenhas de Y" e a barra de completude são sobre
 quem **jogou**, e não sobre quem escreveu: quem está na mesa e ainda não resenhou entra como
-incompleto. Sem isso, uma pessoa que zerou o jogo antes de os outros começarem fazia o cartão
+incompleto. E a mesa começa no **clube daquele dia**, e não no globo daquele giro: o globo só
+tem quem ainda não saiu na rodada, e sentar a mesa nele tirava do jogo justamente quem já
+havia sido sorteado — do quinto jogo de uma rodada de seis, cinco pessoas ficavam de fora de
+uma mesa em que o clube inteiro esteve. Sem isso, uma pessoa que zerou o jogo antes de os outros começarem fazia o cartão
 dizer "100% finalizado" para o clube inteiro. Quem já escreveu não sai da mesa — a conta nunca
 pode ficar com X maior que Y —, e isso é dito uma vez abaixo da lista, não uma vez por linha.
 

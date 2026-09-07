@@ -1,6 +1,7 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-07**, na rodada de acabamento das reações.
+Estado em **2026-09-07**, na rodada da mesa que não perdia mais ninguém e da cápsula
+repintada na porta.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -126,6 +127,14 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`subtitulo` saiu em 09/2026 e a rule ainda o ACEITA.** Uma aba aberta no minuto do deploy
   ainda o manda. O replay não o lê. Não apague os eventos antigos: a contagem local nunca
   fecharia com `versaoLog`.
+- **`eligible` é o GLOBO daquele giro; `roster`, o clube daquele dia.** Os dois vivem em
+  `SpinRecord` e nenhum dos dois é gravado — o replay os deriva. `eligible` é a entrada do
+  sorteio e encolhe a cada giro da rodada, porque ninguém repete antes de todos saírem;
+  `roster` é quem estava ativo no grupo naquele instante. **A mesa senta em `roster`.**
+  Enquanto ela sentava em `eligible`, quem já havia sido sorteado desaparecia da mesa dos
+  jogos seguintes: a completude mentia, e o modo cego parava de lacrar qualquer coisa para
+  essa pessoa, porque ela não devia resenha nenhuma. `synced-group` continua usando
+  `eligible` — e só ele — para encenar a entrega.
 - **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
   alternando quase junto chegariam a contagens diferentes a partir do mesmo log. O `alvo` é
   a **chave de participante** de quem escreveu a resenha, e não um `memberId` — quem assina
@@ -155,13 +164,13 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 ## 5. Suítes e como rodar
 
 ```bash
-npm test -- --watch=false   # 359 unitários e de componente
+npm test -- --watch=false   # 374 unitários e de componente
 npm run test:rules          # 118 rules no emulador (sobe o próprio, sem rede)
 npm run test:store          # 48 de integração da camada de dados
 npm run test:migration      # 13 da migração de histórico
-npm run test:a11y           # 16 telas x 3 larguras — precisa de npm start + emulador
+npm run test:a11y           # 17 telas x 3 larguras — precisa de npm start + emulador
 npm run test:etiqueta       # 86 de ponta a ponta num navegador real — idem
-node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 17 fluxos
+node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 21 fluxos
 node tests/e2e-acabamento.mjs # áudio real, hierarquia, PNG e reações; emulador semeado
 npm run smoke:site          # 13 no SITE PUBLICADO, contra o Firestore de produção
 ```
@@ -251,7 +260,38 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 
 Nada pendente no código.
 
-A rodada de 2026-09-07 troca a antiga grade permanente por `ReviewReactions`: fechado, um
+A rodada de 2026-09-07, parte 2, fecha um defeito e abre uma porta.
+
+**O defeito era um só, e aparecia como dois.** `seatsOf()` sentava a mesa em `spin.eligible`,
+que é o bolo restante da rodada. Consequência 1: quem já havia sido sorteado não constava da
+mesa dos jogos seguintes — no grupo semeado, `4/5 5/6 2/4 0/3 0/2` para um clube de seis.
+Consequência 2: sem estar na mesa, essa pessoa não devia resenha nenhuma, e o **modo cego**
+não tinha o que lacrar para ela — ligá-lo não mudava nada na tela, que foi exatamente o
+relato. `SpinRecord` ganhou `roster` (o clube ativo no instante do giro, derivado, nunca
+gravado) e a mesa passou a sentar nele: `4/5 5/6 6/6 6/6 6/6`. `eligible` não foi tocado — é
+a entrada do sorteio, e mexer nele reescreveria vencedores.
+
+O teste do lacre no `e2e-acabamento` trocava `sealedOf` por `() => true`, e foi por isso que
+o defeito passou por uma suíte inteira: agora ele percorre o caminho real, com o crachá de
+quem ganhou o primeiro giro.
+
+**E o X da prateleira tinha 40px.** A auditoria nunca o pegou porque a lista de máquinas
+deste aparelho estava vazia em todas as rodadas dela — sem linha, não há X para medir. O
+fluxo novo da porta deixa um grupo lembrado, a prateleira passou a ter uma linha, e o alvo
+apareceu: `40×40` contra os 44 que a Regra do Alvo de 44px exige em todo controle. Agora são
+`44×44`, e a goteira da linha subiu de `2.6rem` para `3.1rem` (`.35rem` + 44px) — com a
+antiga o alvo avançava 8px sobre a seta da linha.
+
+**A porta ficou o lugar de repintar a própria cápsula** (ver A Regra da Cápsula Que É Você em
+`DESIGN.md`). Reconhecido o crachá no globo, a cápsula de 340px passa a ser a de verdade —
+com o emoji dentro da cúpula em 56 unidades — e uma linha abre a bancada, que é a bancada da
+gaveta em papel, com as mesmas grades e o mesmo evento `member_styled`. A escrita entra por
+`CAPSULE_PAINT`, um token com importação dinâmica do Firebase, irmão de `ROSTER_LOOKUP`: a
+prateleira e a oficina continuam desenhando a porta sem baixar o SDK. Fechar a porta
+remonta `app-synced-group`, que recarrega — a máquina mostra a cor nova sem recarregar a
+página, e isso está medido.
+
+A rodada de 2026-09-07, parte 1, troca a antiga grade permanente por `ReviewReactions`: fechado, um
 controle de uma linha mostra até três emoji por frequência e a contagem total; aberto,
 oferece nove escolhas com alvos de 44px. O painel prefere nascer abaixo para preservar a
 resenha, usa 4px de respiro vertical, centraliza a segunda linha móvel e revela o nome da

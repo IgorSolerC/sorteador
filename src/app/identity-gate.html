@@ -1,4 +1,4 @@
-<section class="gate" aria-labelledby="gate-title">
+<section class="gate" [attr.aria-labelledby]="painting() ? 'gate-bench-title' : 'gate-title'">
   <p class="machine-plate gate-plate">Mesa do Mês <span>nº 01</span></p>
 
   <div class="gate-badge" aria-hidden="true">
@@ -18,10 +18,108 @@
       <path class="gate-shell" d="M52 110h116v18a58 58 0 0 1-116 0v-18Z" />
       <path class="gate-shell-lip" d="M60 132a50 50 0 0 0 100 0" />
       <path class="gate-seam" d="M46 110h128" />
-      <text class="gate-initials" x="110" y="88" text-anchor="middle" [style.fill]="ink()">{{ initials() }}</text>
+      <!-- O emoji é o símbolo da própria pessoa, e ele pede mais coordenada do que duas
+           letras: `font-size` aqui é medida do desenho, não passo tipográfico. -->
+      <text class="gate-initials" [class.is-emoji]="mark() && mark() !== initials()"
+            x="110" [attr.y]="mark() && mark() !== initials() ? 92 : 88"
+            text-anchor="middle" [style.fill]="ink()">{{ mark() }}</text>
     </svg>
   </div>
 
+  @if (painting()) {
+    <!-- A bancada da porta. Mesma tela, outra face: papel onde se opera, como na gaveta,
+         e nunca um segundo véu por cima da porta. A peça de 340px ao lado é a prévia, por
+         isso a bancada não repete uma cápsula pequena no próprio cabeçalho. -->
+    <div class="gate-bench" role="group" aria-labelledby="gate-bench-title"
+         (keydown.escape)="closePaint()">
+      <p class="roster-card-serial">
+        <button type="button" class="capsule-back" id="gate-bench-back" (click)="closePaint()"
+                [disabled]="saving()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          A porta
+        </button>
+      </p>
+
+      <h1 id="gate-bench-title">Sua cápsula</h1>
+      <p class="capsule-lede">
+        A cor identifica você no globo, no registro e no álbum inteiro. O emoji é o que sai
+        como confete quando a sua cápsula cair na bandeja.
+      </p>
+
+      <fieldset class="style-field">
+        <legend>
+          Cor
+          <b>{{ colorName(draftColor()) }}</b>
+        </legend>
+        <div class="color-grid" role="group" aria-label="Cor da sua cápsula">
+          @for (color of COLORS; track color; let index = $index) {
+            <button
+              type="button"
+              class="color-chip"
+              [class.is-on]="draftColor() === index"
+              [style.--capsule]="color"
+              [attr.aria-pressed]="draftColor() === index"
+              [attr.aria-label]="colorName(index)"
+              [disabled]="saving()"
+              (click)="chooseColor(index)"
+            ></button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="style-field">
+        <legend>
+          Emoji
+          <b>{{ draftEmoji() || 'nenhum' }}</b>
+        </legend>
+        <div class="emoji-grid" role="group" aria-label="Emoji da sua cápsula">
+          @for (symbol of EMOJI; track symbol) {
+            <button
+              type="button"
+              class="emoji-chip"
+              [class.is-on]="draftEmoji() === symbol"
+              [attr.aria-pressed]="draftEmoji() === symbol"
+              [attr.aria-label]="'Emoji ' + symbol"
+              [disabled]="saving()"
+              (click)="chooseEmoji(symbol)"
+            >{{ symbol }}</button>
+          }
+        </div>
+        <label class="emoji-own">
+          <span>Ou cole outro</span>
+          <input
+            name="gateEmoji"
+            type="text"
+            autocomplete="off"
+            [attr.maxlength]="MAX_EMOJI"
+            placeholder="🙂"
+            [ngModel]="draftEmoji()"
+            (ngModelChange)="typeEmoji($event)"
+          />
+        </label>
+        @if (draftEmoji()) {
+          <button type="button" class="note-cancel emoji-clear" (click)="clearEmoji()"
+                  [disabled]="saving()">
+            Ficar sem emoji
+          </button>
+        }
+      </fieldset>
+
+      @if (paintError()) {
+        <p class="field-error" role="alert">{{ paintError() }}</p>
+      }
+
+      <div class="note-actions">
+        <button class="secondary-action" type="button" (click)="savePaint()"
+                [disabled]="saving() || !dirty()">
+          {{ saving() ? 'Pintando…' : 'Salvar a cápsula' }}
+        </button>
+        <button class="note-cancel" type="button" (click)="closePaint()" [disabled]="saving()">
+          Voltar
+        </button>
+      </div>
+    </div>
+  } @else {
   <div class="gate-copy">
     <h1 id="gate-title">
       @if (changing()) {
@@ -108,6 +206,42 @@
       </p>
     </form>
 
+    <!-- Quando o globo reconhece o crachá, a porta deixa de ser só uma pergunta sobre
+         quem você é: ela é o lugar onde você já está desenhado em 340px. Repintar a
+         cápsula era tarefa da gaveta da máquina, e chegar até lá pedia entrar no grupo,
+         abrir os integrantes e se encontrar numa lista de todo mundo. Aqui é a sua, e a
+         prévia é a peça maior do produto. Só aparece para quem o clube já tem: uma
+         primeira visita continua sendo uma pergunta só. -->
+    @if (mine(); as capsule) {
+      <div class="gate-mine">
+        <p class="gate-prefs-title">Sua cápsula neste clube</p>
+
+        <button type="button" class="gate-paint" id="gate-paint" (click)="openPaint()">
+          <span class="gate-person-capsule" aria-hidden="true"
+                [style.--capsule]="capsule.color" [style.--capsule-ink]="capsule.ink">
+            {{ capsule.emoji || capsule.initials }}
+          </span>
+          <span class="gate-paint-copy">
+            <strong>{{ colorName(capsule.colorIndex) }}{{ capsule.emoji ? ' · ' + capsule.emoji : '' }}</strong>
+            <small>Trocar a cor e o emoji</small>
+          </span>
+          <span class="gate-paint-go" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+          </span>
+        </button>
+
+        @if (painted()) {
+          <p class="gate-painted" role="status">{{ painted() }}</p>
+        }
+        @if (paintError()) {
+          <!-- Só a recusa que a bancada não consegue nem tentar chega aqui: uma cápsula sem
+               `memberId`, de uma busca antiga. A falha de gravação fica na bancada, com a
+               cor que a pessoa escolheu ainda na tela. -->
+          <p class="field-error" role="alert">{{ paintError() }}</p>
+        }
+      </div>
+    }
+
     <!-- O modo cego mora na porta porque é a mesma classe de coisa que o crachá: uma
          escolha que fica neste aparelho, não entra no registro e ninguém mais vê. E mora
          aqui, e não na máquina, porque é uma decisão sobre COMO esta pessoa julga — ela se
@@ -132,4 +266,5 @@
       </div>
     }
   </div>
+  }
 </section>

@@ -19,6 +19,12 @@
         "value": "2px",
         "createdAt": "2026-09-04T19:40:33.702Z",
         "reason": "Raio de marca de medicao impressa (regua de criterio, barra de completude, quadradinho da legenda): documentado como o token rounded.rule no DESIGN.md. 4px numa faixa de 6px de altura fecha em pilula e vira indicador de dashboard. Decidido pelo assistente nesta rodada, nao confirmado pelo usuario."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "56px",
+        "createdAt": "2026-09-07T15:04:59.913Z",
+        "reason": "A Regra da Tipografia de Desenho (DESIGN.md): dentro de um SVG font-size e coordenada do desenho, nao passo tipografico — o emoji da cupula da porta e irmao das iniciais de 40 unidades no mesmo viewBox de 220"
       }
     ]
   }

@@ -594,7 +594,7 @@
       },
       {
         "name": "A Regra da Única Quebra",
-        "body": "O papel aparece onde se administra, e em nenhum outro lugar. São duas ocorrências, e as duas se justificam pelo mesmo motivo: a seção da coleção, onde se opera a lista, e a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre. No álbum o papel são os cartões, nunca o fundo: a parede continua sendo esmalte. Uma terceira superfície clara precisa antes provar que é administração.",
+        "body": "O papel aparece onde se administra, e em nenhum outro lugar. São três ocorrências, e as três se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista; a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre; e a bancada da porta, que é a bancada da gaveta no lugar onde a cápsula já está desenhada em 340px, gravando o mesmo evento member_styled. No álbum o papel são os cartões, nunca o fundo: a parede continua sendo esmalte. Uma quarta superfície clara precisa antes provar que é administração, e provar quer dizer gravar o mesmo tipo de evento.",
         "section": "colors"
       },
       {
@@ -646,6 +646,11 @@
         "name": "A Regra do Movimento Reduzido nos Dois Lugares",
         "body": "prefers-reduced-motion é honrado em CSS (todas as durações caem para .01ms) e em JS (a entrega roda em 120ms em vez de 4300ms). Qualquer sequência nova precisa dos dois desligamentos; desligar só o CSS deixa a página parada esperando um timer longo.",
         "section": "components"
+      },
+      {
+        "name": "A Regra da Cápsula Que É Você",
+        "body": "A identidade visual de uma pessoa é a mesma em toda parte do produto, e a porta era o único lugar onde não era: a cor saía de um hash do nome. Reconhecido o crachá no globo, a cápsula de 340px passa a ser a de verdade, com o emoji dentro da cúpula em 56 unidades de desenho, e uma linha abre a bancada de papel que a repinta — com a peça grande como prévia ao vivo. Digitar outro nome devolve a cápsula ao ensaio. O reconhecimento é a única condição, e é por construção que a primeira visita continua sendo uma pergunta só. Salvar só volta para a porta quando o servidor confirma.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -660,7 +665,8 @@
       "Do construir hierarquia com escala e cor: o nome enorme, o apoio em céu, os valores em mono pequena.",
       "Do manter todo controle com no mínimo 44px de altura e o contorno de foco amarelo de 3px.",
       "Do acompanhar toda cor de estado com texto — a cartela marca \"Nesta rodada\" e risca os meses já saídos, e os erros de campo trazem mensagem.",
-      "Do honrar prefers-reduced-motion em CSS e em JS ao mesmo tempo."
+      "Do honrar prefers-reduced-motion em CSS e em JS ao mesmo tempo.",
+      "Do oferecer a bancada da cápsula na porta a quem o globo reconhece: papel, as mesmas grades de 12 e 8 colunas da gaveta, comprimidos de 44px de altura, botão de esmalte para salvar, e a peça de 340px como prévia ao vivo."
     ],
     "donts": [
       "Don't centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.",
