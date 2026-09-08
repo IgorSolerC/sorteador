@@ -388,9 +388,27 @@ graça, sem uma leitura a mais. A plaqueta (`.gate-plate`, mono, canto superior)
 `nº 01` pelo nome do grupo quando há um. É a peça certa: ela já é a **etiqueta de
 identificação da máquina**, e identificar a máquina é exatamente o que falta.
 
-**Cuidado:** nome de grupo é conteúdo de usuário e a plaqueta é mono `.62rem`. Precisa de
-teto de largura e `text-overflow: ellipsis`, ou um clube chamado *"Os Cavaleiros da Mesa
-Redonda de Sexta-Feira"* atravessa o título.
+**Dois cuidados, e o segundo derruba metade da proposta:**
+
+1. Nome de grupo é conteúdo de usuário e a plaqueta é mono `.62rem`. Precisa de teto de
+   largura e `text-overflow: ellipsis`, ou um clube chamado *"Os Cavaleiros da Mesa Redonda
+   de Sexta-Feira"* atravessa o título.
+2. **A plaqueta some abaixo de 620px.** `.machine-plate { display: none }` dentro do
+   `@media (max-width: 620px)` ([styles.scss:638](src/styles.scss#L638)) — e a Regra do
+   Decalque de Bancada explica por quê: *"por ser plaqueta de identificação, não conteúdo"*.
+
+   **Conferido na captura da porta a ~500px:** ela não está lá. A tela mostra a cápsula
+   grande, `Quem é você?`, seis cápsulas com nome e a linha de escrever o nome — e nenhuma
+   pista do clube.
+
+   Ou seja: pôr o nome do grupo na plaqueta o entrega **só no desktop**, e o problema é do
+   celular, que é onde o link é aberto. Se o nome do grupo entrar, ele precisa de um lugar
+   que sobreviva à quebra — e o candidato honesto é o rótulo acima da fileira,
+   `TOQUE NA SUA CÁPSULA` virando `QUEM É VOCÊ NO CLUBE DA FIRMA`, ou uma linha própria
+   abaixo do título.
+
+   Isso muda a proposta de `XS` para `S`, e transforma "identificação de máquina" em
+   conteúdo — que é uma decisão de desenho, não um ajuste.
 
 ---
 
@@ -3465,6 +3483,161 @@ por conta própria, o que deixa o caminho livre para empilhá-las de propósito.
 
 **No álbum o Voltar está certo** e não deve mudar: ele é uma rota de verdade
 (`#/g/<id>/album`), e voltar dele para a máquina é exatamente o que se espera.
+
+---
+
+### T-40 · `replay()` não é o gargalo, e agora tem número
+
+O `FIREBASE.md` deixa uma otimização anotada sem medida:
+
+> *"Se um log passar de algumas centenas de eventos, a saída é gravar snapshots periódicos
+> **dentro do próprio log** e replicar só a partir do último — fica anotado como otimização
+> futura, não é necessária agora."*
+
+**Medi.** Log sintético com 8 pessoas, cada giro com jogo escrito, oito resenhas completas
+(nota, status, horas, texto e cinco critérios) e oito reações:
+
+| Giros | Eventos | `replay()` | Por evento |
+|---|---|---|---|
+| 5 | 106 | 0,36 ms | 3,4 µs |
+| 12 | 232 | 0,53 ms | 2,3 µs |
+| 24 | 448 | 0,81 ms | 1,8 µs |
+| 50 | 916 | 1,36 ms | 1,5 µs |
+| 100 | 1.816 | 2,59 ms | 1,4 µs |
+| 200 | 3.616 | **5,54 ms** | 1,5 µs |
+| **400** | **7.216** | **8,67 ms** | 1,2 µs |
+
+**Linear, e barato.** Quatrocentos giros — um clube que joga toda semana por **oito anos** —
+replicam em **8,67 ms**, menos de um quadro a 60fps. E o custo por evento **cai** com o
+tamanho, porque os mapas amortizam.
+
+**Conclusão: a otimização anotada não precisa ser feita, e agora dá para dizer por quê.**
+Vale trocar a nota do `FIREBASE.md` por este número — "não é necessária agora" é uma
+suposição que envelhece; "8,67 ms a 7.216 eventos" não é.
+
+**O que cresce de verdade é outra coisa** — ver T-41.
+
+---
+
+### T-41 · O cache local cresce sem teto e nunca é limpo `P2` `S`
+
+**Onde:** [group-store.ts:447](src/app/group-store.ts#L447) — `browserLogCache` ·
+[recent-groups.ts:27](src/app/recent-groups.ts#L27) — `forgetGroup`
+
+**Medido**, no mesmo log sintético:
+
+```
+200 giros · 3.616 eventos · JSON no localStorage: 660 KB
+                                     ≈ 182 bytes por evento
+teto do localStorage: ~5 MB por origem
+```
+
+Duas coisas decorrem disso.
+
+**1. Esquecer uma máquina deixa o cache dela para trás — para sempre.**
+
+`forgetGroup()` mexe só em `mesa-do-mes:maquinas:v1`. A chave
+`mesa-do-mes:log:v1:<id>` é escrita por `group-store` e **não é apagada por nada**: nem ao
+esquecer a máquina, nem quando a prateleira derruba a 13ª (P-02), nem nunca.
+
+Um aparelho que passou por vários clubes ao longo de anos acumula o log inteiro de grupos
+que a pessoa não vê mais na prateleira e talvez nunca reabra. E ela não tem como saber:
+a prateleira mostra doze linhas, e o armazenamento guarda quantos grupos já passaram.
+
+**2. Estourando a cota, o produto fica mais caro em silêncio.**
+
+```ts
+write(groupId, value) {
+  try { storage?.setItem(...); }
+  catch { /* Cache indisponível custa leituras, nunca correção. */ }
+}
+```
+
+A escolha está **certa** — correção antes de custo, e o comentário diz isso. Mas a
+consequência não aparece em lugar nenhum: sem cache, cada abertura passa de **1 leitura**
+para **1 + N**, onde N é o log inteiro. Para um grupo de 200 giros isso é **3.617 leituras
+por abertura**, contra um orçamento de 1.500 por aparelho por dia
+([FIREBASE.md](FIREBASE.md)). O `UsageGuard` para a máquina na primeira tentativa, e a
+pessoa vê `A máquina parou por segurança` sem nenhuma relação visível com o que aconteceu.
+
+Ou seja: o modo de falha do cache cheio é **exatamente** o T-12 — o aparelho parado, com o
+log no bolso e a tela dizendo `Grupo não encontrado`.
+
+**Propostas, e a primeira é quase de graça:**
+
+1. **`forgetGroup` apaga o cache junto.** Esquecer uma máquina deve esquecê-la inteira, e
+   quem reabrir pelo link paga uma carga fria — que é o preço justo. Vale também para a
+   evicção da 13ª em `rememberGroup`.
+
+   **Não é `XS`, e o motivo explica por que o vazamento existe.** A chave do cache
+   (`CACHE_PREFIX`) mora em [group-store.ts:69](src/app/group-store.ts#L69), que importa
+   `firebase/firestore` na primeira linha. `recent-groups.ts` é carregado pela **prateleira**,
+   que por decisão de arquitetura **não toca em rede** — importar um do outro traria os
+   550 KB do SDK para o pacote inicial e desfaria a otimização mais valiosa do produto.
+
+   Então a correção passa por mover a chave (e um `esquecerCache(id)` de três linhas) para
+   um módulo sem Firebase — `preferences.ts` e `naming.ts` são dessa família. É uma decisão
+   de fronteira de módulo, não um remendo, e é por isso que **não a implementei aqui**.
+   Feita errado, ela custa mais do que o vazamento que conserta.
+2. **`S` — o cache tem teto.** Antes de gravar, se o JSON passar de ~500 KB, guardar só a
+   cauda do log e o `logVersion` correspondente. Mas isso **quebra a coerência** que
+   `load()` exige (`events.length === logVersion`), então precisa da mesma ideia da
+   otimização anotada: um marco a partir do qual o replay começa. É a única das três que
+   mexe em invariante, e não deve ser feita sem necessidade — e o T-40 mostra que a
+   necessidade não é de CPU.
+3. **`S` — a falha de gravação deixa de ser silenciosa.** Não para a pessoa (não há o que
+   ela faça), mas para o produto: um sinal que a próxima carga possa usar para não tentar
+   de novo, e uma linha no aviso de cota explicando que o atalho local parou de funcionar.
+
+**Recomendação: (1) já, (3) junto com o T-12, e (2) nunca até alguém medir que precisa.**
+
+**Prova que falta:** não estourei a cota de verdade num navegador. O cálculo é aritmético
+(660 KB por grupo maduro × doze linhas na prateleira = 7,9 MB contra ~5 MB de teto), e ele
+diz que o caso é alcançável, não que já aconteceu com alguém.
+
+---
+
+### T-42 · O link compartilhado carrega a query da URL atual `P3` `XS`
+
+**Onde:** [synced-group.ts:300](src/app/synced-group.ts#L300) — `shareUrl` ·
+[group-history.ts:362](src/app/group-history.ts#L362) — `machineUrl`
+
+```ts
+`${location.href.split('#')[0]}#/g/${this.groupId()}`
+```
+
+O `split('#')` corta o fragmento e **preserva a query**. Está visível na captura da gaveta:
+o campo `LINK DO GRUPO` mostra `http://localhost:4200/?emu=1#/g/demo`.
+
+Em produção o caso equivalente é chegar por um link com rastreador — `?fbclid=…` que o
+Facebook cola, um encurtador com `?utm_source=…` — e então copiar o link do grupo. O que sai
+para a conversa leva o rastreador junto: funciona, e fica feio e longo num link que **é** a
+cara do produto.
+
+**Proposta:** montar a partir de `location.origin + location.pathname`, que é o endereço do
+app sem nada colado.
+
+**Um cuidado que muda a proposta:** `?emu=1` é funcional. Cortar a query inteira faria o
+link copiado em desenvolvimento apontar para o **Firestore de produção** a partir do
+localhost — que é exatamente o que a regra 2 do README proíbe (*"Nada de teste contra a
+produção"*). Então a limpeza precisa preservar `emu` e descartar o resto.
+
+---
+
+### T-16c (complemento) · A gaveta diz, pela cor, que adicionar gente é o mais importante
+
+Registrado como reforço do T-16c, visto na captura da gaveta.
+
+`Carregar` — o botão de adicionar uma pessoa — é o **amarelo**, a ação primária do sistema
+visual. `Copiar link do grupo` é o botão de esmalte, secundário. E o bloco `Compartilhar`
+vem depois da lista inteira.
+
+Ou seja, além de estar **2.935px abaixo** num clube de 40 (T-16c), o link também está um
+degrau abaixo na hierarquia de cor. As duas coisas dizem a mesma frase: *o principal aqui é
+cadastrar gente*.
+
+Mas cadastrar gente é o que se faz **uma vez**; mandar o link é o que se faz **toda vez que
+alguém novo entra**. E o produto inteiro se define por essa frase: *um grupo é um link*.
 
 ---
 
