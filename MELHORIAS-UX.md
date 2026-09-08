@@ -53,14 +53,15 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
 | 4 | **F-03** `Retirar o jogo` sem confirmação | `P1`, destrutivo, coletivo e a um clique |
 | 5 | **M-01** ninguém vê o giro de quem girou | `P1`, é o momento social do produto — e a conta cabe: 9 leituras numa noite, 0,6% do orçamento |
 | 6 | **T-12** o aparelho parado esconde o log que tem no bolso | `P1`, e o cache já existe e já é validado |
-| 7 | **G-01** a segunda "Ana" criada em silêncio | `P1` sem conserto depois; o único achado cujo estrago é permanente |
-| 8 | **T-16c** `Compartilhar` a 2.935px do topo da gaveta | `P1` medido, e o link **é** o produto |
-| 9 | **T-07** a cena de 4,3 s sem saída | `P1`, cobrada em toda visita, todo dia |
-| 10 | **T-02 / T-03** a rede caída mente e depois cala | `P1`, e os dois são a mesma sessão de trabalho |
-| 11 | **L-01** o álbum começa 1,4 tela abaixo da parede | `P1` medido nos dois tamanhos |
-| 12 | **R-01** duas pessoas com a mesma cor | `P1`, e a decisão de produto acima de 24 pessoas é sua |
-| 13 | **P-01 / T-04** esquecer uma máquina sem desfazer | `P1` + a infraestrutura de desfazer serve a três achados |
-| 14 | **T-18** ensinar a suíte de a11y a ver o que ela não vê | `P2`, mas é o que impede a volta de A-01, T-09, T-17 e M-02 |
+| 7 | **T-44** quem entra pelo link não entra no globo | `P1`, e é a raiz do G-01: hoje quem digita os nomes é outra pessoa |
+| 8 | **G-01** a segunda "Ana" criada em silêncio | `P1` sem conserto depois; o único achado cujo estrago é permanente |
+| 9 | **T-16c** `Compartilhar` a 2.935px do topo da gaveta | `P1` medido, e o link **é** o produto |
+| 10 | **T-07** a cena de 4,3 s sem saída | `P1`, cobrada em toda visita, todo dia |
+| 11 | **T-02 / T-03** a rede caída mente e depois cala | `P1`, e os dois são a mesma sessão de trabalho |
+| 12 | **L-01** o álbum começa 1,4 tela abaixo da parede | `P1` medido nos dois tamanhos |
+| 13 | **R-01** duas pessoas com a mesma cor | `P1`, e a decisão de produto acima de 24 pessoas é sua |
+| 14 | **P-01 / T-04** esquecer uma máquina sem desfazer | `P1` + a infraestrutura de desfazer serve a três achados |
+| 15 | **T-18** ensinar a suíte de a11y a ver o que ela não vê | `P2`, mas é o que impede a volta de A-01, T-09, T-17 e M-02 |
 
 ### As quatro decisões que são suas, e não minhas
 
@@ -3638,6 +3639,128 @@ cadastrar gente*.
 
 Mas cadastrar gente é o que se faz **uma vez**; mandar o link é o que se faz **toda vez que
 alguém novo entra**. E o produto inteiro se define por essa frase: *um grupo é um link*.
+
+---
+
+### T-43 · A primeira visita inteira: 11 gestos e 29 segundos até o primeiro giro
+
+Percorri a jornada completa num aparelho zerado (`localStorage.clear()`), contando cada
+gesto e cronometrando:
+
+```
+aparelho zerado -> a porta
+  "Quem é você?"  ·  campos: [ Ex.: Mariana Souza ] [ Entrar na mesa ]
+
+ 1. escrevo meu nome ..................... porta          4s
+ 2. "Entrar na mesa" ..................... prateleira     6s
+ 3. "Montar uma máquina" ................. oficina        8s
+ 4. escrevo o nome do clube .............. oficina        8s
+ 5. "Montar a máquina" ................... A MÁQUINA     14s
+ 6. abro os integrantes .................. gaveta        15s
+ 7. escrevo a 2ª pessoa .................. gaveta        15s
+ 8. "Carregar" ........................... gaveta        18s
+ 9. fecho a gaveta ....................... A MÁQUINA     19s
+10. "Girar a roleta" ..................... confirmação   20s
+11. "Girar mesmo assim" .................. A MÁQUINA     29s
+
+vencedor: Breno · 1 giro no registro · 1 máquina na prateleira
+```
+
+**Onze gestos e vinte e nove segundos, com zero becos sem saída.** Cinco superfícies, cada
+uma com uma pergunta só, e a última tela é o produto funcionando. É um primeiro uso muito
+bom, e vale dizer isso antes de dizer o que falta.
+
+**O que falta é uma coisa só, e ela é grande: o link nunca aparece.** Em nenhum dos onze
+passos o produto menciona mandar o link para o clube. A oficina diz *"Depois, mande o link
+para quem joga"* no parágrafo de apoio — e depois disso o assunto morre. O link fica a
+2.935px dentro da gaveta (T-16c), atrás de uma lista de pessoas.
+
+E o que o primeiro uso ensina no lugar é **digitar o nome dos outros**: o passo 7 é a pessoa
+que montou a máquina escrevendo `Breno`. É esse o modelo mental que ela leva.
+
+Isso importa porque é a causa direta do G-01. A organizadora digita `Ana`; a Ana abre o link,
+vê `Ana` na fileira, não se reconhece — ela se chama `Ana Paula` —, toca em
+`Não estou na lista` e digita. Duas pessoas, para sempre.
+
+**Se o primeiro uso terminasse em "mande o link" em vez de "carregue as cápsulas", cada
+pessoa digitaria o próprio nome** — que é a única defesa de verdade contra o G-01. Só que
+hoje ela não funciona, pelo T-44.
+
+---
+
+### T-44 · Quem entra pelo link **não entra no globo**, e nada diz isso `P1` `S`
+
+**Onde:** [identity-gate.ts:352](src/app/identity-gate.ts#L352) — `submit()` só chama
+`identity.remember()` · [synced-group.ts:106](src/app/synced-group.ts#L106) — `myCapsule()`
+
+**O que:** dizer quem você é **não** carrega a sua cápsula no globo. Só a gaveta adiciona
+membros — e, na criação, a caixa `Entrar como a primeira cápsula`.
+
+**Medido**, abrindo o link do `demo` num aparelho zerado, tocando em
+`Não estou na lista — escrever meu nome` e entrando como `Gustavo Novato`:
+
+```
+tela            : a máquina
+crachá          : "Gustavo Novato"  ·  disco "GN" em pinho (cor tirada do nome, não cápsula)
+INTEGRANTES     : 6                  ← ele não é um deles
+sou uma cápsula : false              ← nenhuma cunha no aro é dele
+recados na tela sobre entrar no globo: NENHUM
+
+posso girar        : SIM
+posso abrir a ficha: sim
+posso abrir a gaveta: sim
+```
+
+**A porta reconhece o problema e larga o fio.** O caminho de baixo se chama, com todas as
+letras, **"Não estou na lista"**. A pessoa diz que não está na lista, o produto concorda — e
+não faz nada a respeito. Ela cai numa máquina onde:
+
+- o globo **nunca** vai sortear o nome dela;
+- o crachá dela é um disco de iniciais, e não uma cápsula (o único lugar do produto onde
+  isso acontece de propósito, pela Regra do Crachá Vestido — mas ela não tem como saber);
+- e o botão amarelo, o maior da tela, **gira a roleta de um clube do qual ela não faz
+  parte** — queimando uma vaga do bolo da rodada de outra pessoa, sem volta.
+
+Girar sendo visita **é o desenho**, e está escrito: *"O link é a credencial: quem o tem, lê e
+escreve. Não há permissão por pessoa."* Não proponho mudar isso. O problema é outro: **ser
+participante e ser cápsula são coisas diferentes, e a tela não distingue as duas.**
+
+**Proposta (`S`), e ela é quase de graça porque tudo já existe:**
+
+Na máquina, quando o crachá não está no globo, uma plaqueta — **a mesma forma do recado do
+que se deve**, que já mora ali e já some sozinho quando a pessoa age:
+
+> Você não está no globo desta máquina.  **Carregar a minha cápsula**
+
+- A **condição** já está computada: `myCapsule()` é `null` exatamente nesse caso, e o
+  cabeçalho já a usa para escolher a cor do crachá
+  ([synced-group.ts:106](src/app/synced-group.ts#L106)).
+- A **ação** já existe: `addFromBench(nome)`, com a validação de nome duplicado e o teto de
+  60 já dentro dela.
+- A **forma** já existe: `.owed-note`, com o mesmo comportamento de sumir depois de resolvida.
+
+**E ela conserta o G-01 pela raiz.** Hoje o primeiro uso ensina uma pessoa a digitar o nome
+das outras (T-43), e é aí que nascem as quase-duplicatas. Com esta plaqueta, **cada pessoa
+digita o próprio nome, como ela o escreve** — e a fileira de cápsulas da porta passa a
+oferecer nomes que as próprias donas escolheram.
+
+**Os cuidados:**
+
+- **É uma oferta, não uma cobrança.** Quem só veio assistir não deve ser empurrado; a
+  plaqueta não bloqueia nada e não volta depois de recusada... e aqui há uma decisão: ela
+  some para sempre neste aparelho, ou reaparece na próxima visita? O `owed-note` some porque
+  a dívida acabou; esta não tem como saber. **Recomendo um "agora não" que a cala neste
+  grupo, guardado no aparelho** — é a mesma família do crachá, e não entra no log.
+- **Entrar no meio da rodada já torna a pessoa elegível**, e isso é regra escrita
+  ([FIREBASE.md](FIREBASE.md), decisão 1). Então carregar a própria cápsula muda o bolo do
+  próximo giro — e é justamente o que se quer.
+- **Não fazer isso na porta.** A porta é desenhada antes da rede e não pode travar; carregar
+  uma cápsula é escrita. O lugar é a máquina, onde o SDK já desceu.
+
+**Prova que falta:** não sei quantas pessoas hoje estão nesta situação em grupos reais — um
+crachá que não bate com nenhum membro. O log tem a resposta: é comparar
+`participantKey(autor)` de cada evento com as chaves dos membros. Seria o número que decide
+se isto é `P1` ou `P0`.
 
 ---
 
