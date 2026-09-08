@@ -154,7 +154,7 @@ de cada suíte de navegador:
 
 | Suíte | Antes | Depois de tudo desta branch |
 |---|---|---|
-| `npm test -- --watch=false` | 399 | **404/404** (+5 testes novos) |
+| `npm test -- --watch=false` | 399 | **407/407** (+8 testes novos) |
 | `npm run test:rules` | 118 | **118/118** |
 | `npm run test:store` | 48 | **48/48** |
 | `npm run test:migration` | 13 | **13/13** |
@@ -165,9 +165,8 @@ de cada suíte de navegador:
 | `node tests/e2e-acabamento.mjs` | 59 | **59/59** |
 | `npm run build -- --base-href=./` | ok | **ok**, 4,77s |
 
-Os cinco testes novos: o `👎` no replay (`group-log.spec`), a fileira de dez
-(`game-sheet.spec`), as três cores de quem resenhou (`game-sheet.spec`) e o foco da gaveta
-(`roster-bench.spec`).
+Os oito testes novos: o `👎` no replay e a fileira de dez, as três cores de quem resenhou,
+o foco da gaveta, e os três da mesma pessoa com dois crachás (T-38).
 
 > Uma armadilha nova para o HANDOFF: `test:migration` deixou para trás um **emulador Firestore
 > zumbi** — o hub morreu, o processo `java` do emulador não. Ele ficou segurando a porta 8080
@@ -2826,6 +2825,217 @@ tela está. `há 1440min` não comunica "isto é de ontem" — comunica um núme
 
 **Proposta:** mais dois degraus, no mesmo estilo curto: `há 2h` acima de 60 minutos, e
 `ontem` (ou `há 2 dias`) acima de 24 horas. Três linhas.
+
+---
+
+### T-35 · Imprimir a máquina devolve uma folha em branco `P2` `S`
+
+**Onde:** não existe **nenhum** `@media print` em `styles.scss`, `game-sheet.scss`,
+`group-history.scss` nem `app.scss`.
+
+**O que:** o produto é esmalte azul-noite com texto branco. Os navegadores imprimem **sem
+fundo** por padrão (`print-color-adjust: economy`, medido). O fundo some; o texto branco
+fica.
+
+**Medido**, com a mídia `print` emulada, contra o papel branco:
+
+| Elemento | Cor | Contraste no papel |
+|---|---|---|
+| nome vencedor (`h1`) | `rgb(235,117,190)` | 2,69:1 |
+| parágrafo de apoio | `rgb(188,205,230)` | 1,61:1 |
+| **nomes no registro** (`.cell-open strong`) | `rgb(255,255,255)` | **1,00:1** |
+| **valores da grade de série** | `rgb(255,255,255)` | **1,00:1** |
+| rótulos da grade | `rgb(188,205,230)` | 1,61:1 |
+| rodapé | `rgb(227,234,242)` | 1,21:1 |
+
+**1,00:1 é branco sobre branco.** Quem apertar `Ctrl+P` — ou "Salvar como PDF", que sai do
+mesmo diálogo e é como muita gente arquiva uma página — recebe uma folha com um nome rosado
+apagado e **nada mais**. Os nomes do clube e os números não estão lá.
+
+**Por que vale corrigir e não ignorar:** o produto é um **guardador de memória** — "a estante
+do clube", um ano de jogos. Querer um PDF disso é o desejo mais previsível que ele desperta.
+E o caminho tem uma tecla.
+
+**Proposta, e ela cai no colo do próprio sistema visual:** este produto **já tem** a
+superfície de papel — `--paper`, `--paper-quiet`, `--ink`, `--ink-quiet`, `--line-paper` —, e
+tem a Regra da Única Quebra dizendo que papel é onde se registra. Uma folha impressa é
+exatamente isso: **a máquina virando o próprio registro em papel.**
+
+Um `@media print` que:
+
+- troca o esmalte por `--paper` e as tintas claras por `--ink` / `--ink-quiet`;
+- esconde o que não é conteúdo — o SVG da máquina, as duas navs, o botão de girar, o aviso
+  flutuante, o confete;
+- deixa o registro como **lista** (e não como trilho horizontal), o boletim e o álbum;
+- imprime o link? **Não.** A Regra do Pôster Sem Link vale igual no papel: o link é a
+  credencial, e uma folha esquecida na impressora é pública.
+
+**Isto não é um ajuste, é uma superfície.** Merece passar pela skill como qualquer outra, com
+briefing próprio — por isso não implementei aqui. Mas o estado atual (branco sobre branco)
+não é uma decisão de ninguém; é a ausência de uma.
+
+---
+
+### T-36 · Dedo nervoso: três cliques em "Girar mesmo assim" gravam **um** giro
+
+O teste mais importante que eu podia fazer, porque um giro a mais queima uma vaga do bolo da
+rodada e **não volta atrás**.
+
+**Medido** — três `click()` no mesmo quadro, no botão de confirmação:
+
+```
+antes  : versão do log 39   ·   NO GLOBO AGORA 1 / 6
+        três cliques disparados
+depois : versão do log 40   ·   NO GLOBO AGORA 6 / 6   ·   erro na tela: nenhum
+```
+
+**Um evento.** (O bolo foi de 1/6 para 6/6 porque saiu a última cápsula da rodada e a
+seguinte abriu cheia — que é o comportamento certo.)
+
+O mesmo com a reação, que é a escrita mais fácil de repetir sem querer:
+
+```
+versão antes 39 · dois cliques na mesma escolha · versão depois 40 · eventos gravados: 1
+estado final: aria-pressed="true", "😯 1"
+```
+
+Duas guardas independentes seguram isso: `canSpinNow()` lê `isSpinning`, que é levantado de
+forma síncrona antes do `await`; e o seletor de reações fecha a camada **antes** de emitir.
+Some-se a espera de 30s imposta pelas rules, e são três.
+
+Registrado como acerto porque é o tipo de defesa que uma refatoração remove sem perceber —
+basta mover o `isSpinning.set(true)` para depois do `await`.
+
+---
+
+### T-37 · As regiões vivas são quietas, e isso foi medido
+
+Duas regiões na máquina: `result-announce [polite]` e `toast [polite]`.
+
+**Medido** com um `MutationObserver` sobre as duas:
+
+| Ação | Mutações na região viva |
+|---|---|
+| ficar parado 1,5s | **0** |
+| abrir e fechar a gaveta | **0** |
+| apertar `Atualizar` (recarrega o snapshot inteiro) | **0** |
+| rever a cena (clicar no globo) | 10, todas do anúncio do resultado |
+
+O zero no `Atualizar` é o que importa: recarregar reconstrói todos os giros do log, e a
+região **não** reanuncia nada porque nada mudou. É a correção que o comentário do template
+descreve — *"Envolvendo a coluna inteira ela reanunciava a etiqueta, os botões, a grade de
+série e até o diálogo de confirmação a cada recarga"* — e ela está de pé, verificada.
+
+As 10 mutações do replay são o `h1` e o parágrafo mudando de "Entregando" para o nome de quem
+saiu. Um leitor de tela agrupa mutações numa região `polite` e fala uma ou duas vezes, não
+dez — e falar ali é o certo: quem clicou no globo pediu para rever a entrega.
+
+**Uma coisa que não medi:** o que um leitor de tela **de verdade** fala. `MutationObserver`
+conta mudanças no DOM, não falas. Para isso é preciso NVDA ou VoiceOver e um par de ouvidos,
+e nenhum dos dois cabe numa sonda.
+
+---
+
+### T-38 · Corrigir o próprio nome apaga o seu passado no clube — e a ficha convida a resenhar de novo `P1` `M`
+
+**Onde:** [identity.ts:53](src/app/identity.ts#L53) — `remember()` ·
+[group-log.ts:949](src/app/group-log.ts#L949) — `owesReview()` ·
+[naming.ts:16](src/app/naming.ts#L16) — `participantKey()`
+
+**O cenário, e ele é banal:** alguém entra no clube às pressas e digita `Ana`. Meses depois
+percebe que no globo ela é `Ana Souza`, ou simplesmente quer o nome certo. Troca o crachá.
+
+**Medido**, no grupo `demo`, trocando `Ana` por `Ana Souza`:
+
+| | como `Ana` | como `Ana Souza` |
+|---|---|---|
+| recado do que ela deve | `Você jogou 2 jogos que ainda não resenhou — Lethal Company e mais 1.` | **`nenhum`** |
+| células lacradas no registro | 1 | **0** |
+| a resenha dela em Overcooked 2 | `is-mine: true` | **`is-mine: false`** |
+| o que a ficha oferece | `Editar minha resenha` | **`Escrever minha resenha`** |
+
+Três coisas acontecem de uma vez:
+
+1. **As resenhas dela deixam de ser dela.** Continuam no log, assinadas `Ana`, visíveis para
+   o clube — e **ela não consegue mais editá-las nem retirá-las**. Não há caminho de volta
+   pela interface a não ser digitar o nome antigo de novo, e nada na tela diz isso.
+2. **As obrigações somem.** Ela devia duas resenhas; passa a dever zero. O clube continua
+   esperando por elas, e o produto parou de lembrá-la.
+3. **A ficha convida ao dobro.** `Escrever minha resenha`, num jogo que ela já resenhou. Se
+   ela aceitar, o clube passa a ter **duas resenhas da mesma pessoa** no mesmo jogo, as duas
+   entrando na média.
+
+O item 3 é o que mais custa, e não é porque *dá* para fazer — é porque **o produto pede**.
+
+**A conta não quebra, e isso é mérito do código.** `seatsOf()` senta quem assinou uma
+resenha mesmo sem ser do grupo, e `spinScores` usa `Math.max(seated.length, reviews.length)`
+— então "X resenhas de Y" continua honesto, com Y virando 7. O log não mente. Quem mente é
+a **média**, que passa a ter o peso de uma pessoa contado duas vezes.
+
+**Uma coisa que NÃO é problema, e vale dizer:** o lacre cai junto. Isso parece um buraco na
+regra que diz *"Não há interruptor"* — mas espiar **já é permitido de propósito**, com o
+botão `Ver assim mesmo`, a um clique. Trocar o crachá não dá a ninguém um poder novo; dá o
+mesmo poder por um caminho mais estranho. Não escalo isto.
+
+**E o mecanismo está CERTO para o uso que ele foi feito.** Duas pessoas do mesmo clube
+dividindo um tablet: trocar de crachá tem que trocar as obrigações, os lacres e a autoria.
+É exatamente o que ele faz. O produto não consegue — e não deveria tentar — distinguir "sou
+outra pessoa" de "sou a mesma e errei meu nome".
+
+**Por isso a proposta é dizer, e não impedir.** Ao trocar de pessoa **dentro de um grupo**,
+quando o crachá atual tem histórico ali:
+
+> Você assinou **2 resenhas** como **Ana** neste clube.
+> Elas continuam com esse nome, e só quem usar `Ana` pode editá-las.
+
+Uma frase. Ela não bloqueia nada, atende os dois casos (quem está trocando de pessoa lê e
+segue; quem está corrigindo o próprio nome descobre o preço antes de pagar) e passa no filtro
+da Regra do Texto que Não Explica a Máquina: é **a consequência de um gesto**, e ela decide
+algo para quem lê.
+
+**Onde a informação já está:** `ROSTER_LOOKUP` carrega o `snapshot` inteiro para oferecer as
+cápsulas ([identity-gate.ts:63](src/app/identity-gate.ts#L63)). Contar quantas resenhas a
+chave atual assinou naquele log é uma varredura de array — zero leitura a mais.
+
+**Irmão do G-01, e a defesa é a mesma.** Lá é a segunda "Ana" nascendo por digitação; aqui é
+a mesma pessoa se partindo em duas por correção. Os dois saem de `participantKey` ser
+congelada e decidir identidade — que é uma invariante e **não deve mudar**. A defesa possível
+é só uma: **perguntar antes**, nos dois pontos onde uma chave nova nasce.
+
+**Custo `M`, e não `S`:** a porta precisa saber o histórico da chave atual naquele grupo, o
+que hoje ela não recebe. É um campo a mais no `GateCapsule`, ou um segundo retorno do
+`ROSTER_LOOKUP`.
+
+**E o item 3 está provado, não deduzido.** Rodei `replay()` puro — sem rede, sem emulador,
+sem sujar o grupo semeado — com um clube de três pessoas onde Ana dá 10 e Breno dá 4, e
+depois Ana volta como `Ana Souza` e dá 10 de novo:
+
+```
+ANTES  — resenhas: 2 | mesa: 3 | média do clube: 7,00
+         quem assinou: Ana 10 · Breno 4
+
+DEPOIS — resenhas: 3 | mesa: 4 | média do clube: 8,00
+         quem assinou: Ana 10 · Breno 4 · Ana Souza 10
+         a mesa: Ana · Ana Souza · Breno · Cecília
+         membros no grupo: 3   ← "Ana Souza" nunca virou membro
+```
+
+**A média do clube andou um ponto inteiro**, de 7,00 para 8,00, com uma pessoa a mais na
+mesa que não existe no grupo. Num clube de três, uma pessoa vale 33% da nota; a duplicata
+vale 25% dela.
+
+**E o teste agora existe.** Três casos em
+[group-log.spec.ts](src/app/group-log.spec.ts), no bloco *a mesma pessoa com dois crachás* —
+não para impedir o comportamento, que é o correto para o log, mas para que ninguém o
+descubra por acidente:
+
+- a segunda assinatura vale um voto a mais, e a média vai de **7 para 8**;
+- quem assina uma resenha **senta na mesa** mesmo sem ser do grupo, para que a conta nunca
+  fique com X maior que Y — e `members` continua com três, provando que a mesa tem alguém
+  que o grupo não conhece;
+- o crachá novo não herda as obrigações do antigo.
+
+`npm test` passa de 404 para **407**.
 
 ---
 

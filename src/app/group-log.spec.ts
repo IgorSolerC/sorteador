@@ -709,6 +709,51 @@ function reaction(
   return { type: 'review_reacted', at: at(), spinIndex, actor, target, emoji, reacted };
 }
 
+describe('a mesma pessoa com dois crachás', () => {
+  // Trocar o crachá troca a chave de participante, que é congelada e decide identidade.
+  // Para quem está passando o aparelho a outra pessoa, isso é exatamente o certo. Para
+  // quem só corrigiu o próprio nome, é a mesma pessoa virando duas — e o produto não tem
+  // como distinguir os dois casos. O que ele PODE fazer é avisar antes; o que ele não pode
+  // é deixar a conta mentir. Estes testes travam a conta.
+  const jogo = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+    review(0, 'Ana', { score: 10 }),
+    review(0, 'Breno', { score: 4 }),
+  ];
+
+  it('a segunda assinatura da mesma pessoa é um voto a mais na média do clube', () => {
+    const antes = replay(GRUPO, jogo());
+    expect(spinScores(antes.spins[0]).score).toBe(7);
+
+    const depois = replay(GRUPO, [...jogo(), review(0, 'Ana Souza', { score: 10 })]);
+
+    expect(spinScores(depois.spins[0]).count).toBe(3);
+    expect(spinScores(depois.spins[0]).score).toBe(8);
+  });
+
+  it('quem assina uma resenha senta na mesa, mesmo sem ser do grupo', () => {
+    // Sem isto a conta ficaria com X maior que Y: três resenhas numa mesa de três, com uma
+    // delas de alguém que a mesa não conhece.
+    const state = replay(GRUPO, [...jogo(), review(0, 'Ana Souza', { score: 10 })]);
+
+    expect(state.spins[0].seated.map((seat) => seat.name))
+      .toEqual(['Ana', 'Ana Souza', 'Breno', 'Cecília']);
+    expect(state.members.map((member) => member.name)).toEqual(['Ana', 'Breno', 'Cecília']);
+    expect(spinScores(state.spins[0]).count)
+      .toBeLessThanOrEqual(spinScores(state.spins[0]).seats);
+  });
+
+  it('o crachá novo não deve as resenhas que o antigo assinou', () => {
+    const state = replay(GRUPO, jogo());
+
+    expect(owesReview(state.spins[0], 'ana')).toBe(false);
+    // E também não deve nada como "Ana Souza": ela não estava na mesa daquele dia.
+    expect(owesReview(state.spins[0], 'ana souza')).toBe(false);
+  });
+});
+
 describe('reagir a uma resenha', () => {
   const jogo = (): GroupEvent[] => [
     ...seed(['Ana', 'Breno', 'Cecília']),
