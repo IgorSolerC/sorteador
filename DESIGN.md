@@ -6,6 +6,9 @@ colors:
   enamel-deep: "#0a1830"
   enamel-raised: "#17304f"
   enamel-lit: "#1e3d63"
+  sombra-maquina: "#030a14"
+  vidro-palco: "color-mix(in srgb, var(--enamel-deep) 62%, transparent)"
+  vidro-leitura: "color-mix(in srgb, var(--enamel-deep) 82%, transparent)"
   chrome: "#e3eaf2"
   chrome-dim: "#93a6be"
   sky: "#bccde6"
@@ -242,16 +245,16 @@ components:
 
 **Creative North Star: "A Máquina de Cápsulas do Clube"**
 
-O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula encaixada no aro do globo de acrílico, com a cor e o símbolo que ela mesma escolheu; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete é esmalte azul-noite com brilho especular, aro cromado canelado e acrílico translúcido, e ocupa a tela inteira em vez de flutuar dentro de um cartão. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão "Sortear" que todo sorteador web entrega.
+O produto não é uma página sobre um sorteio: é uma máquina de cápsulas vista de frente. Cada participante é uma cápsula encaixada no aro do globo de acrílico, com a cor e o símbolo que ela mesma escolheu; o globo é a roleta; a coleção completa é a regra de não repetir, tornada visível. O gabinete mantém o esmalte azul-noite, com espessura modelada, brilho suave, aro cromado canelado, discos em aço escovado e acrílico com refração. A máquina repousa numa bancada contínua; o resultado recebe seu próprio painel de vidro azul. A recusa central é explícita: nada aqui usa o card branco centralizado com um botão "Sortear" que todo sorteador web entrega.
 
-A densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita, e entre os dois nenhuma decoração que não seja parte da máquina — a canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: o registro e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.
+A densidade é de objeto, não de dashboard. Uma única peça enorme à esquerda, um nome em escala gigante à direita e cápsulas translúcidas nas bordas da bancada deixam o centro livre para operar. A canelura do aro é desenhada traço a traço, a manivela tem eixo e botão reais, a calha e a bandeja existem porque a cápsula precisa cair em algum lugar. Rótulos de série em monoespaçada anotam peças reais com valores reais. O mundo nunca fala em sorte: o registro e a coleção completa são a prova, e a legenda da máquina diz que a manivela entrega, não decide.
 
 Há exatamente uma quebra no esmalte: a gaveta dos integrantes é papel quente impresso (`paper`), onde a administração acontece. Sair do azul é o sinal de que se mudou de modo — de assistir para operar. O movimento é igualmente contido: um único momento autoral por visita, e nada mais na página anima sozinho.
 
 **Key Characteristics:**
-- Máquina de cápsulas em esmalte azul-noite sangrando na tela, nunca um cartão centralizado.
+- Máquina de cápsulas em esmalte azul-noite sobre uma bancada contínua, com materiais de referência 3D.
 - Uma roda de vinte e quatro cores de cápsula, escolhidas pela própria pessoa, que são a única fonte de cor viva.
-- A cor da cápsula vencedora repinta o corpo da máquina e carrega o nome em escala gigante.
+- A carcaça permanece azul-noite; a cor da cápsula vencedora vive nas peças de identificação e acompanha o nome em escala gigante.
 - Monoespaçada apenas em valores de série e medição; nunca como fantasia técnica.
 - Papel quente como única quebra do esmalte, reservado à administração — que agora vive em gavetas, não em seções.
 - Um único momento animado: manivela, giro, encaixe, queda, abertura e o confete do que estava dentro.
@@ -261,7 +264,7 @@ Há exatamente uma quebra no esmalte: a gaveta dos integrantes é papel quente i
 Uma paleta de esmalte industrial — azul-noite profundo, cromo e céu frio — atravessada por uma roda de vinte e quatro cores de cápsula que são a única fonte de alegria cromática do sistema.
 
 ### Primary
-- **Esmalte Azul-Noite** (`enamel`): o corpo da máquina e o fundo padrão de todo o documento. É o chão do mundo; a página começa nele e volta para ele.
+- **Esmalte Azul-Noite** (`enamel`): a carcaça e o fundo de reserva do documento. A bancada se dissolve nesse esmalte no fim da imagem, e as superfícies de leitura recebem véus azuis translúcidos.
 - **Esmalte Profundo** (`enamel-deep`): a faixa do cabeçalho, o rodapé, a seção do registro, a prateleira da raiz, o poço do globo, a boca da calha e a janela da bandeja. É o interior da máquina — tudo que está atrás de vidro ou dentro de uma cavidade.
 - **Amarelo de Cápsula** (`yellow`): a ação primária, o adesivo redondo da rodada, o anel de foco e o marcador de estado. É também o **Âmbar** da roda de cápsulas, e essa coincidência é intencional: a marca é uma cápsula.
 
@@ -273,7 +276,9 @@ A fonte da verdade é `src/app/palette.ts`; o frontmatter deste arquivo é a có
 A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua na gaveta dos integrantes, e essa cor a identifica em toda parte — a cunha no aro do globo, a bolinha do registro, o disco de iniciais, a cápsula na bandeja, o cartão no álbum, e o confete quando ela sai. É o vínculo que faz a coleção ler como coleção. Antes a cor vinha da posição, e a mesma pessoa mudava de cor quando o bolo mudava de tamanho.
 
 ### Tertiary
-- **Cromo** (`chrome`) e **Cromo Fosco** (`chrome-dim`): o aro canelado, a placa da manivela, o cubo central, os links de texto e os estados desabilitados. Cromo é metal, não texto de ênfase.
+- **Cromo** (`chrome`) e **Cromo Fosco** (`chrome-dim`): o aro canelado, os links de texto e os estados desabilitados. Na placa da manivela e no cubo central, a mesma dupla forma aço escovado de transições amplas e textura discreta; esses discos não são espelhos.
+- **Vidro do Palco** (`vidro-palco`) e **Vidro de Leitura** (`vidro-leitura`): véus de esmalte profundo sobre a bancada, respectivamente no estado vazio e nas superfícies da porta, prateleira e álbum. O resultado da máquina tem o gradiente e o desfoque próprios descritos em Elevation & Depth.
+- **Sombra da Máquina** (`sombra-maquina`): oclusão, pés, interior da bandeja e sombras de contato da peça.
 - **Céu** (`sky`): todo texto de apoio sobre esmalte — parágrafos secundários, legendas, rótulos de decalque e etiquetas de série.
 
 ### Neutral
@@ -284,7 +289,18 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 ### Named Rules
 
-**A Regra da Cápsula Portante.** Cada cor escolhe tinta clara ou escura por contraste medido, nunca por suposição. `capsuleInk()` garante pelo menos 4.5:1 para iniciais, nomes do aro e ferragens sobre qualquer uma das vinte e quatro tintas. Quando a cor da pessoa não alcança 4.5:1 como texto sobre o esmalte, o nome vencedor fica branco; a cor continua inequívoca na chapa, no aro, na cápsula e no brilho. `palette.spec.ts` derruba o build se qualquer um desses dois contextos falhar.
+**A Regra da Cápsula Portante.** Cada cor escolhe tinta clara ou escura por contraste medido, nunca por suposição. `capsuleInk()` garante pelo menos 4.5:1 para iniciais, nomes do aro e ferragens sobre qualquer uma das vinte e quatro tintas. Quando a cor da pessoa não alcança 4.5:1 como texto sobre o esmalte, o nome vencedor fica branco; a cor continua inequívoca nos setores, no pino, na manopla e na cápsula entregue. `palette.spec.ts` derruba o build se qualquer um desses dois contextos falhar. O texto **composto** sobre os véus é medido à parte, pela Regra do Fundo Que Se Vê.
+
+**A Regra do Fundo Que Se Vê.** Onde há véu translúcido sobre o cenário, o contraste se
+mede contra o **pixel composto**, nunca contra o primeiro fundo opaco da cascata. O cenário
+é uma imagem em `body::before` que cobre o fundo do `body`: subir a árvore de estilos
+procurando um fundo opaco encontra um esmalte que ninguém enxerga, e devolve uma razão
+otimista. `tests/audit-a11y.mjs` lê os pixels da imagem sob a caixa de cada texto, compõe os
+véus por cima e usa o **pior** dos casos — o pixel mais claro e o mais escuro sob aquele
+texto. As dezessete telas em três larguras passam com folga; a menor é `album-serial` em
+**4.74:1** contra o alvo de 4.5, no álbum, onde o véu de leitura deixa passar 18% da foto.
+Com o véu afrouxado para 40% a mesma conta acha três reprovações, a pior em `1.97:1`: a
+guarda morde. Quem mexer num véu, na imagem do cenário ou na altura da banda mede de novo.
 
 **A Regra da Tinta que Acompanha a Cápsula.** Onde a cor da cápsula pinta um fundo, a tinta
 por cima é a que `capsuleInk()` calculou para **aquela** cápsula — nunca uma tinta fixa. Vale
@@ -318,7 +334,7 @@ origem.
 
 **A Regra da Cor Escolhida.** A cor guardada é a **posição na paleta**, nunca um hexadecimal livre — nem no log, nem nas rules. É o que garante que toda cápsula continue passando no contraste sem que o servidor precise saber calcular contraste, e o que permite reafinar a paleta inteira sem reescrever um evento sequer.
 
-**A Regra da Repintura Total.** Quando a rodada é revelada, o corpo da máquina (`.body-plate`) é preenchido com a cor da cápsula vencedora como campo chapado, saturado e sem mistura, e todos os elementos montados na chapa — decalques, linhas-guia, costura, aba da bandeja, lábio da calha — trocam para a tinta AA calculada daquela cápsula. O puxador da manivela está sobre cromo: permanece em esmalte profundo, com contorno cromado, para não virar tinta branca sobre metal claro. O pino central conserva a cor da cápsula, delimitada por esmalte profundo. Nunca dilua a tinta da cápsula na chapa: ela aparece inteira; só o brilho atmosférico usa mistura.
+**A Regra da Carcaça Permanente.** O corpo da máquina conserva o gradiente de esmalte azul-noite depois da revelação. A cor vencedora identifica os setores, o pino central, a manopla, o lábio da calha e a cápsula entregue; ela não repinta a carcaça nem seus decalques. O pino e a manopla recebem contorno de esmalte profundo. Essa separação mantém os materiais da referência 3D e a identidade de cada pessoa ao mesmo tempo.
 
 **A Regra da Única Quebra.** O papel aparece onde se administra, e em nenhum outro lugar. São três ocorrências, e as três se justificam pelo mesmo motivo: a gaveta dos integrantes, onde se opera a lista; a etiqueta do giro, que é literalmente papel colado sobre o esmalte — o mesmo material do adesivo do mês, escrito na bancada de papel que a etiqueta abre; e a bancada da porta, que é a bancada da gaveta no lugar onde a cápsula já está desenhada em 340px, com o mesmo evento por baixo. Uma quarta superfície clara precisa antes provar que é administração — e provar, aqui, quer dizer gravar o mesmo tipo de evento que as outras três.
 
@@ -381,11 +397,15 @@ o clube joga, não onde ele lê a documentação.
 
 O produto é uma única página empilhada em faixas de largura total, com goteira lateral de `5vw` (`1.1rem` abaixo de 620px) e respiro vertical de seção em `clamp(4.5rem, 9vw, 8rem)`.
 
-A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr) / minmax(0, 1.08fr)`) com altura mínima de `min(760px, 100svh - 64px)`: a máquina à esquerda, separada por uma hairline vertical; o resultado à direita. O adesivo da rodada fica posicionado em absoluto no canto superior direito do palco, rotacionado `-13deg`. O registro é uma grade de células que se empacota borda a borda (`auto-fit, minmax(124px, 1fr)`) sob uma régua superior de 2px, com um tique por célula. A porta e a prateleira repetem a mesma assimetria do palco. A grade de série sob o resultado é `auto-fit, minmax(140px, 1fr)` com bordas que se costuram sem gap.
+A dobra inicial é um palco de duas colunas assimétricas (`minmax(320px, .92fr) / minmax(0, 1.08fr)`) com altura mínima de `min(760px, 100svh - 64px)`: a máquina nítida à esquerda e o resultado num painel de vidro à direita, sem divisória entre eles. O palco tem espaçamento de `3vw` entre colunas e preenchimento de `3rem 5vw 3rem 4vw`. O adesivo da rodada fica posicionado em absoluto no canto superior direito do palco, rotacionado `-13deg`. O registro é uma grade de células que se empacota borda a borda (`auto-fit, minmax(124px, 1fr)`) sob uma régua superior de 2px, com um tique por célula. A porta e a prateleira repetem a mesma assimetria do palco. A grade de série sob o resultado é `auto-fit, minmax(140px, 1fr)` com bordas que se costuram sem gap.
+
+O cenário é `src/images/bancada-capsulas.png`: bancada azul-noite com três cápsulas grandes recortadas nas bordas e centro livre. Seu prompt acompanha o arquivo em `bancada-capsulas.prompt.txt` e nos metadados da imagem. A camada fica em posição **absoluta**, atrás do documento, e rola com ele; não é um fundo fixo de sala. Usa `cover`, alinhamento central no alto e altura `clamp(820px, 68vw, 1120px)`, dissolvendo no esmalte a partir de 72% da altura. Abaixo de 980px passa a `1250px`, com posição horizontal em 44%.
+
+**Onde cada imagem mora, e por quê.** O cenário fica em `src/images/` porque só a folha de estilos o pede: o empacotador o emite uma vez, com hash. Os dois atlas do SVG (`maquina-materiais.png` e `capsula-material.png`) ficam em `public/images/` porque o `<image href>` os endereça em tempo de execução e precisa de um caminho estável. Um cenário em `public/` com `url()` apontando para ele viaja **duas vezes** — 1615 kB repetidos, medidos no `dist` antes da correção.
 
 A página tem duas faixas e um rodapé, e mais nada: o palco e o registro. **A administração não é uma seção — é uma gaveta.** A lista de integrantes ocupava a metade de baixo de toda visita para uma tarefa que se faz uma vez por mês; agora ela abre pelo cabeçalho e some quando acaba.
 
-**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina troca a borda direita por borda inferior, e os decalques da máquina desaparecem. Em `620px` a placa da máquina some, a barra do topo quebra em **exatamente duas linhas** (ver A Regra das Duas Linhas da Barra), a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, o seletor de ordem do álbum troca de forma (ver A Regra da Ordem que Cabe na Mão), e o rodapé empilha.
+**Responsivo.** Em `980px` tudo colapsa para uma coluna, a máquina e o resultado ficam centralizados com larguras máximas de `460px` e `620px`, e os decalques da máquina desaparecem. O palco continua sem divisória. Em `620px` a placa da máquina some, a barra do topo quebra em **exatamente duas linhas** (ver A Regra das Duas Linhas da Barra), a grade de série vira duas colunas, o registro vira um trilho horizontal com `scroll-snap` e a dica de deslize aparece, as ações do resultado empilham em largura total, as grades de cor e emoji passam de doze para oito colunas, o seletor de ordem do álbum troca de forma (ver A Regra da Ordem que Cabe na Mão), e o rodapé empilha.
 
 ### Named Rules
 
@@ -462,11 +482,13 @@ e sem cartão nenhum.
 
 ## Elevation & Depth
 
-O sistema é material, não empilhado: a profundidade vem de gradientes de acrílico e cromo dentro do SVG, de hairlines de luz sobre esmalte, e de uma parede lateral moldada sob os botões. Sombras difusas existem apenas onde uma peça física estaria de fato levantada da chapa.
+O sistema é material: a profundidade vem da espessura desenhada da carcaça, da refração do acrílico, do cromo canelado e do aço escovado dentro do SVG, das hairlines de luz sobre esmalte e da parede lateral moldada sob os botões. Sombras difusas ancoram as peças; reflexos amplos e suaves descrevem sua curvatura.
 
 ### Shadow Vocabulary
 - **Poço do globo:** `feDropShadow` em `enamel-deep`, deslocamento vertical 22, desvio 40, opacidade `.55`: o globo assenta sobre o gabinete.
-- **Corpo e placa da manivela:** `feDropShadow` em `enamel-deep`, respectivamente deslocamento/desvio/opacidade `12/20/.45` e `6/12/.5`, depois do lábio moldado. A **cápsula solta** conserva `drop-shadow(0 2px 3px rgba(4, 10, 22, .45))`: peça menor, sombra proporcional.
+- **Corpo:** `feDropShadow` em `enamel-deep`, deslocamento vertical 12, desvio 20 e opacidade `.45`, depois da iluminação especular filtrada da face. A espessura é geometria própria, sem a antiga sombra dura de `dy="-6"`.
+- **Placa e braço da manivela:** sombras em `sombra-maquina`, respectivamente `dx/dy/desvio/opacidade` de `1/5/5/.42` e `1.5/4/3.5/.45`. A **cápsula solta** conserva `drop-shadow(0 2px 3px rgba(4, 10, 22, .45))`: peça menor, sombra proporcional.
+- **Painel de resultado:** gradiente azul a 135° de `rgba(16, 35, 63, .58)` a `rgba(10, 24, 48, .76)`, desfoque de fundo de `22px` (`14px` abaixo de 620px), raio de `18px`, reflexos internos de borda e sombra `0 20px 42px rgba(3, 10, 20, .28)`. Sem suporte a `backdrop-filter`, o fundo passa a esmalte profundo sólido. Com transparência reduzida, o cenário some e as superfícies ficam sólidas; em cores forçadas o painel usa `Canvas` e borda `CanvasText`.
 - **Adesivo do mês** (`0 10px 22px rgba(6, 14, 28, .42), 0 0 0 5px var(--paper)`): sombra de colagem mais a borda branca de adesivo recortado.
 - **Parede lateral moldada** (`0 6px 0 #c48f16, 0 12px 20px rgba(4, 10, 22, .38)`): botão primário. O botão de esmalte usa `0 5px 0 #061225, 0 11px 18px rgba(4, 10, 22, .28)`.
 - **Aviso flutuante** (`0 14px 30px rgba(4, 10, 22, .48)`): o toast, único elemento fora do plano da página.
@@ -474,20 +496,13 @@ O sistema é material, não empilhado: a profundidade vem de gradientes de acrí
 
 ### Named Rules
 
-**A Regra do Lábio Moldado.** As peças grandes da máquina são plástico moldado, e não
-retângulos pintados: a caixa da roleta (`.body-plate`) e o disco da manivela
-(`.crank-plate`) levam um **lábio duro de 6 unidades em cima** — `feDropShadow` sem
-desfoque, com `dy="-6"` e tinta `enamel-deep` — que diz que a peça está à frente do que vem atrás dela, mais a sombra ambiente
-que diz que ela é grossa.
+**A Regra da Espessura que Recua.** A traseira da base fica em `(20, 338)` e a face em `(14, 352)`: recua 6 unidades para a direita e **14 para cima**, deixando o tampo visível. A espessura não se projeta para baixo como um degrau sob a caixa. Bisel, tampo e sombra ambiente descrevem o volume; a antiga faixa dura de sombra no alto foi removida.
 
-O lábio nunca vem sozinho, pela Regra da Parede Moldada: deslocamento sem desfoque, sozinho,
-é adesivo e não moldagem. Ele fica na tinta do esmalte mesmo quando a chapa é repintada com a
-cor da cápsula vencedora — é sombra da carcaça, e não um elemento montado na chapa, então a
-Regra da Repintura Total não o alcança.
+**A Regra da Luz Parada.** O braço gira dentro de um grupo externo parado que recebe seu filtro de sombra. A sombra continua caindo para baixo e à direita durante a rotação, com desfoque de `3.5` unidades; ela nunca gira junto com o braço. O disco da manivela e o cubo recebem gradiente amplo e textura fina de aço escovado, sem faixas brancas de cromo espelhado. Reflexos da carcaça e da cúpula são difusos e acompanham as curvas, sem retângulos duros colados sobre as peças.
 
 **A Regra da Parede Moldada.** O botão tem uma parede lateral de plástico moldado — preenchimento sólido mais escuro em `0 Npx 0`, acompanhado de uma sombra ambiente real e desfocada — e essa parede colapsa sob um `translateY` no `:active`, como plástico que afunda. É moldagem, não a sombra diagonal dura de bloco: nunca use deslocamento em X, e nunca use a parede sem a sombra ambiente que a acompanha.
 
-**A Regra do Material Antes da Camada.** Profundidade se resolve com gradiente, canelura e hairline dentro da peça. Uma sombra só é adicionada quando um objeto físico estaria levantado; nenhum contêiner de conteúdo recebe sombra para parecer "card".
+**A Regra do Material Antes da Camada.** Profundidade se resolve com geometria, gradiente, canelura e hairline dentro da peça. A sombra acompanha um volume físico. O painel de resultado é a superfície de vidro sobre a bancada, com borda iluminada e sombra próprias; as demais agrupações de conteúdo continuam feitas por costura de bordas.
 
 ## Shapes
 
@@ -509,7 +524,7 @@ Bordas são sempre hairline de 1px (1.5–2px quando é traço de peça). Nenhum
 - **Ghost / link de texto:** cromo, peso 700, sublinhado com `0.24em` de deslocamento e traço de 1.5px, altura 44px.
 
 ### Cards / Containers
-Quase não há cards. As agrupações são feitas por costura de bordas: a grade de série e o registro desenham suas próprias hairlines e se encaixam sem gap nem raio. As exceções são a prateleira da raiz (esmalte profundo, hairline, raio `16px`) e a faixa do ensaio do resumo na bancada da etiqueta (papel silencioso, raio `8px`) — as duas com fundo próprio porque são recipientes, não agrupamentos.
+Quase não há cards. As agrupações são feitas por costura de bordas: a grade de série e o registro desenham suas próprias hairlines e se encaixam sem gap nem raio. O resultado da máquina recebe vidro azul com raio `18px` e o tratamento descrito em Elevation & Depth. As outras exceções são a prateleira da raiz (esmalte profundo, hairline, raio `16px`) e a faixa do ensaio do resumo na bancada da etiqueta (papel silencioso, raio `8px`) — as duas com fundo próprio porque são recipientes, não agrupamentos.
 
 ### Inputs / Fields
 - **Style:** fundo branco, tinta escura, borda de 1.5px em `#a9b1bf`, raio `8px`, `0.78rem 0.95rem`, altura mínima 48px. Sempre precedidos por rótulo em mono `0.64rem` caixa alta.
@@ -536,9 +551,9 @@ Aviso fixo no canto inferior direito sobre esmalte elevado, borda de linha forte
 A máquina é um único SVG (`viewBox="-26 -26 452 576"`) desenhado em espaço próprio de 400×400 para o globo: centro em (200, 200), raio interno 96, equador 118, raio externo 168, trilho de rótulo em 140. O aro cromado leva 84 caneluras desenhadas individualmente entre os raios 171 e 183. Nove cápsulas inteiras repousam fixas no interior inferior, para que a cena nunca reembaralhe.
 
 - **Recortes e sombras:** o SVG permite `overflow: visible`; cada sombra grande declara sua região em `userSpaceOnUse`, contendo a peça, seu deslocamento e três desvios do desfoque. O recorte circular do núcleo fica no grupo externo parado, enquanto apenas o grupo de cápsulas balança dentro dele.
-- **Materiais sem repintar pessoas:** os gradientes usam os tokens de esmalte, cromo e branco. O vidro termina no equador de raio 118, antes da faixa colorida e dos nomes; seu reflexo é um arco dentro do núcleo. As cascas translúcidas usam cromo com opacidade própria de cada escala. Assim o acrílico não clareia a tinta nem reduz o contraste dos nomes, cujo mínimo medido nas 24 cores é `4.611:1`. O puxador em esmalte sobre o trecho mais escuro do cromo mede `7.114:1`.
+- **Materiais sem repintar pessoas:** o acrílico principal termina no raio 118, e a refração de volume fica no núcleo de raio 96. O verniz e os reflexos externos passam por uma máscara que preserva o intervalo radial `128–153`, onde ficam os nomes em qualquer rotação. As cascas translúcidas usam cromo com opacidade própria de cada escala. O mínimo registrado para a tinta dos nomes sobre as 24 cores é `4.611:1`; preservar o fundo sob esses glifos faz parte da geometria, não de uma estimativa visual. Os discos da manivela e do cubo usam o gradiente amplo `chrome` com a textura `aco-escovado`; o aro externo mantém cromo canelado.
 
-- **Rótulos no aro:** cada nome corre tangencialmente pelo aro via `textPath`. O arco do rótulo é invertido para as cápsulas que param na metade inferior, de modo que nenhum nome fique de cabeça para baixo. O texto degrada por orçamento de arco — primeiro nome, iniciais, uma letra — conforme o número de participantes; o tamanho da fonte é `min(17, max(8, 46/√n))`.
+- **Rótulos no aro:** cada nome corre tangencialmente pelo aro via `textPath`. O arco do rótulo é invertido para as cápsulas que param na metade inferior, de modo que nenhum nome fique de cabeça para baixo. O texto degrada por orçamento de arco — primeiro nome, iniciais, uma letra — conforme o número de participantes; o tamanho da fonte é `min(14, max(8, 40/√n))` — o aro do render é mais estreito que o aro vetorial que ele substituiu.
 - **Calha às seis horas:** a rotação de destino é calculada para que a cápsula vencedora pare exatamente na calha, na base do globo.
 - **Estado ao vivo:** revelada a rodada, a chapa recebe a cor da cápsula, os elementos montados nela recebem a tinta AA calculada, e um brilho radial suave da mesma cor aparece atrás do palco.
 
@@ -937,10 +952,10 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 ## Do's and Don'ts
 
 ### Do:
-- **Do** deixar o esmalte sangrar até as bordas da tela; a máquina é o plano de fundo, não um objeto dentro de uma moldura.
+- **Do** manter a bancada contínua até as bordas da tela, a máquina nítida e o desfoque concentrado no painel de resultado.
 - **Do** usar a cor da cápsula da pessoa em todo lugar onde ela aparece — aro, registro, gaveta, bandeja, álbum e confete — para que a coleção leia como coleção.
 - **Do** guardar a cor como posição na paleta, nunca como hexadecimal livre, para que o contraste continue garantido sem o servidor precisar calculá-lo.
-- **Do** pintar a chapa da máquina com a cor da cápsula vencedora como campo chapado e trocar os elementos montados nela para a tinta AA calculada.
+- **Do** conservar a carcaça azul-noite e identificar a cápsula vencedora nos setores, no pino, na manopla e na entrega.
 - **Do** usar o raio `rule` (2px) — e só ele — em marca de medição impressa: a régua de um
   critério, a barra de completude e o quadradinho da legenda dela. Um raio de 4px numa
   faixa de 6px de altura fecha em pílula, e a medição passa a parecer um indicador de
@@ -957,8 +972,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
   ser desfeito" decide algo para quem lê; "fica gravado no registro" não.
 - **Do** dar a toda tela em que se entra uma saída no alto e à esquerda, com o destino
   escrito por extenso.
-- **Do** dar às peças grandes da máquina o lábio duro em cima mais a sombra ambiente: é o que
-  faz plástico moldado em vez de retângulo pintado.
+- **Do** modelar a espessura da base recuando para cima e manter a direção da sombra da manivela fixa enquanto o braço gira.
 - **Do** honrar `prefers-reduced-motion` em CSS e em JS ao mesmo tempo.
 - **Do** dar borda de `ButtonText` em cores forçadas a toda peça cuja silhueta é o
   preenchimento — e conferir com o modo LIGADO, porque a folha de estilos do autor não
@@ -996,8 +1010,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Don't** duplicar uma nav no DOM para mudá-la de lugar entre desktop e celular: id
   repetido e dois caminhos de teclado para a mesma coisa. Move-se por CSS.
 - **Don't** pôr o voltar no meio das ações da tela: ele é a saída, não uma das respostas.
-- **Don't** usar o lábio moldado sem a sombra ambiente que o acompanha — sozinho ele é
-  adesivo, não plástico.
+- **Don't** reconstruir a espessura da máquina com uma faixa dura de sombra, nem transformar os discos de aço escovado em cromo espelhado.
 - **Don't** publicar `--live` sem `--live-ink`: os dois são um par, e quem separa devolve
   metade da paleta ao ilegível.
 - **Don't** pôr o bloco de cores forçadas no meio da folha: ele é sobrescrita e perde por

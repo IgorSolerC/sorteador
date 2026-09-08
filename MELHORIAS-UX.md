@@ -21,7 +21,7 @@ Cada achado tem:
 
 ## Resumo: o que fazer primeiro
 
-**85 entradas numeradas:** 67 achados com peso — **3 `P0`**, 20 `P1`, 25 `P2`, 19 `P3` — e
+**86 entradas numeradas:** 68 achados com peso — **3 `P0`**, 21 `P1`, 25 `P2`, 19 `P3` — e
 18 registros sem peso, que são decisões certas anotadas para não serem desfeitas por engano
 (o mapa do foco, as superfícies do navegador, as duas barras medidas, a Regra da Platina).
 
@@ -53,6 +53,7 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
 | 2 | **T-11** `Grupo não encontrado` em toda falha | mesma função do T-22, e o título mente em três das quatro causas |
 | 3 | **F-02** o rascunho da resenha some no clique fora | `P1`, e é a perda de trabalho de quem mais colabora |
 | 4 | **F-03** `Retirar o jogo` sem confirmação | `P1`, destrutivo, coletivo e a um clique |
+| 5 | **T-49** a cena de materiais custa 4,9 MB e 29,6 s | `P1` medido, cobrado na tela principal e em toda primeira visita; a correção não decide nada de produto |
 | 5 | **M-01** ninguém vê o giro de quem girou | `P1`, é o momento social do produto — e a conta cabe: 9 leituras numa noite, 0,6% do orçamento |
 | 6 | **T-12** o aparelho parado esconde o log que tem no bolso | `P1`, e o cache já existe e já é validado |
 | 7 | **T-44** quem entra pelo link não entra no globo | `P1`, e é a raiz do G-01: hoje quem digita os nomes é outra pessoa |
@@ -3871,6 +3872,43 @@ para ler os 8px dos nomes no aro do globo (T-15) e as casas de 20px da régua a 
 
 É o atalho que metade da web ainda bloqueia. Registrado para não ser "otimizado" um dia por
 causa de um toque duplo indesejado.
+
+---
+
+### T-49 · A cena de materiais custa 4,9 MB e 29,6 s de pintura `P1` `M`
+
+O cenário e os dois atlas do SVG são PNG. Medido num `dist` servido localmente, primeira
+visita fria a 1,6 Mbps com `Network.emulateNetworkConditions`, viewport de 1440px:
+
+| Tela | Total na rede | Imagens | LCP |
+|---|---|---|---|
+| A prateleira | 1973 kB | 1615 kB | **2564 ms** no `h1` |
+| A máquina do grupo | **5936 kB** | **4908 kB** | **29 600 ms** em `maquina-materiais.png` |
+
+Os três são RGB **sem canal alfa** — o recorte é feito por `clipPath`, não pelo arquivo:
+
+| Arquivo | Dimensão | Peso | Desenhado em |
+|---|---|---|---|
+| `public/images/maquina-materiais.png` | 1177×1337 | 1944 kB | aro em 370px; caixa em 372×184 |
+| `src/images/bancada-capsulas.png` | 1659×948 | 1615 kB | largura da viewport, banda de até 1120px |
+| `public/images/capsula-material.png` | 1254×1254 | 1348 kB | **30px** (as soltas) e **44px** (a entregue) |
+
+O terceiro é o pior: 1,3 MB para um sprite de 44px de lado, ~90x mais pixels do que a tela
+usa mesmo a 3x de densidade.
+
+**Proposta, em duas partes que não se dependem.** Re-encodar os três em WebP mantendo as
+dimensões em pixel — sem tocar em coordenada nenhuma. E reduzir a escala de
+`capsula-material` **sem** mexer nos recortes: `width`/`height` do `<image>` são unidades de
+usuário, então um arquivo menor por trás do mesmo `width="1254"` deixa `silhueta-capsula` e
+o `viewBox` do `symbol` valendo como estão. O único ajuste é a verificação
+`os dois materiais carregam nas dimensões dos recortes` em `e2e-roleta.mjs`, que compara
+`naturalWidth` com o atributo: ela passa a cobrar **proporção**, que é o que de fato
+desloca peça quando alguém troca a imagem.
+
+**Já corrigido junto desta entrada:** `bancada-capsulas.png` viajava **duas vezes** — 1615 kB
+em `images/` (copiado de `public/`) e 1615 kB outra vez em `media/`, emitido pelo `url()` da
+folha. O cenário passou para `src/images/`, onde só o empacotador o pede, e o `dist` caiu de
+**7,7 MB para 6,2 MB**. A regra de onde cada imagem mora está no `DESIGN.md`.
 
 ---
 

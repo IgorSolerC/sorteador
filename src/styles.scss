@@ -16,6 +16,9 @@
   --score-high: #0b6f7d; --score-high-lit: #3fbccb; --score-low: #a8481a; --score-worst: #ae1f16;
   --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --remove-ink: #6d5560; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
   --line: rgba(200, 220, 255, .17); --line-strong: rgba(200, 220, 255, .34); --line-paper: rgba(22, 35, 58, .18);
+  --vidro-palco: color-mix(in srgb, var(--enamel-deep) 62%, transparent);
+  --vidro-leitura: color-mix(in srgb, var(--enamel-deep) 82%, transparent);
+  --sombra-maquina: #030a14;
   --display: 'Fredoka Variable', 'Trebuchet MS', sans-serif;
   --mono: 'Martian Mono', ui-monospace, monospace;
   --body: 'Atkinson Hyperlegible', sans-serif;
@@ -25,7 +28,13 @@
 }
 * { box-sizing: border-box; }
 html { background: var(--enamel); scroll-behavior: smooth; }
-body { margin: 0; background: var(--enamel); color: var(--white); }
+body { position: relative; margin: 0; background: var(--enamel); color: var(--white); isolation: isolate; }
+/* O cenário fica atrás do documento: a transparência pertence às superfícies,
+   sem desbotar os nomes, as cápsulas ou os controles junto com o fundo. */
+body::before {
+  content: ''; position: absolute; z-index: -1; inset: 0 0 auto; height: clamp(820px, 68vw, 1120px); pointer-events: none;
+  background: linear-gradient(to bottom, transparent 72%, var(--enamel)), url('./images/bancada-capsulas.png') center top / cover no-repeat;
+}
 button, input, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
@@ -65,7 +74,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 .machine-plate span { color: var(--chrome); font-variant-numeric: tabular-nums; }
 
 /* ---- The stage: enamel body, the live capsule colour flooding it ---- */
-.draw-stage, .empty-stage { position: relative; display: grid; grid-template-columns: minmax(320px, .92fr) minmax(0, 1.08fr); overflow: hidden; background: var(--enamel); }
+.draw-stage, .empty-stage { position: relative; display: grid; grid-template-columns: minmax(320px, .92fr) minmax(0, 1.08fr); overflow: hidden; background: var(--vidro-palco); }
 .draw-stage { min-height: min(760px, calc(100svh - 64px)); border-bottom: 1px solid var(--line); }
 .draw-stage::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 24% 42%, color-mix(in srgb, var(--live) 26%, transparent), transparent 34%); opacity: 0; transition: opacity .7s ease, background .7s ease; pointer-events: none; }
 .draw-stage.is-live::before { opacity: 1; }
@@ -79,59 +88,33 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03
 // contra uma caixa inline e encolhe. `contents` devolve SVG e legenda ao grid da máquina.
 app-machine { display: contents; }
 .machine-front { width: min(100%, 452px); height: auto; overflow: visible; }
-/* A caixa da roleta é plástico moldado, e não um retângulo pintado: um lábio duro de 6
-   unidades em cima diz que a chapa está À FRENTE do poço do globo, e a sombra ambiente
-   embaixo diz que ela é grossa. Pela Regra da Parede Moldada, o lábio nunca vem sozinho —
-   deslocamento sem desfoque é adesivo, não moldagem. */
-.body-plate { fill: var(--enamel-raised); stroke: var(--line-strong); stroke-width: 1.5; filter: url(#sombra-corpo); transition: fill .6s ease, stroke .6s ease; }
-.is-live .body-plate { fill: var(--live); stroke: color-mix(in srgb, var(--live-ink) 34%, transparent); }
-.body-seam { fill: rgba(200, 220, 255, .2); }
-.is-live .body-seam { fill: color-mix(in srgb, var(--live-ink) 30%, transparent); }
+/* O render contém as reflexões locais; só a sombra sobre a bancada é externa. */
+.body-plate { filter: url(#sombra-corpo); }
 .globe-well { filter: url(#sombra-globo); }
-.globe-core, .globe-inner-edge { pointer-events: none; }
-.loose-dome { filter: drop-shadow(0 2px 3px rgba(4, 10, 22, .45)); }
-.loose-shell { fill: color-mix(in srgb, var(--chrome) 40%, transparent); }
-.loose-seam { fill: none; stroke: rgba(10, 24, 48, .34); stroke-width: 1.2; stroke-linecap: round; }
-.loose-spot { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: 2.2; stroke-linecap: round; }
+.capsula-solta-fisica, .delivery-dome { isolation: isolate; }
+.loose-dome, .tampa-colorida { mix-blend-mode: multiply; }
+.loose-spot { fill: none; stroke: var(--white); stroke-opacity: .45; stroke-width: .8; stroke-linecap: round; }
+.verniz-fisico { mix-blend-mode: multiply; }
 .loose { transform-box: view-box; transform-origin: 200px 240px; }
 .machine.is-spinning .loose { animation: settle var(--spin) both; }
 @keyframes settle { 0% { transform: rotate(0) translateY(0); } 22% { transform: rotate(-4deg) translateY(-7px); } 58% { transform: rotate(3deg) translateY(-3px); } 100% { transform: rotate(0) translateY(0); } }
-.knurl path { fill: none; stroke: rgba(10, 24, 48, .3); stroke-width: 1.1; }
 .capsule-field { transform-box: view-box; transform-origin: 200px 200px; will-change: transform; }
 .machine.is-spinning .capsule-field { transition: transform var(--spin); }
-.capsule-shell { fill: color-mix(in srgb, var(--chrome) 46%, transparent); }
-.capsule-seam { fill: none; stroke: rgba(10, 24, 48, .38); stroke-width: 1.6; }
-.capsule-gloss { fill: none; stroke: rgba(255, 255, 255, .62); stroke-width: 3.4; stroke-linecap: round; }
+.capsule-shell { fill: url(#casca-acrilico); }
 .capsule-name { fill: var(--enamel-deep); font-family: var(--display); font-weight: 600; letter-spacing: .01em; }
-.capsule.is-chosen .capsule-dome { stroke: var(--live-ink); stroke-width: 1.5; }
-.capsule.is-chosen .capsule-gloss { stroke: var(--white); }
-.globe-glass { pointer-events: none; }
-.globe-sheen { fill: none; stroke: var(--white); stroke-opacity: .16; stroke-width: 9; stroke-linecap: round; pointer-events: none; }
-.globe-rim-line { stroke: rgba(10, 24, 48, .5); stroke-width: 2; }
-.hub-ring { fill: var(--enamel-deep); }
 
 .hub-pin { fill: var(--live); stroke: var(--enamel-deep); stroke-width: 1.5; transition: fill .5s ease; }
 .chute-mouth { fill: var(--enamel-deep); }
 .chute-lip { fill: none; stroke: var(--live); stroke-width: 3; stroke-linecap: round; transition: stroke .5s ease; }
-/* O disco da manivela é uma peça cromada assentada num rebaixo: o lábio escuro em cima é
-   a borda do rebaixo caindo sobre ele, e a sombra difusa embaixo é a peça saindo da chapa.
-   As duas juntas são o que faz um botão de máquina parecer que gira. */
-.crank-plate { filter: url(#sombra-manivela); }
-.crank-arm { transform-box: view-box; transform-origin: 106px 452px; }
+/* O eixo coincide com o centro do disco escovado registrado no atlas. */
+.crank-arm { transform-box: view-box; transform-origin: 111px 444px; }
 .crank-bar { fill: none; stroke: var(--enamel-deep); stroke-width: 9; stroke-linecap: round; }
 .crank-knob { fill: var(--enamel-deep); stroke: var(--chrome); stroke-width: 1.5; }
 .crank-boss { fill: var(--enamel-deep); }
-.is-live .tray-flap { stroke: color-mix(in srgb, var(--live-ink) 55%, transparent); }
-.is-live .chute-lip { stroke: var(--live-ink); }
 .machine.is-spinning .crank-arm { animation: crank var(--spin) both; }
 @keyframes crank { to { transform: rotate(720deg); } }
-.tray-window { fill: var(--enamel-deep); }
-.tray-glass { fill: rgba(200, 220, 255, .1); stroke: rgba(10, 24, 48, .3); stroke-width: 1.5; }
-.tray-flap { fill: none; stroke: var(--chrome-dim); stroke-width: 2.5; stroke-linecap: round; }
 .delivery { opacity: 0; }
 .delivery-body { transform-box: view-box; transform-origin: 280px 458px; }
-.delivery-shell { fill: color-mix(in srgb, var(--chrome) 50%, transparent); }
-.delivery-seam { fill: none; stroke: rgba(10, 24, 48, .45); stroke-width: 2; stroke-linecap: round; }
 .delivery-dome { transform-box: fill-box; transform-origin: 12% 100%; }
 .machine.is-delivered .delivery { opacity: 1; }
 .machine.is-delivered .delivery-body { animation: deliver .92s cubic-bezier(.22, .9, .3, 1) both; }
@@ -139,8 +122,6 @@ app-machine { display: contents; }
 @keyframes deliver { 0% { opacity: 0; transform: translate(-80px, -76px) scale(.7); } 16% { opacity: 1; } 64% { transform: translate(0, 7px) scale(1); } 80% { transform: translate(0, -7px) scale(1); } 100% { transform: translate(0, 0) scale(1); } }
 @keyframes crack { 0%, 68% { transform: translate(0, 0) rotate(0); } 88% { transform: translate(-2px, -7px) rotate(-8deg); } 100% { transform: translate(-2px, -6px) rotate(-7deg); } }
 .decals text { fill: var(--sky); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; }
-.is-live .decal-plate, .is-live .leader-plate { stroke: color-mix(in srgb, var(--live-ink) 68%, transparent); }
-.is-live text.decal-plate { fill: var(--live-ink); stroke: none; }
 .decals .leader { fill: none; stroke: var(--sky); stroke-width: 1.2; opacity: .68; }
 .machine-caption { max-width: 40ch; margin: 0; color: var(--sky); font-size: .82rem; line-height: 1.5; text-align: center; }
 
@@ -1147,6 +1128,46 @@ app-confetti { display: contents; }
 .create-check input { width: 24px; height: 24px; min-height: 24px; flex: none; accent-color: var(--yellow); }
 .create-check small { display: block; margin-top: .15rem; color: var(--chrome-dim); font-size: .82rem; }
 
+.gate, .home-stage, .album-head, .album-wall { background: var(--vidro-leitura); }
+
+/* A bancada é uma cena contínua. Só o resultado recebe vidro: a máquina fica
+   nítida e apoiada na mesa, como na referência aprovada. */
+.draw-stage { background: transparent; padding: 3rem 5vw 3rem 4vw; gap: 3vw; align-items: center; }
+.draw-stage::before { display: none; }
+.draw-stage .machine { border: 0; padding: 1rem 0; }
+.draw-stage .result {
+  margin: 1.5rem 0; padding: clamp(1.7rem, 3vw, 3rem);
+  background: linear-gradient(135deg, rgba(16, 35, 63, .58), rgba(10, 24, 48, .76));
+  backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(227, 234, 242, .8), inset 1px 0 0 rgba(227, 234, 242, .36), inset -1px -1px 0 rgba(227, 234, 242, .22), 0 20px 42px rgba(3, 10, 20, .28);
+}
+.draw-stage .month-sticker { top: 2rem; right: 4vw; }
+.draw-stage .result-actions { flex-wrap: wrap; gap: 1rem; }
+
+@supports not (backdrop-filter: blur(1px)) {
+  .draw-stage .result { background: var(--enamel-deep); }
+}
+
+@media (max-width: 980px) {
+  body::before { height: 1250px; background-position: 44% top; }
+  .draw-stage { padding: 2.5rem 5vw 3rem; gap: .5rem; }
+  .draw-stage .machine { width: min(100%, 460px); justify-self: center; }
+  .draw-stage .result { width: min(100%, 620px); justify-self: center; margin: 0; }
+  .draw-stage .month-sticker { top: 1.5rem; right: 5vw; }
+}
+@media (max-width: 620px) {
+  .draw-stage { padding: 2.5rem 1.1rem 2rem; }
+  .draw-stage .result { padding: 1.6rem 1.3rem; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .draw-stage .month-sticker { right: 1.4rem; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body::before { display: none; }
+  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-wall { background: var(--enamel); }
+  .draw-stage .result { background: var(--enamel-deep); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
 /* ---- Cores forçadas (alto contraste do Windows) ---- */
 /* Neste modo o sistema substitui TODA cor de fundo pela dele. As peças deste produto que
    se desenham por preenchimento — sem borda, sem contorno, sem sombra — passavam a ser
@@ -1157,6 +1178,9 @@ app-confetti { display: contents; }
    Aqui elas voltam a existir como FORMA, com a tinta do sistema. Não é uma segunda paleta:
    é a borda que o preenchimento fazia. */
 @media (forced-colors: active) {
+  body::before { display: none; }
+  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-wall { background: Canvas; }
+  .draw-stage .result { background: Canvas; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid CanvasText; }
   .primary-action, .secondary-action, .note-sticker, .month-sticker,
   .score-tick, .status-choice, .reaction, .reaction-popover,
   .roster-card, .sheet-card, .confirm-card, .gate-bench,

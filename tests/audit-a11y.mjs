@@ -22,11 +22,11 @@ await new Promise((r) => (ws.onopen = r));
 let id = 0; const pend = new Map();
 ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } };
 const send = (m, p = {}) => new Promise((res) => { const i = ++id; pend.set(i, res); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
-const ev = async (e) => (await send('Runtime.evaluate', { expression: e, returnByValue: true })).result?.value;
+const ev = async (e) => (await send('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true })).result?.value;
 
 await send('Page.enable'); await send('Runtime.enable');
 
-const SONDA = `(() => {
+const SONDA = `(async () => {
   const lum = (c) => {
     const m = c.match(/[\\d.]+/g);
     if (!m) return null;
@@ -34,15 +34,106 @@ const SONDA = `(() => {
     const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
-  const bgOf = (el) => {
+  const rgb = (c) => {
+    const m = (c || '').match(/[\\d.]+/g);
+    if (!m) return null;
+    return { r: Number(m[0]), g: Number(m[1]), b: Number(m[2]), a: m.length > 3 ? Number(m[3]) : 1 };
+  };
+  const sobre = (frente, fundo) => ({
+    r: frente.r * frente.a + fundo.r * (1 - frente.a),
+    g: frente.g * frente.a + fundo.g * (1 - frente.a),
+    b: frente.b * frente.a + fundo.b * (1 - frente.a),
+    a: 1,
+  });
+  const texto = (c) => 'rgb(' + Math.round(c.r) + ', ' + Math.round(c.g) + ', ' + Math.round(c.b) + ')';
+  // O html pinta --enamel: ler o computado devolve rgb() resolvido, e um token hexadecimal
+  // cru passaria pelo parser como um numero so.
+  const esmalte = rgb(getComputedStyle(document.documentElement).backgroundColor) ?? { r: 16, g: 35, b: 63, a: 1 };
+
+  // O cenario e uma imagem em ::before ATRAS do documento: ela cobre o fundo do body, e e
+  // ela que aparece por baixo dos veus. Ler os pixels dela e a unica forma de saber o que
+  // esta de fato sob um texto -- o caminho de estilos so diz o que estaria sem a foto.
+  const cenario = await (async () => {
+    const cs = getComputedStyle(document.body, '::before');
+    if (cs.content === 'none' || cs.display === 'none') return { estado: 'ausente' };
+    const url = (cs.backgroundImage.match(/url\\("([^"]+)"\\)/) || [])[1];
+    if (!url) return { estado: 'ausente' };
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      const tela = document.createElement('canvas');
+      tela.width = img.naturalWidth; tela.height = img.naturalHeight;
+      const ctx = tela.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, tela.width, tela.height).data;
+      const banda = parseFloat(cs.height);
+      const caixa = document.body.clientWidth;
+      // A camada da imagem e a ultima do atalho; cover escolhe a maior escala que cobre.
+      const posicao = cs.backgroundPosition.split(',').pop().trim().split(/\\s+/);
+      const pctX = posicao[0].endsWith('%') ? parseFloat(posicao[0]) / 100 : 0.5;
+      const escala = Math.max(caixa / tela.width, banda / tela.height);
+      const offX = (caixa - tela.width * escala) * pctX;
+      return { estado: 'medido', px, w: tela.width, h: tela.height, banda, escala, offX };
+    } catch (erro) {
+      return { estado: 'falhou', motivo: String(erro) };
+    }
+  })();
+
+  // O veu de esmalte do fim da imagem (transparent 72%) so clareia o pior caso, entao
+  // entra na conta; abaixo da banda o fundo volta a ser o esmalte solido do body.
+  const ESMALTE_SO = [esmalte];
+  let sobOCenario = 0;
+  const baseSobOCenario = (doc) => {
+    if (cenario.estado !== 'medido') return ESMALTE_SO;
+    const y0 = Math.max(0, doc.topo), y1 = Math.min(cenario.banda, doc.base);
+    if (y1 <= y0) return ESMALTE_SO;
+    const passo = 3;
+    let claro = null, escuro = null, claroL = -1, escuroL = 2;
+    for (let y = y0; y < y1; y += passo) {
+      const iy = Math.floor(y / cenario.escala);
+      if (iy < 0 || iy >= cenario.h) continue;
+      const t = y / cenario.banda;
+      const veu = { r: esmalte.r, g: esmalte.g, b: esmalte.b, a: t <= 0.72 ? 0 : Math.min(1, (t - 0.72) / 0.28) };
+      for (let x = Math.max(0, doc.esquerda); x < doc.direita; x += passo) {
+        const ix = Math.floor((x - cenario.offX) / cenario.escala);
+        if (ix < 0 || ix >= cenario.w) continue;
+        const i = (iy * cenario.w + ix) * 4;
+        const cor = sobre(veu, { r: cenario.px[i], g: cenario.px[i + 1], b: cenario.px[i + 2], a: 1 });
+        const l = lum(texto(cor));
+        if (l > claroL) { claroL = l; claro = cor; }
+        if (l < escuroL) { escuroL = l; escuro = cor; }
+      }
+    }
+    if (!claro) return ESMALTE_SO;
+    // Texto que passa da banda continua sobre esmalte: ele entra como terceiro candidato.
+    return doc.base > cenario.banda ? [claro, escuro, esmalte] : [claro, escuro];
+  };
+
+  // Devolve TODOS os fundos plausiveis sob o elemento; o contraste usa o pior deles.
+  const fundosDe = (el) => {
+    const camadas = [];
     let node = el;
-    while (node) {
-      const bg = getComputedStyle(node).backgroundColor;
-      const m = bg.match(/[\\d.]+/g);
-      if (m && (m.length < 4 || Number(m[3]) > 0.9)) return bg;
+    while (node && node !== document.body && node !== document.documentElement) {
+      const cs = getComputedStyle(node);
+      const cor = rgb(cs.backgroundColor);
+      if (cor && cor.a >= 0.999) return [cor];
+      if (cor && cor.a > 0) camadas.push(cor);
+      if (cs.backgroundImage !== 'none') {
+        // Num gradiente, a parada mais transparente e a que menos cobre: e o pior caso.
+        const paradas = (cs.backgroundImage.match(/rgba?\\([^)]*\\)/g) || []).map(rgb).filter(Boolean);
+        if (paradas.length) camadas.push(paradas.reduce((pior, c) => (c.a < pior.a ? c : pior)));
+      }
       node = node.parentElement;
     }
-    return 'rgb(16, 35, 63)';
+    const r = el.getBoundingClientRect();
+    const doc = {
+      esquerda: r.left + window.scrollX, direita: r.right + window.scrollX,
+      topo: r.top + window.scrollY, base: r.bottom + window.scrollY,
+    };
+    const bases = baseSobOCenario(doc);
+    if (bases !== ESMALTE_SO) sobOCenario += 1;
+    return bases.map((base) => camadas.reduceRight((fundo, camada) => sobre(camada, fundo), base));
   };
   const ratio = (a, b) => {
     const la = lum(a), lb = lum(b);
@@ -71,6 +162,7 @@ const SONDA = `(() => {
   }
 
   const contraste = [];
+  let folga = { sobra: Infinity };
   for (const el of document.querySelectorAll('p, span, strong, b, dd, dt, h1, h2, h3, li, label, button, a')) {
     if (!el.textContent || !el.textContent.trim()) continue;
     if (el.querySelector('*') && el.childElementCount > 0 && !el.matches('button, a, strong, b, span, dd, dt')) continue;
@@ -81,7 +173,11 @@ const SONDA = `(() => {
     const px = parseFloat(cs.fontSize);
     const grande = px >= 24 || (px >= 18.66 && Number(cs.fontWeight) >= 700);
     const alvo = grande ? 3 : 4.5;
-    const razao = ratio(cs.color, bgOf(el));
+    const razoes = fundosDe(el).map((fundo) => ratio(cs.color, texto(fundo))).filter((v) => v !== null);
+    const razao = razoes.length ? Math.min(...razoes) : null;
+    if (razao !== null && razao - alvo < folga.sobra) {
+      folga = { sobra: razao - alvo, razao: Number(razao.toFixed(2)), alvo, cls: el.className.toString().slice(0, 40) || el.tagName };
+    }
     if (razao !== null && razao < alvo) {
       contraste.push({ cls: el.className.toString().slice(0, 40) || el.tagName, px: Math.round(px), razao: Number(razao.toFixed(2)), alvo });
     }
@@ -99,6 +195,9 @@ const SONDA = `(() => {
   }).length;
 
   return JSON.stringify({
+    cenario: cenario.estado + (cenario.motivo ? ': ' + cenario.motivo : ''),
+    sobOCenario,
+    folga: folga.sobra === Infinity ? null : folga,
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     alvosPequenos: alvos,
     contrasteBaixo: contraste,
@@ -176,7 +275,8 @@ for (const [nome, url, opcoes = {}] of paginas) {
     }
     const bruto = await ev(SONDA);
     const r = JSON.parse(bruto);
-    const falhas = r.overflow > 0 || r.alvosPequenos.length || r.contrasteBaixo.length ||
+    const falhas = r.cenario !== 'medido' ||
+      r.overflow > 0 || r.alvosPequenos.length || r.contrasteBaixo.length ||
       r.saltosDeTitulo.length || r.controlesSemNome || r.imagensSemAlt || r.svgSemRotulo || r.h1 !== 1;
     if (falhas) problemas += 1;
     console.log(`\n== ${nome} @ ${w}px ==`);
@@ -184,6 +284,8 @@ for (const [nome, url, opcoes = {}] of paginas) {
     console.log('  h1 na página:', r.h1, '| saltos de título:', r.saltosDeTitulo.join(', ') || 'nenhum');
     console.log('  controles sem nome:', r.controlesSemNome, '| img sem alt:', r.imagensSemAlt, '| svg sem rótulo:', r.svgSemRotulo);
     console.log('  alvos abaixo de 44px:', r.alvosPequenos.length ? JSON.stringify(r.alvosPequenos) : 'nenhum');
+    console.log('  cenário sob os véus:', r.cenario, '| textos medidos contra a foto:', r.sobOCenario);
+    console.log('  menor folga de contraste:', r.folga ? r.folga.razao + ':1 (alvo ' + r.folga.alvo + ') em ' + r.folga.cls : 'sem texto medido');
     console.log('  contraste abaixo do mínimo:', r.contrasteBaixo.length ? JSON.stringify(r.contrasteBaixo) : 'nenhum');
   }
 }

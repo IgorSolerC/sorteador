@@ -48,18 +48,16 @@ export interface Capsule {
   readonly ink: string;
   readonly dome: string;
   readonly clear: string;
-  readonly seam: string;
-  readonly gloss: string;
   readonly label: string;
   readonly labelPath: string;
   readonly fontSize: number;
 }
 
 export interface LooseCapsule {
+  readonly cx: number;
+  readonly cy: number;
   readonly color: string;
   readonly dome: string;
-  readonly shell: string;
-  readonly seam: string;
   readonly spot: string;
   readonly transform: string;
 }
@@ -91,7 +89,7 @@ export class Machine {
 
     const step = 360 / count;
     const gap = Math.min(1.6, step * 0.12);
-    const fontSize = Math.min(17, Math.max(8, 46 / Math.sqrt(count)));
+    const fontSize = Math.min(14, Math.max(8, 40 / Math.sqrt(count)));
     const arcLength = (2 * Math.PI * GLOBE.label) / count;
     const budget = Math.floor((arcLength * 0.82) / (0.62 * fontSize));
     const rest = this.restRotation();
@@ -106,8 +104,6 @@ export class Machine {
         ink: person.ink,
         dome: annulus(from, to, GLOBE.equator, GLOBE.outer),
         clear: annulus(from, to, GLOBE.inner, GLOBE.equator),
-        seam: arc(from, to, GLOBE.equator),
-        gloss: arc(from + (to - from) * 0.12, from + (to - from) * 0.46, GLOBE.outer - 11),
         label: fitLabel(person.name, budget),
         labelPath: labelArc(from, to, GLOBE.label, atRest),
         fontSize,
@@ -126,23 +122,15 @@ export class Machine {
       const { cx, cy } = capsule;
       const r = LOOSE_RADIUS;
       return {
+        cx,
+        cy,
         color: colors.length ? colors[index % colors.length] : capsuleColor(index),
         dome: `M${cx - r} ${cy}a${r} ${r} 0 0 1 ${r * 2} 0Z`,
-        shell: `M${cx - r} ${cy}a${r} ${r} 0 0 0 ${r * 2} 0Z`,
-        seam: `M${cx - r - 1} ${cy}h${r * 2 + 2}`,
         spot: `M${cx - r * 0.62} ${cy - r * 0.42}a${r * 0.72} ${r * 0.72} 0 0 1 ${r * 0.5} ${-r * 0.42}`,
         transform: `rotate(${capsule.rot} ${cx} ${cy})`,
       };
     });
   });
-
-  /** O canelado que o aro cromado promete, desenhado em vez de sugerido. */
-  protected readonly flutes = computed<string[]>(() =>
-    Array.from({ length: 84 }, (_, index) => {
-      const angle = (index * 360) / 84;
-      return `M${point(angle, 171)}L${point(angle, 183)}`;
-    }),
-  );
 
   protected readonly winner = computed<MachinePerson | null>(() => {
     const index = this.chosenIndex();

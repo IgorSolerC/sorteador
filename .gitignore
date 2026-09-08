@@ -49,8 +49,10 @@ Thumbs.db
 /.gemini/
 /.claude/skills/
 /.claude/agents/
-# Design review captures are working artifacts; DESIGN.md and its sidecar are the record
+# Design review captures and option comps are working artifacts; DESIGN.md and its
+# sidecar are the record. Os comps de escolha de direcao pesam megabytes por rodada.
 /.impeccable/review/
+/.impeccable/mocks/
 
 # Firebase
 /firebase-debug.log
