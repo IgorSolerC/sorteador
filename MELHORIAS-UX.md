@@ -25,7 +25,7 @@ Cada achado tem:
 18 registros sem peso, que são decisões certas anotadas para não serem desfeitas por engano
 (o mapa do foco, as superfícies do navegador, as duas barras medidas, a Regra da Platina).
 
-**Seis achados foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
+**Sete achados foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
 em vez de só apontar foi estreito: medido, de uma ou duas linhas, sem decisão de produto no
 meio, e com as nove suítes verdes depois. Todo o resto é plano.
 
@@ -40,6 +40,7 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
 | ✅ | **T-25** a gaveta nunca recebia o foco | teste que falha sem a correção; 404/404 |
 | ✅ | **M-02** o Tab terminava num botão invisível | 17 paradas → **16** |
 | ✅ | **F-01** a mesma pessoa com duas cores na mesma ficha | Davi tangerina→pinho; 3 testes novos |
+| ✅ | **T-32** o globo desenrolava 7 voltas para trás com rede lenta | medido a 1500ms: `rotate(0deg)` → fica parado |
 
 ### O que eu faria a seguir, nesta ordem
 
@@ -1678,6 +1679,11 @@ pior caso com --live-ink: Carmim a 4.61:1
 amarelo padrão #ffc53d -> tinta #0F0F12 a 12.13:1  (era 11.22:1)
 ```
 
+**E o número tem confirmação independente:** a suíte `e2e-roleta` do próprio projeto mede a
+mesma tinta contra a mesma paleta noutro contexto — o nome dentro da cúpula — e imprime
+`Contraste mínimo dos nomes: 4.611`. É o mesmo pior caso, pela mesma Carmim, calculado por
+outro caminho.
+
 **Conferido no navegador**, no palco do grupo `demo`:
 
 ```
@@ -2575,6 +2581,251 @@ melhor que ela seja uma decisão escrita do que um efeito colateral.
 ---
 
 ---
+
+---
+
+### T-29 · Dezessete larguras, do 1440 ao 320: nenhum estouro, nenhum alvo pequeno
+
+Varredura de `1440 · 1100 · 1000 · 979 · 900 · 820 · 768 · 700 · 640 · 621 · 620 · 560 · 480 ·
+414 · 390 · 360 · 320`, na máquina, medindo overflow horizontal, alvos abaixo do mínimo,
+altura da barra e o estado das duas quebras.
+
+```
+overflow horizontal : 0 em TODAS as dezessete
+alvos pequenos      : nenhum em TODAS as dezessete
+altura da topbar    : 64px de 1440 a 621 · 60px de 620 para baixo
+nav no rodapé       : `static` até 621 · `fixed` de 620 para baixo
+registro em trilho  : `visible` até 621 · `overflow-x: auto` de 620 para baixo
+```
+
+As duas quebras documentadas (980 e 620) são exatamente onde o `DESIGN.md` diz, e o produto
+atravessa a faixa do meio — 621 a 979, a do tablet, que quase ninguém testa — sem nada
+quebrado.
+
+**Uma curiosidade medida, e ela é decisão de design, não defeito.** O nome vencedor muda de
+escala na quebra de 620, **para cima**:
+
+| Largura | Tamanho do nome |
+|---|---|
+| 700px | 52px |
+| 640px | **48px** ← o menor de todos |
+| **620px** | **67px** ← salta 40% ao estreitar |
+| 390px | 55px |
+| 320px | 45px |
+
+É a troca do token `display` (`clamp(3rem, 7.4vw, 6rem)`) pelo `display-narrow`
+(`clamp(2.7rem, 14vw, 4.2rem)`) na quebra. Faz sentido no celular — o nome ganha linha
+própria e pode crescer. O efeito colateral é que o **menor** nome do produto acontece em
+`640px`, uma largura de tablet pequeno em pé, onde o layout já é de uma coluna e sobra espaço.
+
+**Não proponho mexer.** Redimensionar janela é coisa de quem audita; num aparelho de verdade
+ninguém atravessa a quebra. Fica registrado para que o salto não seja "descoberto" como bug
+mais adiante.
+
+---
+
+### T-30 · Conteúdo no pior caso possível: nada corta, nada estoura
+
+Semeei um grupo `extremo` no emulador só para isto:
+
+| Conteúdo | No limite |
+|---|---|
+| Nome com espaços | `Maria Eduarda Gonçalves de Albuquerque Vasconcelos Sá` — **53 caracteres** |
+| Nome **sem** espaço nenhum | `MariaEduardaGoncalvesDeAlbuquerqueVasconcelos` — 45, e sem ponto de quebra |
+| Título do jogo | 64 caracteres, e um de 54 sem espaços |
+| Descrição | **280**, o teto da rule |
+| Texto da resenha | **600**, o teto da rule |
+
+Varrido em `1440 · 900 · 390 · 320`, na máquina, na gaveta e na ficha aberta:
+
+```
+overflow horizontal da página : 0 nas quatro larguras, nas três telas
+texto cortado sem reticências : nenhum
+```
+
+Isto é resultado de trabalho anterior, não de sorte: `overflow-wrap: anywhere` nos valores da
+grade de série, `text-overflow: ellipsis` no crachá, `text-wrap: pretty` nos títulos, e a
+Regra do Nome Inteiro colocando a degradação só onde o arco do globo manda.
+
+**Três alarmes falsos, e eles valem mais que o atestado.** As minhas sondas erraram três
+vezes antes de acertar, e os três erros são exatamente os que uma suíte automatizada de
+layout cometeria. Anoto-os aqui porque o T-18 propõe escrever essas sondas de verdade:
+
+1. **`getComputedStyle` mente sobre filho de SVG oculto.** A minha primeira sonda "provou"
+   que os decalques da máquina apareciam em 390px, contra a Regra do Decalque de Bancada. O
+   grupo `<g class="decals">` **está** com `display: none` abaixo de 980, mas os filhos
+   computam o `display` deles próprios, não o do ancestral. E `Element.checkVisibility()`
+   erra do mesmo jeito neste Chrome. **O que não mente é a caixa:** o grupo mede `0x0` de 980
+   para baixo, e `246x327` em 981. A regra está implementada; a sonda é que estava errada.
+2. **Elemento dentro de contêiner que rola "sai da tela" por definição.** O trilho do
+   registro tem `overflow-x: auto` no celular, então as células passam da direita da tela de
+   propósito. Uma varredura de estouro precisa subir pelos ancestrais e ignorar quem está
+   dentro de um deles.
+3. **`scrollWidth > clientWidth` não é corte.** O `8,0` da etiqueta acusava 7px de sobra; é
+   `overflow: visible` no elemento **e** no pai, mais as duas faíscas de foil, que são
+   `::before`/`::after` absolutos. O texto aparece inteiro. Corte só existe com
+   `overflow: hidden` ou `clip`.
+
+Uma sonda que não filtra os três acusa dezessete falhas onde não há nenhuma — que foi
+exatamente o que a minha fez antes de eu conferir.
+
+---
+
+### T-31 · Espaçamento de texto (WCAG 1.4.12): passa limpo
+
+O critério exige que, aplicados os quatro ajustes abaixo, **nada** seja cortado ou perdido:
+
+```css
+* { line-height: 1.5; letter-spacing: 0.12em; word-spacing: 0.16em; }
+p, li { margin-bottom: 2em; }
+```
+
+**Medido**, injetando exatamente isso:
+
+| Tela | 390px | 320px |
+|---|---|---|
+| A máquina | 0 cortes · overflow 0 | — |
+| A ficha, na face da resenha | **0 cortes** | **0 cortes** |
+| A gaveta dos integrantes | **0 cortes** | **0 cortes** |
+
+A altura do documento cresce de 2079 para 2307px na máquina a 390 — que é o esperado e é o
+ponto do critério: crescer para baixo, e não cortar.
+
+É o teste que pega altura fixa em px com texto em rem, e este produto tem `min-height: 44px`
+em dezenas de controles. Passa porque são `min-height`, e não `height` — a diferença de uma
+palavra que quase todo projeto erra.
+
+---
+
+### T-32 · Com rede lenta, o globo desenrolava sete voltas **para trás** antes de girar `P1` `XS` ✅ FEITO
+
+**Onde:** [synced-group.ts:521](src/app/synced-group.ts#L521) — `spin()`
+
+```ts
+this.isSpinning.set(true);     // liga a transição de 4,3s (.machine.is-spinning)
+this.revealed.set(false);
+this.rotation.set(0);          // ← e manda a roda para zero
+try {
+  await this.store.spin(...);  // ← só AGORA vai ao servidor
+```
+
+As três linhas entram no mesmo ciclo de detecção, então o DOM recebe `.is-spinning` **e**
+`transform: rotate(0deg)` juntos. A transição está ligada, o ângulo mudou — o navegador
+começa a animar do repouso até zero, para trás, e leva 4,3s para chegar lá. Só que o
+servidor ainda nem foi chamado.
+
+Numa conexão boa a ida e volta dura ~100ms e o recuo é invisível. Numa ruim, ele dura o
+tempo todo.
+
+**Medido**, com 1500ms de latência e 40 kbps emulados por CDP, lendo o valor alvo do
+`transform` a cada 120ms:
+
+```
+antes de girar : rotate(2610deg)   transição 0s      parado
+   127ms       : rotate(0deg)      transição 4,3s    "Entregando"
+```
+
+`2610° → 0°` são **sete voltas e um quarto para trás**, com a tela dizendo *Entregando* o
+tempo inteiro. A máquina anda ao contrário enquanto promete que está entregando.
+
+**Por quê:** este é o **momento autoral** do produto — o único movimento que a página tem, e
+o que ela existe para mostrar. Vê-lo rodar ao contrário num bar com sinal ruim é o pior lugar
+possível para um defeito de movimento.
+
+**Feito:** apagar a linha. Só isso.
+
+Não é preciso zerar, e a própria `playScene()` já explica por quê no comentário dela:
+*"Cada reencenação continua a partir do repouso atual."* Ela calcula
+`firstEquivalentAhead + 360 × 7` **a partir do ângulo em que a roda está**, então funciona de
+qualquer posição — e o comentário seguinte avisa que voltar a zero e chegar ao destino no
+mesmo quadro é justamente o que fazia *"a roleta parecer não girar"*. A linha contradizia o
+raciocínio escrito duas funções abaixo.
+
+**Depois**, mesma latência de 1500ms:
+
+```
+antes de girar : rotate(2520deg)   transição 0s      parado
+   127ms       : rotate(2520deg)   transição 4,3s    "Entregando"   ← parada, esperando
+  4996ms       : rotate(5310deg)   transição 4,3s    "Entregando"   ← +2790°, para a frente
+```
+
+A máquina fica **parada** enquanto pergunta ao servidor, e só se move quando ele já disse
+quem saiu. Que é exatamente a promessa do produto: encenar não decide, e não se encena o que
+ainda não aconteceu.
+
+**Verificado:** `e2e-roleta` **14/14** (a suíte que mede o SVG quadro a quadro),
+`e2e-flows` **21/21** (que gira de verdade, inclusive com movimento reduzido) e
+`npm test` **404/404**.
+
+---
+
+### T-33 · Um link com uma barra a mais cai na prateleira, calado `P2` `S`
+
+**Onde:** [app.ts:74](src/app/app.ts#L74) — `readSyncedGroupId`
+
+```ts
+/^#?\/g\/([A-Za-z0-9_-]{1,64})$/        // a máquina: fim exato
+/^#?\/g\/([A-Za-z0-9_-]{1,64})\/album\/?$/   // o álbum: aceita barra final
+/^#?\/novo\/?$/                          // a oficina: aceita barra final
+```
+
+Duas das três rotas toleram uma barra no fim. A da máquina, não.
+
+**Medido**, navegando por cada variação e vendo onde o app para:
+
+| Link | Onde cai |
+|---|---|
+| `#/g/demo` | **a máquina** ✅ |
+| `#/g/demo/` | **a prateleira** ❌ |
+| `#/g/demo?x=1` | **a prateleira** ❌ |
+| `#/g/demo#` | **a prateleira** ❌ |
+| `#/G/demo` | **a prateleira** ❌ |
+| `#/g/demo/album` · `#/g/demo/album/` | o álbum ✅ ✅ |
+| `#/novo` · `#/novo/` | a oficina ✅ ✅ |
+| `#/g/` · `#/g` · `#/qualquer` | a prateleira (correto) |
+| `#grupo=…&inicio=…` | a prateleira (correto e testado) |
+
+**Por quê importa:** o link **é** a credencial e **é** o produto. Ele viaja por WhatsApp,
+Telegram, Discord e Notas — lugares que reescrevem URL, cortam no fim da linha, colam duas
+vezes ou capitalizam depois de um ponto. Um caractere a mais e a pessoa cai numa prateleira
+que **não diz nada** sobre o link que ela acabou de abrir: ela vê a saudação, conclui que o
+link morreu, e vai pedir outro no grupo.
+
+**Proposta, em duas partes — e a segunda é a que importa:**
+
+1. **`XS`** — a rota da máquina aceita `\/?$` como as outras duas. Consistência de uma
+   barra.
+2. **`S`** — quando o fragmento **não está vazio e não casa com nada**, a prateleira diz:
+   `Esse link não abriu nenhuma máquina.` Cobre a barra a mais, o `?x=1`, o `#/G/`, o
+   formato antigo e todo caso futuro que ninguém previu.
+
+O item 2 é a mesma classe do T-11: uma falha silenciosa que a pessoa interpreta como o
+produto estar quebrado. E ele **não quebra** o teste que existe — `e2e-flows` confere que o
+link antigo cai na prateleira, com zero cápsulas e sem inventar "Zilda"; uma linha de recado
+não muda nada disso. O comentário daquele teste, aliás, já diz que a prateleira *"explica o
+que fazer"*. Hoje ela explica em geral; não explica sobre **este** link.
+
+---
+
+### T-34 · `lido há 90min` `P3` `XS`
+
+**Onde:** [synced-group.ts:639](src/app/synced-group.ts#L639) — `loadedAgo()`
+
+```ts
+if (seconds < 10) return 'agora';
+if (seconds < 60) return `há ${seconds}s`;
+return `há ${Math.floor(seconds / 60)}min`;
+```
+
+Não há degrau acima do minuto. Uma aba deixada aberta a manhã inteira diz `lido há 312min`, e
+um dia inteiro, `lido há 1440min`.
+
+Some com o T-02 e com o M-01 num problema só: a **única** pista de que a tela pode estar
+velha é essa linha, e ela fica cada vez mais difícil de ler justamente quanto mais velha a
+tela está. `há 1440min` não comunica "isto é de ontem" — comunica um número grande.
+
+**Proposta:** mais dois degraus, no mesmo estilo curto: `há 2h` acima de 60 minutos, e
+`ontem` (ou `há 2 dias`) acima de 24 horas. Três linhas.
 
 ---
 
