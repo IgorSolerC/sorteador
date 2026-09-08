@@ -1,7 +1,9 @@
 # Grupo sincronizado (Firebase)
 
-Modo novo, ao lado do atual. O modo por link (`#grupo=...`) **continua existindo e não muda** —
-há gente usando, e `compatibility.spec.ts` prova que os resultados antigos seguem intactos.
+**O log sincronizado é o produto inteiro.** O modo por link estático (`#grupo=...&inicio=...`)
+foi removido em setembro de 2026: links daquele formato caem na prateleira inicial, sem
+inventar um grupo, e `tests/e2e-flows.mjs` prova isso. Não há um segundo produto a preservar
+aqui — o que existe é este.
 
 ## Regra de custo, acima de qualquer outra
 

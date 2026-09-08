@@ -400,11 +400,15 @@ porque cada controle novo (o som foi o último) empurrava o crachá para uma lin
 Os comprimidos de navegação não encolhem; o **nome** do crachá é o que cede, porque ele é o
 único conteúdo variável ali.
 
-E ele cede pela barra cheia, não pela largura sozinha: abaixo de `460px` **e** com dois
-comprimidos na fileira — a máquina —, sobra o disco da cápsula, que já é a pessoa neste
-produto e já tem 44px. O álbum tem um comprimido só e mostra o nome inteiro na mesma
-largura. Escondido, o nome sai do olho e **não** da árvore de acessibilidade: com
-`display: none` o botão passaria a se anunciar como "trocar de pessoa" sem dizer de quem.
+E ele cede pela **barra cheia**, não pela largura sozinha: quem manda é a presença da saída
+escrita. A regra é `.topbar:has(.back-link) .who-name` — ou seja, o nome cede no **álbum** e na
+**oficina**, que têm o comprimido de voltar disputando a fileira, e não na máquina, que não
+tem saída no alto porque é onde se está. Medido a 320px com o crachá
+`Maria Eduarda Gonçalves de Albuquerque`: no álbum sobra o disco de 48×44px e o nome fica em
+1×1px; na máquina o nome aparece.
+
+Escondido, o nome sai do olho e **não** da árvore de acessibilidade: com `display: none` o
+botão passaria a se anunciar como "trocar de pessoa" sem dizer de quem.
 
 **A Regra das Duas Barras.** No desktop o cabeçalho é uma plaqueta só. No celular ele é
 **duas**: em cima quem eu sou e por onde eu saio; embaixo, fixo no pé da tela, o que eu posso
@@ -820,7 +824,7 @@ pode ficar com X maior que Y —, e isso é dito uma vez abaixo da lista, não u
 
 O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colada no esmalte. A superfície continua sendo o esmalte — o papel são os objetos, não o fundo, e é isso que mantém a Regra da Única Quebra de pé com dezenas de cartões na tela.
 
-- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
+- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série travada em **duas colunas** (`.album-stats`), hoje com seis valores: `Nota do clube`, `Platinado`, `Jogos com nota`, `Resenhas`, `Com jogo escrito` e `Rodadas`. Colunas automáticas deixavam órfão; duas colunas fecham o bloco em qualquer contagem par. Ela custa **189px** no celular, antes do primeiro cartão — ver a proposta de descê-la em `MELHORIAS-UX.md` (L-01).
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca. No celular a mesma escolha é o seletor do sistema (ver A Regra da Ordem que Cabe na Mão).
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.

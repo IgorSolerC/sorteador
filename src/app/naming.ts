@@ -29,7 +29,12 @@ export function initialsOf(name: string): string {
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
+    // `[...parte][0]` corta por PONTO DE CÓDIGO, e não por unidade UTF-16. Com `parte[0]`,
+    // um nome que começa por emoji devolvia meio par substituto: "🎮 Ana" virava "\uD83CA",
+    // que o navegador desenha como o losango de interrogação — no crachá, na porta, na
+    // gaveta, no aro do globo e no PNG do álbum, onde fica assado na imagem que vai para o
+    // grupo. É a mesma lição que `emojiText()` já aprendeu: um símbolo não é um caractere.
+    .map((part) => [...part][0]?.toUpperCase() ?? '')
     .join('');
 }
 

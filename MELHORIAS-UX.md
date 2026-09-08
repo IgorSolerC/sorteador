@@ -25,7 +25,7 @@ Cada achado tem:
 18 registros sem peso, que são decisões certas anotadas para não serem desfeitas por engano
 (o mapa do foco, as superfícies do navegador, as duas barras medidas, a Regra da Platina).
 
-**Oito achados foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
+**Nove achados e as sete derivas de documentação foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
 em vez de só apontar foi estreito: medido, de uma ou duas linhas, sem decisão de produto no
 meio, e com as nove suítes verdes depois. Todo o resto é plano.
 
@@ -42,6 +42,8 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
 | ✅ | **F-01** a mesma pessoa com duas cores na mesma ficha | Davi tangerina→pinho; 3 testes novos |
 | ✅ | **T-32** o globo desenrolava 7 voltas para trás com rede lenta | medido a 1500ms: `rotate(0deg)` → fica parado |
 | ✅ | **L-06** a cápsula sem jogo escrito também lacrava | o pôster e o recado já acertavam; a parede e a ficha, não |
+| ✅ | **iniciais quebradas** em nome com emoji | `🎮 Ana` dava `\uD83CA` — meio par substituto — no crachá, no aro e no PNG |
+| ✅ | **D-01 a D-07** as sete derivas de documentação | ver a seção 4: cada uma com o que dizia e o que passou a dizer |
 
 ### O que eu faria a seguir, nesta ordem
 
@@ -86,6 +88,7 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
    desempenho e o clube de 40 pessoas
 4. [Deriva de documentação](#4-deriva-de-documentacao)
 5. [Ideias de produto](#5-ideias-de-produto)
+6. [A crítica formal da máquina](#6-a-critica-formal-da-maquina-playbook-critique) — heurísticas de Nielsen, carga cognitiva e jornada
 
 ### Como esta auditoria foi feita
 
@@ -3764,9 +3767,136 @@ se isto é `P1` ou `P0`.
 
 ---
 
+### T-45 · O erro de uma reação aparece no topo do boletim, longe do dedo `P3` `XS`
+
+**Onde:** [game-bench.ts:186](src/app/game-bench.ts#L186) — `commitReaction()` ·
+[game-sheet.html:179](src/app/game-sheet.html#L179) — onde o erro é desenhado
+
+`commitReaction` é a única escrita que **não** passa por `write()`, e com um bom motivo
+escrito no código: *"o dedo está na fileira de emoji e é lá que ele continua"*. Ela não muda
+de face nem mexe no foco.
+
+Mas o erro dela vai para o mesmo `error()` de todo o resto, e esse sinal é desenhado **acima
+da lista de resenhas**. Num boletim com cinco resenhas, quem tocar em 😂 na última e a
+escrita falhar recebe um aviso a uma tela de distância, fora de vista. O `role="alert"` salva
+quem usa leitor de tela; quem enxerga não vê nada acontecer.
+
+**Proposta:** a reação já tem `aria-busy` e um estado `saving` no próprio controle
+([review-reactions.ts:25](src/app/review-reactions.ts#L25)). O erro cabe no mesmo lugar — o
+gatilho vira `is-error` por alguns segundos, com o motivo no nome acessível que ele já monta.
+Um sinal que nasce onde o dedo está.
+
+**Junta-se ao T-03:** hoje, sem rede, esse mesmo controle fica girando indefinidamente e
+calado. Os dois são o mesmo pedaço de trabalho.
+
+---
+
+### T-38 (complemento) · O estrago do crachá trocado **tem** volta, e o produto quase diz como
+
+**Onde:** [game-bench.ts:164](src/app/game-bench.ts#L164)
+
+```ts
+if (!seat.memberId) {
+  this.error.set(`${seat.name} assinou uma resenha e não é do grupo: só saindo dela.`);
+```
+
+A duplicata `Ana Souza` do T-38 aparece na mesa exatamente assim — uma cadeira sem
+`memberId`, porque quem assinou não é membro. E a mensagem, que já existe e é boa, diz o que
+fazer: **"só saindo dela"**.
+
+A recuperação completa é: voltar o crachá para `Ana Souza`, abrir a ficha e `Retirar a minha`,
+e voltar o crachá para `Ana`.
+
+Convoluto, mas existe — e isso rebaixa o T-38 de "estrago permanente" para "estrago com saída
+escondida". **O que continua faltando é alguém dizer isso na hora certa**, que é a proposta do
+T-38: avisar antes de trocar, em vez de deixar a pessoa descobrir o caminho de volta lendo
+uma mensagem de erro da tela da mesa.
+
+---
+
+### T-46 · O celular deitado perde a barra de baixo `P3` `S`
+
+**Medido**, na máquina, em três orientações paisagem reais:
+
+| Viewport | Overflow | Altura do documento | Nav no rodapé? |
+|---|---|---|---|
+| 780 × 390 | 0 | 1966px (5 telas) | **não** — fica no cabeçalho |
+| 844 × 390 | 0 | 1974px | **não** |
+| 740 × 360 | 0 | 1964px | **não** |
+
+A ficha aberta se comporta bem nas três (`742 × 352`, rolando por dentro, sem estouro).
+
+**O que muda é a nav.** A Regra das Duas Barras leva os controles para o pé abaixo de 620px, e
+o argumento escrito é o polegar. A condição é de **largura** — e um celular deitado tem 780 de
+largura, passa dos 620, e todos os controles voltam para o topo. Deitado, o topo é onde o
+polegar menos alcança.
+
+**Proposta:** a condição ganha a altura — `@media (max-width: 620px), (max-height: 480px)`.
+Uma vírgula.
+
+**Contra, e é sério:** com 390px de altura, 56px de barra no pé mais 60px de cabeçalho comem
+**30% da tela**. Deitado, o conteúdo é o que menos sobra. Pode ser que a resposta certa seja
+a barra no topo mesmo — e aí a regra deveria dizer isso, porque hoje ela não menciona
+orientação nenhuma.
+
+**Prova que falta:** não sei se alguém usa este produto deitado. A cena de 4,3s sugere que
+sim; o resto, que é leitura em coluna, sugere que não. É pergunta para o clube.
+
+---
+
+### T-47 · `prefers-contrast` não existe na folha `P3` `S`
+
+Não há nenhuma regra `@media (prefers-contrast: more)` no produto.
+
+Diferente do T-17 (cores forçadas), aqui o navegador **não** substitui nada: é um pedido do
+sistema por mais contraste, e cabe ao site atender.
+
+**Proposta mínima, e ela é quase só as linhas:** sob `prefers-contrast: more`, `--line` e
+`--line-paper` sobem para uma opacidade que separe de verdade, e `--chrome-dim` (6,31:1 sobre
+esmalte) dá lugar a `--sky` (9,72:1) nos textos de apoio. Nada de repintar o mundo: as
+divisórias e o texto secundário são exatamente onde um pedido de mais contraste dói.
+
+Não é piso obrigatório — é a diferença entre atender o pedido e ignorá-lo.
+
+---
+
+### T-48 · O zoom por pinça funciona, e isso não é pouco
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+```
+
+Sem `maximum-scale`, sem `user-scalable=no`. Quem precisa aproximar, aproxima — inclusive
+para ler os 8px dos nomes no aro do globo (T-15) e as casas de 20px da régua a 320px (F-08).
+
+É o atalho que metade da web ainda bloqueia. Registrado para não ser "otimizado" um dia por
+causa de um toque duplo indesejado.
+
+---
+
 ## 4. Deriva de documentação
 
-### D-01 · O briefing do álbum aponta para um arquivo que não existe `P2` `XS`
+**Todas as sete foram corrigidas.** Deriva é o único tipo de achado desta auditoria em que
+apontar não basta: um documento errado reescreve o trabalho de quem o ler amanhã, e nenhuma
+delas exigia decisão de produto.
+
+| | Arquivo | O que dizia | O que passou a dizer |
+|---|---|---|---|
+| D-01 | `.impeccable/surfaces/src-app-group-history-html.md` | a bancada é `note-editor.html` | é `game-sheet.html`, e o `note-editor` não existe mais |
+| D-02 | `.impeccable/surfaces/src-index-html.md` | a lista é local, compartilhada pelo fragmento | um grupo é um link, e o estado vive num log no Firestore |
+| D-03 | idem | "390px não pôde ser capturado" | como capturar (`setDeviceMetricsOverride`), e o que foi medido a 390 e a 320 |
+| D-04 | `FIREBASE.md` (3ª linha) | o modo por link "continua existindo e não muda" | ele saiu em setembro de 2026, e `e2e-flows` prova |
+| D-05 | `DESIGN.md` (O Álbum) | grade 2×2 com `Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram` | duas colunas travadas, seis valores, com os nomes de hoje |
+| D-06 | `DESIGN.md` (Duas Linhas da Barra) | o nome cede na **máquina** | cede onde há saída escrita — o **álbum** e a oficina —, com a medida a 320px |
+| D-07 | `README.md` | "as sete estão listadas abaixo", e faltava a de acabamento | as **nove**, com `e2e-acabamento`, as contagens desta rodada e as duas armadilhas do emulador |
+
+Três delas ganharam mais do que a correção: o briefing do index recebeu a seção de **notas de
+medição** (para a próxima pessoa não repetir a conclusão errada sobre 390px), o `DESIGN.md`
+recebeu o número medido a 320px, e o `README` recebeu o aviso do `--only firestore,auth` e do
+emulador zumbi — as duas coisas que custaram uma rodada inteira de investigação aqui.
+
+
+### D-01 · O briefing do álbum apontava para um arquivo que não existe `P2` `XS` ✅ FEITO
 
 **Onde:** [.impeccable/surfaces/src-app-group-history-html.md](.impeccable/surfaces/src-app-group-history-html.md) — `related_targets` e a seção "Decisões".
 
@@ -3782,7 +3912,7 @@ texto. Não é tarefa de design — é conserto de contrato.
 
 ---
 
-### D-02 · O briefing do index descreve um produto que foi removido `P2` `XS`
+### D-02 · O briefing do index descrevia um produto que foi removido `P2` `XS` ✅ FEITO
 
 **Onde:** [.impeccable/surfaces/src-index-html.md](.impeccable/surfaces/src-index-html.md)
 
@@ -3799,7 +3929,7 @@ credencial, a prateleira é a raiz).
 
 ---
 
-### D-03 · A "decisão não resolvida" do index cita uma medição que já não vale `P3` `XS`
+### D-03 · A "decisão não resolvida" do index citava uma medição que já não vale `P3` `XS` ✅ FEITO
 
 **Onde:** [.impeccable/surfaces/src-index-html.md](.impeccable/surfaces/src-index-html.md) — última linha.
 
@@ -3817,7 +3947,7 @@ verdadeira.
 
 ---
 
-### D-04 · O `FIREBASE.md` abre dizendo que o modo por link continua existindo `P1` `XS`
+### D-04 · O `FIREBASE.md` abria dizendo que o modo por link continua existindo `P1` `XS` ✅ FEITO
 
 **Onde:** [FIREBASE.md:3](FIREBASE.md#L3) — a terceira linha do arquivo.
 
@@ -3840,7 +3970,7 @@ prateleira.
 
 ---
 
-### D-05 · O `DESIGN.md` descreve a grade de números do álbum que não existe mais `P2` `XS`
+### D-05 · O `DESIGN.md` descrevia a grade de números do álbum que não existe mais `P2` `XS` ✅ FEITO
 
 Registrado em L-05, repetido aqui para o índice: a seção *O Álbum* promete
 `2×2 (Cápsulas, Etiquetadas, Rodadas, Já saíram)`. São **seis** valores hoje, e nenhum dos
@@ -3848,7 +3978,7 @@ quatro rótulos sobreviveu. A regra ("a grade fecha") continua valendo; a descri
 
 ---
 
-### D-06 · A Regra das Duas Linhas descreve o oposto do que o CSS faz `P2` `XS`
+### D-06 · A Regra das Duas Linhas descrevia o oposto do que o CSS faz `P2` `XS` ✅ FEITO
 
 Registrado em T-19, repetido aqui: o `DESIGN.md` diz que o nome do crachá cede *"com dois
 comprimidos na fileira — a máquina"* e que *"O álbum tem um comprimido só e mostra o nome
@@ -3860,7 +3990,7 @@ descrição que está trocada, e ela é o que alguém lê antes de mexer.
 
 ---
 
-### D-07 · Nove suítes, e o README lista sete `P3` `XS`
+### D-07 · Nove suítes, e o README listava sete `P3` `XS` ✅ FEITO
 
 **Onde:** [README.md](README.md#8-antes-de-dizer-que-terminou) — *"As sete estão listadas
 abaixo"*.
@@ -4059,3 +4189,189 @@ Anti-ideias, porque um documento de melhorias sem elas convida à próxima má i
 - **Unificar `josé` e `jose`.** A aspereza é intencional e está na invariante nº 3. O jeito
   certo de resolver o problema real por trás dela é o **G-01** — perguntar antes de criar
   uma segunda pessoa —, e não mexer na normalização.
+
+---
+
+## 6. A crítica formal da máquina (playbook `critique`)
+
+> ⚠️ **Rodada parcialmente degradada.** O playbook exige duas avaliações isoladas em
+> subagentes. A **Avaliação A** (revisão de design) rodou e está inteira abaixo. A
+> **Avaliação B** (detector + evidência de navegador) foi interrompida pelo limite de sessão
+> antes de devolver a tabela dela. O detector, porém, **já havia sido rodado nesta auditoria**
+> e voltou limpo: `node .claude/skills/impeccable/scripts/detect.mjs src/` → **0 achados**,
+> saída 0. O que falta da B é a medição de camadas, `z-index`, nós de DOM e tempo de layout —
+> não há síntese A×B completa, e por isso esta seção é a A com as minhas verificações por
+> cima, e não a crítica sintetizada que o playbook pede.
+
+### Veredito de especificidade: **alta, com uma rachadura no lugar mais visível**
+
+Nenhum outro produto usa esta composição sem mudar nada: o palco assimétrico, as 84
+caneluras desenhadas uma a uma ([machine.ts:140](src/app/machine.ts#L140)), a chapa repintada
+com a cor de quem ganhou, e a rotação de destino que sai da **mesma conta** que desenha as
+cunhas ([synced-group.ts:611](src/app/synced-group.ts#L611)) — a cápsula para na calha porque
+a matemática manda, não porque alguém ajustou um deslocamento.
+
+**A rachadura é uma palavra.** O botão principal diz `Girar a roleta`, a confirmação diz
+`Tem certeza que deseja girar a roleta?` e o nome acessível da peça diz
+`Girar a roleta de novo`. *Roleta* é o vocabulário do sorteador genérico — e a três linhas de
+distância a mesma tela acerta: *"Toque no globo para ver a **entrega** de novo"*, *"A cápsula
+já saiu do globo"*. O produto tem palavra própria e não a usa onde ela mais pesaria.
+
+### C-01 · A frase que ensina a regra de não repetição é inalcançável `P1` `S`
+
+**Onde:** [synced-group.html:127](src/app/synced-group.html#L127) —
+`@if (!pool().length) { Todos já saíram — a próxima rodada abre com o globo cheio. }`
+
+**Conferi no replay, e procede.** [group-log.ts:481](src/app/group-log.ts#L481):
+
+```ts
+pool = available.filter((id) => id !== winnerId);
+if (!pool.length) { round += 1; pool = activeIds(); drawnThisRound = new Set(); }
+```
+
+O bolo é **reabastecido no mesmo evento que o esvazia**. Então `state.pool` nunca fica vazio
+depois do último giro de uma rodada — ele já volta cheio.
+
+`!pool().length` só é verdadeiro quando `activeIds()` devolve vazio, ou seja, quando o grupo
+**não tem nenhum membro ativo**. E nesse estado a frase é falsa: não há "próxima rodada com o
+globo cheio", há um globo vazio porque todo mundo saiu.
+
+**A única frase da tela que ensina o motivo de o produto existir aparece só onde ela mente.**
+Fechar uma rodada — completar a coleção, que é a prova que o produto oferece — passa como um
+dígito trocando no adesivo, de `R1` para `R2`.
+
+**Proposta:** a condição certa não é o bolo vazio, é a **rodada ter virado neste giro**. O
+replay já sabe disso; o estado não expõe. Um `spin.round !== state.round` no último giro, ou
+um campo derivado `fechouRodada` no `SpinRecord`, dá a condição — e aí a frase aparece
+exatamente uma vez, no giro que completou a coleção.
+
+### C-02 · O aviso de cota é a quarta superfície de papel `P2` `XS`
+
+**Onde:** [synced-group.html:64](src/app/synced-group.html#L64) ·
+[styles.scss:593](src/styles.scss#L593)
+
+`.usage-note` é `--paper-quiet` com `--note-ink` sobre o esmalte, no alto da máquina. A Regra
+da Única Quebra lista **três** ocorrências de papel e exige que uma quarta *"prove que é
+administração — gravar o mesmo tipo de evento que as outras três"*. O aviso de cota não grava
+nada; é infraestrutura.
+
+E o texto dele (`Muitos pedidos deste aparelho hoje`) é exatamente o tipo de explicação de
+máquina que a Regra do Texto proíbe — sobrevive pela exceção do erro-com-saída, mas o
+**material** está errado: papel é onde se opera, e ali não se opera nada.
+
+*(Detalhe de acabamento junto: a regra usa `!important` em `color` e `font-size`. Um
+`!important` na folha de sistema é uma disputa de especificidade que ficou sem resolver.)*
+
+### C-03 · O giro de verdade é indistinguível do ensaio `P1` `M`
+
+`spin()` ([synced-group.ts:521](src/app/synced-group.ts#L521)) produz os **mesmos** 4,3
+segundos, o **mesmo** confete, o **mesmo** `h1` e o **mesmo** parágrafo que `replayScene()`.
+Nenhum aviso, nenhuma diferença de cópia, nenhuma marca.
+
+A confirmação diz *"não pode ser desfeito"* e, dois segundos depois, a consequência chega
+vestida de reprise. O `DESIGN.md` diz *"encenar não é decidir"*; a tela faz **decidir parecer
+encenar**.
+
+Some-se ao T-07 (a cena roda sozinha em toda visita, dizendo `Entregando` no presente) e o
+resultado é o pior dos dois: quem abre o link pela primeira vez acha que **causou** um
+sorteio, e quem gira de verdade não recebe nada que marque o gesto irreversível.
+
+**Proposta:** uma batida a mais só no giro verdadeiro — o aviso do rodapé, que já existe e já
+é usado por toda outra escrita, dizendo `Breno saiu do globo.` O confete e a cena continuam
+os mesmos; o que muda é haver **um** sinal que só a decisão produz.
+
+### C-04 · A manivela gira enquanto o servidor não respondeu `P2` `S`
+
+Complemento honesto ao **T-32**, que eu corrigi pela metade.
+
+`spin()` liga `isSpinning` de forma síncrona e só chama o servidor três linhas depois.
+`.machine.is-spinning` dispara a animação da manivela ([styles.scss:126](src/styles.scss#L126))
+e o assentamento das cápsulas soltas no mesmo instante.
+
+Eu tirei o globo do recuo de sete voltas (T-32) — ele agora fica **parado** esperando. Mas a
+**manivela continua girando 720°** durante a espera, e o `h1` continua afirmando `Entregando`
+sobre um giro que o servidor ainda não decidiu. Se ele recusar, a manivela terá girado para
+nada.
+
+**A correção do T-32 melhorou o defeito e não o fechou.** O fechamento é a mesma ideia: nada
+na peça se move antes da resposta. `is-spinning` precisa virar dois estados — *perguntando* e
+*entregando* —, e só o segundo anima.
+
+### C-05 · O globo diz 2 e a grade diz 1, e no celular nada reconcilia `P2` `S`
+
+Já registrado como **T-16d** pela minha medição; a Avaliação A achou o pedaço que faltava.
+
+O decalque `2 NO GIRO` ([machine.html:69](src/app/machine.html#L69)) é a **única** legenda que
+explica a diferença entre o globo (a foto do instante do giro) e a contagem (o bolo de agora).
+E ele é desktop-only: [styles.scss:627](src/styles.scss#L627) apaga `.decals` abaixo de 980px.
+
+No celular, onde os dois números ficam a 600px um do outro, a legenda que os separa não
+existe.
+
+### C-06 · Heurísticas de Nielsen, com nota
+
+| # | Heurística | Nota | Em uma frase |
+|---|---|---|---|
+| 1 | Visibilidade do estado | **3** | Contagem regressiva, `lido agora`, `aria-busy` e toast — mas o globo e a grade discordam (C-05). |
+| 2 | Correspondência com o mundo real | **3** | Calha, bandeja, manivela, canelura: metáfora de primeira linha, furada pela palavra "roleta". |
+| 3 | Controle e liberdade | **2** | A cena de 4,3s roda sozinha, não pula, e trava a ação primária (T-07). |
+| 4 | Consistência e padrões | **3** | A cor de uma pessoa é a mesma em seis lugares; desconta "roleta"/"entrega" e a quarta superfície de papel. |
+| 5 | Prevenção de erro | **3** | A confirmação diz a consequência; desconta que a cena automática ensina que girar é casual. |
+| 6 | Reconhecer em vez de lembrar | **3** | Quase tudo está na tela; desconta ter de lembrar que o globo é uma foto. |
+| 7 | Flexibilidade e eficiência | **3** | Reencenar, atalho da resenha devida, som; desconta três destinos duplicados e nenhum jeito de pular a cena. |
+| 8 | Estética e minimalismo | **3** | Duas faixas e um rodapé; desconta 3 das 4 células da grade de série repetirem o que já está visível. |
+| 9 | Erros: reconhecer e recuperar | **3** | `explain()` fala português com saída; desconta o fallback cru em inglês (T-22). |
+| 10 | Ajuda e documentação | **2** | Não é `n/a`: a própria regra abre exceção para "o que um controle faz quando não se vê", e a cena automática é exatamente isso, e não é dita. |
+
+**Média 2,8 de 4.** As duas notas 2 apontam para o mesmo lugar: a cena de abertura.
+
+### C-07 · Carga cognitiva e jornada
+
+**Carga.** Um único ponto de decisão com mais de quatro opções — o registro, com cinco
+células de peso visual idêntico mais três controles. Não é grave porque só um alvo é amarelo.
+**A primeira dobra tem 8 controles e exatamente 1 amarelo**, e a Regra da Escala Sozinha
+funciona.
+
+**Densidade que não paga:** das quatro células da grade de série, `Rodada 1` repete o `R1` do
+adesivo, `Giros 5` repete o `5 GIROS` do mesmo adesivo, e `Grupo` repete o rodapé. **Quatro
+células, um dado novo** (`No globo agora`), cobrando 2,6rem de margem e uma faixa costurada.
+
+**Jornada.** O pico é autoral e bom. O vale é a espera de rede (C-04). E o **fim** — a regra
+do pico-e-fim — não existe: fechar a rodada é o clímax do conceito e não acontece na tela
+(C-01).
+
+**Bandeiras por persona:**
+
+- **Quem abre o link pela primeira vez** vê uma cena rodar sozinha dizendo `Entregando` no
+  presente, e conclui — com razão — que abrir o link disparou um sorteio. Durante esses 4,3s
+  o botão principal está cinza sem dizer por quê. É a bandeira mais vermelha da superfície.
+- **Quem administra** tem dois caminhos para a gaveta e dois para o álbum na mesma página, e
+  **nenhum** para o link do grupo (T-16c). A espera de 30s só existe como rótulo de um botão
+  `disabled`, que o teclado pula e o leitor de tela não anuncia.
+- **Quem só quer ler** paga 4,3s de animação, ouve a região viva anunciar `Entregando` a cada
+  visita para uma cena que não vê, e encontra no registro uma célula lacrada **idêntica** a
+  uma célula sem resenha nenhuma — o álbum tem `.album-sealed` para separar as duas; o
+  registro não tem nada.
+
+### C-08 · Observações menores da crítica
+
+- `caption="Toque no globo…"` diz *toque* num desktop com mouse.
+- `.machine-replay:disabled` mantém `opacity: 1` (certo, não apaga a máquina) — mas então
+  clicar durante a cena não dá retorno nenhum.
+- O `h1` do palco é o nome do vencedor **e** o `aria-labelledby` da seção: sem giro, a região
+  passa a se chamar `Pronta para girar`, que é um estado, não um nome de região.
+- `winnerText()` devolve branco quando a cor não alcança 4.5:1 sobre esmalte, e
+  [styles.scss:151](src/styles.scss#L151) define `.winner-name { color: var(--live) }` — o
+  inline vence. Funciona, e é frágil: apagar o `[style.color]` reabre um buraco de contraste
+  sem que nada avise.
+- Só há dois níveis de cabeçalho na página, e o `h1` é um nome próprio: navegar por títulos
+  não leva a lugar nenhum útil.
+
+### C-09 · As três perguntas que ficam para o clube
+
+1. **Se um giro de verdade e uma carga de página produzem os mesmos 4,3 segundos, o mesmo
+   confete e a mesma frase, o que o "não pode ser desfeito" está comprando?**
+2. **O globo é a foto do último giro ou o estado de agora?** Hoje a tela mantém as duas
+   respostas a 400px de distância e apaga a legenda que as separa justamente no celular.
+3. **Se a coleção completa é a prova, por que fechar uma rodada é a única coisa desta tela
+   que o produto não comemora — e a frase que a anuncia é inalcançável?**

@@ -85,6 +85,14 @@ describe('as iniciais de um crachá', () => {
   it('um nome vazio não inventa letra nenhuma', () => {
     // A prateleira põe o seu próprio '?' quando não sobra sigla; as outras cinco telas
     // mostram a cápsula sem letra, que é o que elas sempre mostraram.
+    // Nome que começa por emoji: `parte[0]` devolvia meio par substituto, e a tela
+    // desenhava o losango de interrogação. Um símbolo é um ponto de código, não um char.
+    expect(initialsOf('🎮 Ana')).toBe('🎮A');
+    expect(initialsOf('🎮')).toBe('🎮');
+    expect([...initialsOf('🎮 Ana')].length).toBe(2);
+    // E os alfabetos que não são o nosso continuam inteiros.
+    expect(initialsOf('中村')).toBe('中');
+    expect(initialsOf('أحمد')).toBe('أ');
     expect(initialsOf('')).toBe('');
     expect(initialsOf('   ')).toBe('');
   });
