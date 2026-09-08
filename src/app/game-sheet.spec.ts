@@ -835,6 +835,16 @@ describe('o lacre da nota do clube', () => {
     fixture.destroy();
   });
 
+  it('não lacra uma cápsula sem jogo escrito: não há boletim a prometer', async () => {
+    // A saída de um giro sem jogo é escrever o jogo, e a ficha já oferece isso. Um selo de
+    // lacre ali esconde um boletim que não existe.
+    const fixture = await render(spinRecord({ seated: [seat('Ana'), seat('Breno')] }));
+
+    expect(el(fixture).querySelector('.sheet-seal')).toBeNull();
+    expect(el(fixture).textContent).toContain('Sem jogo escrito');
+    fixture.destroy();
+  });
+
   it('não lacra o que eu já resenhei', async () => {
     const fixture = await render(spinRecord({
       note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },

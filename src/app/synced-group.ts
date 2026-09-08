@@ -456,7 +456,7 @@ export class SyncedGroup {
    * há nota dela para ancorar. Sempre, e não sob um interruptor: ver `game-sheet.ts`.
    */
   protected sealed(spin: SpinRecord): boolean {
-    return owesReview(spin, this.myKey());
+    return !!spin.note && owesReview(spin, this.myKey());
   }
 
   /** Os jogos que esta pessoa jogou e ainda não resenhou, do mais recente para trás. */

@@ -25,7 +25,7 @@ Cada achado tem:
 18 registros sem peso, que são decisões certas anotadas para não serem desfeitas por engano
 (o mapa do foco, as superfícies do navegador, as duas barras medidas, a Regra da Platina).
 
-**Sete achados foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
+**Oito achados foram corrigidos nesta branch**, mais o emote pedido. O critério para corrigir
 em vez de só apontar foi estreito: medido, de uma ou duas linhas, sem decisão de produto no
 meio, e com as nove suítes verdes depois. Todo o resto é plano.
 
@@ -41,6 +41,7 @@ meio, e com as nove suítes verdes depois. Todo o resto é plano.
 | ✅ | **M-02** o Tab terminava num botão invisível | 17 paradas → **16** |
 | ✅ | **F-01** a mesma pessoa com duas cores na mesma ficha | Davi tangerina→pinho; 3 testes novos |
 | ✅ | **T-32** o globo desenrolava 7 voltas para trás com rede lenta | medido a 1500ms: `rotate(0deg)` → fica parado |
+| ✅ | **L-06** a cápsula sem jogo escrito também lacrava | o pôster e o recado já acertavam; a parede e a ficha, não |
 
 ### O que eu faria a seguir, nesta ordem
 
@@ -154,7 +155,7 @@ de cada suíte de navegador:
 
 | Suíte | Antes | Depois de tudo desta branch |
 |---|---|---|
-| `npm test -- --watch=false` | 399 | **407/407** (+8 testes novos) |
+| `npm test -- --watch=false` | 399 | **409/409** (+10 testes novos) |
 | `npm run test:rules` | 118 | **118/118** |
 | `npm run test:store` | 48 | **48/48** |
 | `npm run test:migration` | 13 | **13/13** |
@@ -165,8 +166,10 @@ de cada suíte de navegador:
 | `node tests/e2e-acabamento.mjs` | 59 | **59/59** |
 | `npm run build -- --base-href=./` | ok | **ok**, 4,77s |
 
-Os oito testes novos: o `👎` no replay e a fileira de dez, as três cores de quem resenhou,
-o foco da gaveta, e os três da mesma pessoa com dois crachás (T-38).
+Os dez testes novos: o `👎` no replay e a fileira de dez, as três cores de quem resenhou, o
+foco da gaveta, os três da mesma pessoa com dois crachás (T-38) e os dois da cápsula sem
+jogo que não lacra (L-06). **Cinco deles falham sem a correção** — conferido tirando a linha
+e rodando.
 
 > Uma armadilha nova para o HANDOFF: `test:migration` deixou para trás um **emulador Firestore
 > zumbi** — o hub morreu, o processo `java` do emulador não. Ele ficou segurando a porta 8080
@@ -1159,6 +1162,66 @@ então a regra sobreviveu; a descrição dela, não.
 Mesma classe de D-01 a D-03: documento que descreve um produto anterior. **Não corrigi** —
 por instrução do próprio `impeccable`, deriva encontrada é relatada e não consertada de
 carona numa tarefa de design.
+
+---
+
+#### L-06 · Uma cápsula sem jogo escrito também lacrava — a mesma ausência dita duas vezes `P1` `XS` ✅ FEITO
+
+**Onde:** [group-history.ts:399](src/app/group-history.ts#L399) — `sealedOf()` ·
+[game-sheet.ts:150](src/app/game-sheet.ts#L150) — `sealed`
+
+**O que:** capturei a parede a ~500px e o primeiro cartão dizia as duas coisas ao mesmo
+tempo:
+
+```
+Cecília · CÁPSULA 5 · 29/08/26
+  Sem jogo escrito
+  🔒 Lacrado até você resenhar
+```
+
+Um giro sem jogo escrito **não tem nota nenhuma** — ninguém pode ter resenhado um jogo que
+ninguém nomeou. O lacre ali não esconde nada: ele **promete** um boletim que não existe.
+
+E é exatamente o que o `DESIGN.md` proíbe, com estas palavras:
+
+> *"Um cartão sem jogo **não** diz também que não tem nota: é a mesma ausência dita duas
+> vezes."*
+> *"E lacra só o que tem nota a ancorar."*
+
+**A parte que fecha o caso: o repositório já concorda comigo em dois lugares.**
+
+| Superfície | O que fazia | Confere o jogo antes? |
+|---|---|---|
+| `pendingReviews()` ([group-log.ts:963](src/app/group-log.ts#L963)) | não conta o giro sem jogo no recado | ✅ `spin.note && owesReview(...)` |
+| O pôster ([album-poster.ts:92](src/app/album-poster.ts#L92)) | o cartão em branco sai sem `Lacrada` | ✅ `if (!spin.note) { … return }` |
+| A célula do registro | nunca lacra sem jogo | ✅ o template já guarda com `@if (spin.note)` |
+| **O cartão do álbum** | **lacrava** | ❌ |
+| **A ficha do jogo** | **abria o selo de lacre** | ❌ |
+
+Duas de quatro superfícies acertavam, e as duas que erravam são as que uma pessoa lê. Havia
+até uma contradição interna visível na mesma tela: o recado dizia *"Você jogou **2** jogos
+que ainda não resenhou"* e a parede mostrava **3** cartões lacrados.
+
+**Feito:** as duas passam a fazer o que as outras já faziam —
+`!!spin.note && owesReview(...)`. Não é regra nova: é a mesma condição, escrita no quarto
+lugar.
+
+Na ficha, a cápsula sem jogo agora abre direto no que ela é: `Sem jogo escrito`, com
+`Escrever o jogo` na fileira de ações — que sempre foi a saída certa dela, e estava atrás de
+um cadeado.
+
+**Os dois testes que falham sem a correção** — conferido tirando as duas condições e
+rodando:
+
+```
+× uma cápsula sem jogo escrito não lacra: não há nota a esconder   (group-history.spec)
+× não lacra uma cápsula sem jogo escrito: não há boletim a prometer (game-sheet.spec)
+  AssertionError: expected <div …>…</div> to be null
+Tests  2 failed | 407 passed (409)
+```
+
+**Verde depois:** `npm test` **409/409**, `e2e-acabamento` **59/59**, `test:etiqueta`
+**86/86**, `e2e-flows` **21/21**, `test:a11y` **0 achados**.
 
 ---
 

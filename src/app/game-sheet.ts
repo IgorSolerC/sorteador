@@ -147,8 +147,13 @@ export class GameSheet {
    * clube lê, e uma conta que depende de um interruptor não é a mesma conta para todos.
    * Espiar continua sendo de quem está lendo, e vale só enquanto esta ficha está aberta.
    */
+  /**
+   * Sem jogo escrito não há lacre: o giro ainda não tem nota nenhuma a ancorar, e a saída
+   * dele é escrever o jogo — que é a ação que a ficha já oferece logo abaixo. Mesma
+   * condição de `pendingReviews()` e do pôster.
+   */
   protected readonly sealed = computed(() =>
-    !this.peeked() && owesReview(this.spin(), this.myKey()),
+    !this.peeked() && !!this.spin().note && owesReview(this.spin(), this.myKey()),
   );
 
   /** Quantas pessoas já escreveram sobre este jogo. O lacre esconde a nota, não a fila. */
