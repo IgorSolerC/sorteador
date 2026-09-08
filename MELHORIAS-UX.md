@@ -1324,6 +1324,150 @@ de medição.
 
 ---
 
+### PO-04 · Gerei o pôster e olhei para ele
+
+Interceptei o `createObjectURL` do `savePoster()` para capturar o PNG sem baixá-lo, e abri os
+dois — a parede por rodada e a parede por diversão. **2048 × 3384px, 442 KB**, cinco fichas
+em duas colunas. A proporção medida (0,61) bate exatamente com o modelo do PO-02.
+
+O que o desenho acerta, e é bastante: a faixa na cor de quem escolheu com o emoji dela, o
+picote, a nota nas quatro tintas (`9,2` em ciano, `7,5` em tinta preta), `Lacrada` no lugar
+da nota, a inicial `F` para Fátima que não escolheu emoji, e o cartão em branco com o fio
+tracejado. Cada regra nomeada está de pé no arquivo.
+
+E a **Regra da Medida em Foco** está correta onde importa: ordenando a parede por *Diversão*,
+o pôster continua imprimindo `NOTA DO CLUBE` em todos os cartões, e a linha do cabeçalho diz
+`5 fichas nesta coleção · Por diversão`. É exatamente o que o `DESIGN.md` promete.
+
+Três coisas que só aparecem olhando:
+
+#### PO-05 · A coleção não tem datas nem rodadas `P2` `S`
+
+Nenhum cartão diz **quando**. Nem a data do giro, nem a rodada. A única data no arquivo é a
+do rodapé — `Coleção de 07/09/2026` —, que é o dia da exportação, a menos útil das duas.
+
+Na tela, cada cartão traz `Cápsula 3 · 21/08/26`, e a parede é cortada por réguas de rodada
+(`RODADA 1 · 5 cápsulas`). O pôster achata tudo numa grade contínua.
+
+A Regra do Pôster Sem Link justifica os cortes — *"Critérios, completude e descrição saíram:
+a imagem é lida no grupo do clube, longe do produto e num tamanho que ninguém amplia"* — e a
+justificativa é boa para critérios e completude, que são letra miúda. **A data não é letra
+miúda: é a espinha de uma coleção.** Um clube olhando o pôster um ano depois não consegue
+dizer o que veio antes.
+
+**Proposta:** a data cabe onde já há espaço de sobra — ao lado de `escolheu`, em 15 unidades,
+a mesma escala que aquela palavra já usa. E a régua de rodada custa uma fileira de ~40
+unidades por rodada, com o mesmo desenho de filete que o cartão do álbum já tem.
+
+Se só uma couber, é a **data**: ela funciona em qualquer ordem, e a régua de rodada só faz
+sentido na ordem padrão.
+
+#### PO-06 · O cartão sem jogo é um retângulo vazio de 428 unidades `P3` `S`
+
+O cartão de Cecília ocupa o mesmo espaço de um cartão cheio para dizer duas palavras. Na
+imagem, mais da metade da área dele é um tracejado vazio.
+
+Na tela isso não incomoda — os cartões têm altura variável e o vazio encolhe. No pôster a
+altura é fixa em `CARD_H = 428`, e o vazio fica inteiro.
+
+Para uma imagem que vai a uma conversa, um quinto da área dizendo "não escrevemos este"
+compete com os quatro que o clube quer mostrar.
+
+**Proposta:** ou o cartão em branco encolhe (meia altura, com a grade se fechando por
+baixo), ou ele sai da imagem e o cabeçalho conta: `5 fichas · 1 sem jogo escrito`. A segunda
+é mais barata e provavelmente melhor — quem exporta quer mostrar o que o clube jogou.
+
+**Contra:** o cartão em branco é um convite ("falta escrever este"), e tirá-lo da imagem tira
+o convite justamente de onde o clube inteiro está olhando. Se essa for a intenção, ele fica —
+mas então merece dizer mais do que `Sem jogo escrito`.
+
+#### PO-07 · O lacre é de uma pessoa, e a imagem é do clube inteiro `P2` `S`
+
+Nos dois pôsteres, dois cartões dizem `Lacrada` — porque **eu, que exportei**, não resenhei
+aqueles jogos. A `A Regra do Lacre` diz que *"o lacre vale também na imagem"*, e a
+implementação obedece.
+
+Só que a imagem **não é minha**: ela vai para a conversa do clube. E aí ela vira as duas
+coisas erradas ao mesmo tempo:
+
+- **Esconde de quem podia ver.** Breno já resenhou *Lethal Company*. Ele recebe uma imagem
+  que esconde dele uma nota que ele tem todo o direito de ler, sem nenhuma pista do motivo —
+  o lacre é meu, e ele não tem como saber disso.
+- **E mostra a quem não devia.** Se quem exporta já resenhou tudo, o pôster sai com **todas**
+  as notas — e cai na conversa onde está quem ainda não escreveu a dela. O lacre daquela
+  pessoa é furado por um botão que outra pessoa apertou.
+
+Não é defeito de implementação: é a consequência de um estado **por pessoa** viajar num
+artefato **por grupo**, e ela não aparece em lugar nenhum da documentação.
+
+**Proposta (`XS`), a mais honesta e a mais barata:** a linha ao lado do botão já avisa uma
+coisa importante — `O link do grupo não vai na imagem.` Ela ganha a segunda:
+
+> `O link do grupo não vai na imagem. Os jogos que você ainda não resenhou saem lacrados.`
+
+Isso resolve a primeira metade (quem exporta sabe o que o clube vai receber) e **não**
+resolve a segunda, que é uma decisão de produto de verdade:
+
+- **lacrar sempre na imagem, para todos** — protege quem não escreveu, e esconde de quem já
+  escreveu;
+- **nunca lacrar na imagem** — a imagem é do clube, o lacre é da tela; simples de explicar,
+  mas fura o lacre de quem ainda deve;
+- **manter como está** — o lacre de quem exporta, dito na linha do botão.
+
+**Recomendação: manter como está, e dizer.** É a única das três em que ninguém é surpreendido:
+quem exporta sabe, e quem recebe vê `Lacrada` como parte do mundo do produto — que é a mesma
+palavra que ele já vê na própria tela.
+
+#### PO-08 · Ordenado por diversão, o pôster imprime 5,0 antes de 9,0 `P2` `S`
+
+O `DESIGN.md` prevê o risco e o responde com a linha do cabeçalho (`Por diversão`). Olhando o
+arquivo, essa linha não é suficiente em um caso específico: como o pôster imprime **sempre a
+nota do clube**, e a ordenação é por **outro** número, os valores impressos podem sair fora
+de ordem na cara de quem lê.
+
+**Construí o caso e exportei.** Semeei um clube de dois jogos em que a diversão e a nota
+andam em direções opostas:
+
+```
+Festa Boba        | nota do clube 5,0 | diversão 10,0 | 3 resenhas de 3
+Obra-prima Chata  | nota do clube 9,0 | diversão  3,0 | 3 resenhas de 3
+```
+
+Ordenei a parede por *Diversão* e exportei. O PNG (2048 × 1544) sai assim:
+
+```
+2 fichas nesta coleção · Por diversão
+
+   Festa Boba            Obra-prima Chata
+      5,0                     9,0
+   NOTA DO CLUBE           NOTA DO CLUBE
+```
+
+**`5,0` antes de `9,0`.** A ordenação está perfeita — diversão 10,0 antes de 3,0 —, mas o
+número que o cartão imprime é outro, e ele sobe. Quem receber essa imagem na conversa do
+clube vê uma parede que se anuncia ordenada e mostra os valores em ordem crescente, sem
+nenhum jeito de descobrir por quê.
+
+A linha do cabeçalho diz `Por diversão`, e ela não basta: ela nomeia a régua e não a
+imprime.
+
+E com o lacre e os cartões em branco, **três dos cinco cartões não imprimem número nenhum** —
+então a ordem não é verificável nem quando está certa.
+
+**Proposta:** quando a ordem **não** for `rodada` nem `nota do clube`, o cartão imprime a
+medida em foco **abaixo** da nota, pequena: `Diversão 9,4`. Duas linhas de canvas, e a imagem
+passa a explicar a si mesma.
+
+**Isto não fere a Regra da Medida em Foco** — ela diz que a nota do clube continua sendo a
+protagonista impressa, e continua. O que muda é acrescentar a régua pela qual a parede foi
+ordenada, que hoje só existe como uma frase no topo.
+
+E a proposta se paga sozinha: com `Diversão 10,0` impresso pequeno sob o `5,0`, a mesma
+imagem passa de "parece errada" para "explica a si mesma" — sem tirar a nota do clube do
+lugar de protagonista, que é o que a regra protege.
+
+---
+
 ## 3. Achados transversais
 
 ### A-01 · A saída da porta era tinta de papel sobre esmalte — 2.74:1 `P0` `XS` ✅ FEITO
@@ -3036,6 +3180,72 @@ descubra por acidente:
 - o crachá novo não herda as obrigações do antigo.
 
 `npm test` passa de 404 para **407**.
+
+---
+
+### T-39 · No celular, o gesto de fechar uma camada sai do grupo `P1` `M`
+
+**Onde:** [app.ts](src/app/app.ts) — não há `pushState`, `replaceState` nem `popstate` em
+lugar nenhum do produto. A rota é o hash, e as quatro camadas (ficha, gaveta, bancada,
+confirmação) vivem fora dele.
+
+**O que:** no Android, o **Voltar** — o botão ou o gesto de deslizar da borda — é o "fechar
+isto" universal. Todo aplicativo o respeita. Aqui ele não fecha a camada: ele **sai do
+grupo**.
+
+**Medido**, a 390×780, com uma semeadura limpa (repetido duas vezes, resultado idêntico):
+
+```
+ponto de partida     : hash "#/g/demo"   tela: máquina
+abro a ficha do jogo : hash "#/g/demo"   ficha: true    tela: máquina
+Voltar               : hash ""           ficha: false   tela: PRATELEIRA
+```
+
+O mesmo com a gaveta dos integrantes e com a confirmação do giro: em todos os três, o Voltar
+não fecha a camada — ele descarta a máquina inteira e a pessoa aterrissa na prateleira.
+
+**Por que isto é `P1`:** o produto é feito para o celular (as duas barras, a nav sob o
+polegar, o trilho do registro, o seletor nativo de ordem). No celular, o caminho mais natural
+para fechar a ficha é deslizar da borda. E ele:
+
+- perde a camada;
+- perde a máquina;
+- e **perde o rascunho da resenha** (F-02), porque sair leva o componente junto.
+
+Ou seja: a perda mais cara do produto tem, no aparelho principal do produto, o gesto mais
+natural como gatilho. F-02 fala de um clique fora do cartão; isto é pior, porque é o gesto
+que a pessoa aprendeu a fazer sem pensar.
+
+**Proposta — o padrão de camada com histórico:**
+
+```
+abrir uma camada  -> history.pushState({ camada: 'ficha' }, '', location.href)
+popstate          -> fecha a camada do topo (uma por vez, como o Esc já faz)
+fechar pelo X/Esc -> history.back() se a entrada é minha
+```
+
+O `Esc` **já** implementa a semântica certa — uma face por vez, e a ficha sai só da última.
+O trabalho é fazer o Voltar chamar o mesmo caminho que o `Esc` chama.
+
+**Os cuidados, e eles não são triviais:**
+
+- `pushState` com a **mesma** URL não dispara `hashchange`, só `popstate`. O app hoje escuta
+  apenas `hashchange` ([app.ts:57](src/app/app.ts#L57)); precisaria escutar os dois sem que
+  um desfaça o outro.
+- Fechar a camada por `X` ou `Esc` precisa **consumir** a entrada empilhada, ou o Voltar
+  seguinte fica sem efeito uma vez — o defeito clássico deste padrão.
+- As camadas se aninham (gaveta → bancada, ficha → resenha). Uma entrada por face, e não uma
+  por camada.
+
+Por isso é `M`, e por isso vale fazer de uma vez com o F-02: as duas correções encostam no
+mesmo ponto — o que acontece quando alguém tenta sair.
+
+**O histórico não está inflado**, e vale registrar: `history.length: 3` depois de navegar
+pela máquina, abrir e fechar três camadas e voltar duas vezes. O app não empilha entradas
+por conta própria, o que deixa o caminho livre para empilhá-las de propósito.
+
+**No álbum o Voltar está certo** e não deve mudar: ele é uma rota de verdade
+(`#/g/<id>/album`), e voltar dele para a máquina é exatamente o que se espera.
 
 ---
 
