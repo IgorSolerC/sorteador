@@ -20,6 +20,8 @@ import {
   scoreTone,
   spinScores,
   reactionTally,
+  REACTION_LABELS,
+  isReactionEmoji,
   REVIEW_REACTIONS,
   pendingReviews,
   owesReview,
@@ -722,6 +724,21 @@ describe('reagir a uma resenha', () => {
       const removed = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', emoji), reaction(0, 'Breno', 'ana', emoji, false)]);
       expect(removed.spins[0].reviews[0].reactions).toEqual([]);
     }
+  });
+
+  it('o joinha negativo é uma escolha de verdade, e é a última da fileira', () => {
+    // Discordar de uma resenha não tinha símbolo: 🤔 é dúvida e 💀 é piada. Ele entra pelo
+    // FIM porque a fileira é onde o dedo procura — abrir espaço no meio moveria nove alvos.
+    expect(isReactionEmoji('👎')).toBe(true);
+    expect(REACTION_LABELS['👎']).toBe('Discordo');
+    expect(REVIEW_REACTIONS.at(-1)).toBe('👎');
+    expect(REVIEW_REACTIONS.indexOf('💀')).toBe(9);
+
+    const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', '👎')]);
+
+    expect(state.spins[0].reviews[0].reactions).toEqual([
+      { emoji: '👎', author: 'Breno', authorKey: 'breno' },
+    ]);
   });
 
   it('a reação pendura na resenha de quem escreveu, e diz quem reagiu', () => {

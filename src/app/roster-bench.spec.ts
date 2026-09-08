@@ -50,6 +50,16 @@ describe('a gaveta dos integrantes', () => {
     fixture.destroy();
   });
 
+  it('o foco entra na gaveta ao abrir, e não fica na barra atrás dela', async () => {
+    // `aria-modal="true"` promete que o resto da página está indisponível. Sem mover o foco
+    // para dentro, a promessa é falsa: o Tab preso e o `Esc` pendem do próprio cartão, e o
+    // foco ficava na marca do cabeçalho, fora dos dois. Medido antes da correção.
+    const fixture = await render([member()]);
+
+    expect(document.activeElement?.id).toBe('roster-close');
+    fixture.destroy();
+  });
+
   it('a bancada de uma cápsula troca a face da gaveta, sem empilhar outra', async () => {
     // Dois modais sobrepostos deixariam dois véus e dois `aria-modal` disputando o Esc.
     const fixture = await render([member()]);

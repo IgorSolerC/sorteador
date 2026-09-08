@@ -10,8 +10,8 @@
 >
   <!-- Uma gaveta que passa da altura da tela precisa de saída no alto: o "Fechar"
        do rodapé fica abaixo da dobra e some justo quando a lista é longa. -->
-  <button type="button" class="roster-close" (click)="close()" [disabled]="busy()"
-          aria-label="Fechar a lista de integrantes">
+  <button type="button" class="roster-close" id="roster-close" (click)="close()"
+          [disabled]="busy()" aria-label="Fechar a lista de integrantes">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
   </button>
 

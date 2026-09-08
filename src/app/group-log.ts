@@ -132,13 +132,14 @@ export const MAX_NOTE_DESCRIPTION = 280;
 export const MAX_REVIEW_TEXT = 600;
 
 /**
- * As doze reações do clube, em ordem estável para o dedo encontrar a mesma escolha.
+ * As treze reações do clube, em ordem estável para o dedo encontrar a mesma escolha.
  *
  * Uma caixa aberta de emoji viraria uma segunda caixa de texto — e o produto já tem uma,
  * assinada, que é a resenha. A lista é validada também nas rules; ampliá-la exige
- * publicar as rules antes do site. As quatro originais permanecem nas mesmas posições.
+ * publicar as rules antes do site. Escolha nova entra pelo FIM: a fileira é o alvo do
+ * dedo, e quem já reagia encontra as antigas onde as deixou.
  */
-export const REVIEW_REACTIONS = ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆'] as const;
+export const REVIEW_REACTIONS = ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆', '👎'] as const;
 
 export type ReactionEmoji = (typeof REVIEW_REACTIONS)[number];
 
@@ -796,6 +797,7 @@ export const REACTION_LABELS: Readonly<Record<ReactionEmoji, string>> = {
   '💀': 'Morri',
   '🎮': 'Bora jogar',
   '🏆': 'Troféu',
+  '👎': 'Discordo',
 };
 
 /**

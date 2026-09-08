@@ -1,5 +1,7 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import {
+  Component, afterNextRender, computed, effect, inject, input, output, signal, untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { GroupMember, MAX_EMOJI, emojiText } from './group-log';
@@ -77,6 +79,13 @@ export class RosterBench {
   });
 
   constructor() {
+    // O foco entra na gaveta quando ela abre. Sem isto ele ficava na barra ATRÁS de um
+    // painel que se anuncia como `aria-modal="true"` — e daí nem o Tab preso nem o `Esc`
+    // o alcançavam, porque os dois pendem do próprio cartão. Medido: abrindo a gaveta e
+    // tabulando, o foco caía na marca do cabeçalho, fora do diálogo. A segunda face já
+    // fazia isto certo (`open()` foca a saída da bancada); a primeira, não.
+    afterNextRender(() => this.document.getElementById('roster-close')?.focus());
+
     effect(() => {
       // `back()` lê `editingId`. Sem `untracked`, essa leitura fazia o efeito observar a
       // pessoa em edição; depois do primeiro salvamento, abrir qualquer outra disparava o

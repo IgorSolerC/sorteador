@@ -10,6 +10,8 @@ import {
 } from './group-log';
 import { GameSheet } from './game-sheet';
 import { SheetFace } from './game-bench';
+import { capsuleColor, CAPSULE_COLOR_COUNT } from './palette';
+import { hashString } from './naming';
 
 /**
  * A ficha é só papel: ela não fala com o servidor. O que se prova aqui é que a face de
@@ -53,15 +55,15 @@ function seat(name: string, memberId = name.toLowerCase()): SpinSeat {
   return { key: name.toLowerCase(), name, memberId };
 }
 
-function member(name: string): GroupMember {
+function member(name: string, colorIndex = 0, emoji = ''): GroupMember {
   return {
     id: name.toLowerCase(),
     name,
     active: true,
     joinedAt: Date.parse('2026-01-01T00:00:00Z'),
     leftAt: null,
-    colorIndex: 0,
-    emoji: '',
+    colorIndex,
+    emoji,
   };
 }
 
@@ -623,6 +625,55 @@ describe('a mesa de um jogo', () => {
   });
 });
 
+describe('a cápsula de quem resenhou', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  const jogo = () => spinRecord({
+    note: { title: 'Overcooked 2', description: '', at: Date.now(), revision: 1 },
+    reviews: [review({ author: 'Davi', authorKey: 'davi', score: 8 })],
+    seated: [seat('Davi')],
+  });
+
+  it('a resenha usa a cápsula que a pessoa pintou, e não uma cor tirada do nome', async () => {
+    // A mesma pessoa aparecia de duas cores na MESMA ficha aberta: tangerina na resenha,
+    // porque ali a cor saía do hash do nome, e pinho na mesa, dois dedos abaixo, porque
+    // ali a cor era a que ela escolheu. A cor pertence à pessoa em toda parte do produto.
+    const fixture = await render(jogo(), 'ficha', 'Ana', [member('Davi', 9, '🐙')]);
+    const naResenha = el(fixture).querySelector('.review .capsule-mark') as HTMLElement;
+
+    expect(naResenha.style.getPropertyValue('--capsule')).toBe(capsuleColor(9));
+    expect(naResenha.textContent?.trim()).toBe('🐙');
+    fixture.destroy();
+  });
+
+  it('a mesma pessoa tem a mesma cor na resenha e na mesa', async () => {
+    const membros = [member('Davi', 9, '🐙')];
+    const naFicha = await render(jogo(), 'ficha', 'Ana', membros);
+    const corDaResenha = (naFicha.nativeElement as HTMLElement)
+      .querySelector('.review .capsule-mark')!.getAttribute('style');
+    naFicha.destroy();
+    TestBed.resetTestingModule();
+
+    const naMesa = await render(jogo(), 'mesa', 'Ana', membros);
+    const corDaMesa = (naMesa.nativeElement as HTMLElement)
+      .querySelector('.seat .capsule-mark')!.getAttribute('style');
+    naMesa.destroy();
+
+    expect(corDaResenha).toBe(corDaMesa);
+  });
+
+  it('quem só assinou uma resenha e nunca foi do grupo fica na cor do nome', async () => {
+    // Sem cápsula não há o que vestir, e é a mesma regra que a mesa já seguia.
+    const fixture = await render(jogo(), 'ficha', 'Ana', []);
+    const marca = el(fixture).querySelector('.review .capsule-mark') as HTMLElement;
+
+    expect(marca.style.getPropertyValue('--capsule'))
+      .toBe(capsuleColor(hashString('cracha:v1:davi') % CAPSULE_COLOR_COUNT));
+    expect(marca.textContent?.trim()).toBe('D');
+    fixture.destroy();
+  });
+});
+
 describe('reagir a uma resenha', () => {
   afterEach(() => TestBed.resetTestingModule());
 
@@ -631,15 +682,15 @@ describe('reagir a uma resenha', () => {
     reviews: [review({ author: 'Breno', authorKey: 'breno', score: 9, text: 'Grito muito.', reactions })],
   });
 
-  it('começa compacto e abre nove escolhas, sem troféu, controle ou joinha', async () => {
+  it('começa compacto e abre dez escolhas, sem troféu, controle ou joinha para cima', async () => {
     const fixture = await render(comResenha());
     expect(el(fixture).querySelectorAll('.reaction').length).toBe(0);
     (el(fixture).querySelector('.reaction-trigger') as HTMLButtonElement).click();
     fixture.detectChanges();
     const botoes = [...el(fixture).querySelectorAll('.review-reactions .reaction')];
 
-    expect(botoes.length).toBe(9);
-    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂', '❤️', '👏', '🤔', '🤯', '💀']);
+    expect(botoes.length).toBe(10);
+    expect(botoes.map((b) => b.textContent?.trim())).toEqual(['😯', '🔥', '😭', '😂', '❤️', '👏', '🤔', '🤯', '💀', '👎']);
     expect(botoes.every((b) => b.classList.contains('is-empty'))).toBe(true);
     fixture.destroy();
   });

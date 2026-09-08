@@ -364,7 +364,13 @@
 
 <div class="toast" [class.is-visible]="notice()" role="status" aria-live="polite">
   <span>{{ notice() }}</span>
-  <button class="toast-close" type="button" (click)="dismissNotice()" aria-label="Fechar aviso">
+  <!-- Recolhido, o aviso continua na árvore de acessibilidade — e precisa continuar, ou a
+       região viva para de anunciar o que acabou de ser gravado. Mas `opacity: 0` não tira
+       nada da ordem de tabulação: no 1440 o Tab terminava numa 17ª parada invisível, o
+       "Fechar aviso" de um aviso que não existe. `tabindex="-1"` tira a parada e deixa o
+       anúncio onde estava. -->
+  <button class="toast-close" type="button" (click)="dismissNotice()" aria-label="Fechar aviso"
+          [attr.tabindex]="notice() ? null : -1">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
   </button>
 </div>

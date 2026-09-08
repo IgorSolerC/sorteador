@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 399 unitários e de componente
+npm test -- --watch=false   # 400 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -187,7 +187,7 @@ cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma lin
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
 gravada em campo nenhum, e `Overcooked 2 · 2 resenhas` quando a nota está lacrada.
 
-A resenha de cada um pode receber **nove reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀.
+A resenha de cada um pode receber **dez reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 👎.
 Um único controle mostra os emoji mais usados e a contagem; as escolhas se abrem por
 clique, toque, teclado ou hover, sem ocupar uma fileira permanente.
 Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o

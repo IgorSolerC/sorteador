@@ -229,7 +229,7 @@ service cloud.firestore {
             && d.giro < grupoAntes().versaoLog
             && texto(d.autor, 60)
             && texto(d.alvo, 60)
-            && d.emoji in ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆']
+            && d.emoji in ['😯', '🔥', '😭', '😂', '❤️', '👍', '👏', '🤔', '🤯', '💀', '🎮', '🏆', '👎']
             && d.reagiu is bool
             && !('cor' in d);
         }
