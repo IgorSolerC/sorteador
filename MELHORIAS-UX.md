@@ -635,6 +635,63 @@ o resto do produto deveria seguir.
 
 ---
 
+#### M-06 · No celular, o registro abre no giro mais VELHO — e o "Último" fica fora da tela `P1` `XS`
+
+**Onde:** [synced-group.html:305](src/app/synced-group.html#L305) — `.chart-grid` ·
+[styles.scss](src/styles.scss) — `overflow-x: auto` + `scroll-snap-type: x mandatory` abaixo
+de 620px
+
+**Medido**, no grupo `demo` (5 giros), logo depois da carga:
+
+| | 390px | 1440px |
+|---|---|---|
+| `overflow-x` | `auto` | `visible` |
+| `scroll-snap-type` | `x mandatory` | `none` |
+| **rolagem inicial** | **0** | 0 |
+| rolagem disponível à direita | **621px** | 0 |
+| células **inteiramente visíveis** | **1** — `RODADA 1 · 13/08/26 · Fátima` | as **5** |
+| a célula marcada `Último` (a 5ª) está visível? | **não** | sim |
+
+No celular, o trilho abre parado no **primeiro giro do grupo** e esconde o mais recente atrás
+de 621px de arrasto. Com cinco giros são duas arrastadas; com um ano de clube — vinte e
+quatro giros — são umas catorze.
+
+**Três coisas discordam entre si na mesma tela:**
+
+1. **O palco**, dois dedos acima, mostra o vencedor **mais recente** em `55px`.
+2. **O trilho** abre no mais antigo.
+3. **O selo `Último`** está grudado numa célula que não está na tela.
+
+E o produto **já decidiu isso** noutro lugar, com o motivo escrito: no álbum, *"a faixa é a
+rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás:
+**quem abre o álbum quer ver o que acabou de acontecer**"*. O registro é a mesma pergunta na
+tela que se visita todo dia, e responde ao contrário.
+
+**Proposta (`XS`):** o trilho **abre no fim**. Uma linha, num `afterNextRender`:
+
+```ts
+trilho.scrollLeft = trilho.scrollWidth;
+```
+
+A ordem do DOM não muda — o tempo continua correndo da esquerda para a direita, que é o
+certo — muda só **onde a fita começa**: em "agora".
+
+**Dois cuidados, e o segundo é o que faz isto ser trabalho de verdade:**
+
+- **Uma vez, e nunca num `effect`.** A máquina recarrega sozinha ao voltar para a aba; um
+  efeito puxaria a pessoa de volta para o fim toda vez que ela tivesse arrastado até um giro
+  antigo. É `afterNextRender`, como o foco da gaveta (T-25).
+- **A dica muda de sentido.** `Deslize para ver o registro completo →`, com a seta para a
+  direita, deixa de fazer sentido quando já se está na ponta direita. Ela viraria
+  `← Deslize para ver os giros anteriores`. **É uma decisão de texto e de desenho numa
+  superfície com opinião forte**, e por isso não implementei — o trecho tem seta desenhada,
+  e a direção dela é parte do desenho.
+
+**Por que vale mesmo assim:** hoje a informação mais procurada da tela mais visitada está
+escondida atrás de um gesto, num aparelho onde o produto foi feito para viver.
+
+---
+
 ### 2.4 A ficha do jogo — [game-sheet.html](src/app/game-sheet.html)
 
 #### F-01 · A mesma pessoa tinha duas cores na mesma ficha aberta `P1` `XS` ✅ FEITO
@@ -863,6 +920,105 @@ platina ficam atrás de um picote, com a faísca no rótulo, porque o denominado
 
 São duas decisões que quase nenhum produto toma, as duas estão documentadas com o motivo, e
 as duas seriam desfeitas pelo primeiro reflexo de "uniformizar as réguas". Não uniformize.
+
+---
+
+#### F-08 · A 320px, as casas da régua têm 20px — abaixo do piso do próprio projeto `P1` `M`
+
+**Onde:** [game-sheet.html:255](src/app/game-sheet.html#L255) — a régua da nota final ·
+[:415](src/app/game-sheet.html#L415) — as réguas dos critérios
+
+**Medido**, na face da resenha, com a viewport forçada por `setDeviceMetricsOverride`:
+
+| Régua | 390px | **320px** |
+|---|---|---|
+| Nota final (11 casas) | 29 × 48px | **22 × 48px** |
+| Diversão e as outras quatro (12 casas) | 26 × 44px | **20 × 44px** |
+| Folga entre casas vizinhas | 2px | 2px |
+
+**O piso é 24px, e é do projeto.** A própria suíte de a11y reprova qualquer alvo com
+`altura < 44 || largura < 24` ([audit-a11y.mjs:68](tests/audit-a11y.mjs#L68)) — e ela mede
+certo, mapeando o `input[type=radio]` para o `<label>` que o envolve. É o mesmo piso da WCAG
+2.5.8 (24 × 24), e com 2px de folga a exceção por espaçamento também não vale.
+
+**Por que a suíte não pega:** ela roda em `1440 · 900 · 390`
+([audit-a11y.mjs:150](tests/audit-a11y.mjs#L150)). A 390 as casas medem 26px e passam. **320
+não está na lista** — e 320 é largura de aparelho de verdade: iPhone SE, Androids de entrada,
+e qualquer telefone numa janela dividida.
+
+A regra existe, o teste existe, e a largura que os viola não é testada.
+
+**Por que é `M` e não `XS`:** não dá para só aumentar as casas. Doze casas de 24px com 2px de
+folga pedem `12 × 24 + 11 × 2 = 310px`, e o cartão da ficha a 320 tem
+`min(42rem, 100vw - 2.4rem)` ≈ **281px** antes do respiro interno. **Não cabe.** A correção é
+de forma, não de tamanho:
+
+1. **A régua quebra em duas fileiras** abaixo de ~360px — seis e seis, que fecha a grade
+   (Regra da Grade que Fecha) e devolve alvos de 44px.
+2. **Ou os critérios opcionais viram os cinco degraus com nome** abaixo de 360px, como a
+   dificuldade já é. Menos precisão, alvos honestos, e o produto já tem o controle desenhado.
+3. **Ou o `—` sai da régua** e vira um controle próprio (ver F-09), o que devolve uma casa às
+   outras onze — mas 11 × 24 + 10 × 2 = 284px ainda não cabe em 281.
+
+**Recomendação: (1).** É a única que preserva a escala de onze casas, que é a medida que o
+clube discute.
+
+**Junto com ela, a suíte ganha 320px.** Hoje ela é `[[1440,1200],[900,1200],[390,844]]`; com
+`[320,720]` na lista, este achado teria aparecido sozinho — e vai voltar a aparecer sozinho
+na próxima vez.
+
+---
+
+#### F-09 · "não avaliei" fica colado em "Nenhuma", e os dois parecem a mesma coisa `P1` `S`
+
+**Onde:** [game-sheet.html:384](src/app/game-sheet.html#L384) — a régua de dificuldade
+
+**Medido**, a 390px, os rótulos da régua de dificuldade na ordem em que aparecem:
+
+```
+[ — não avaliei ]  [ Nenhuma ]  [ Fácil ]  [ Médio ]  [ Difícil ]  [ Impossível ]
+      38px             59px        47px      47px       59px          76px
+              ↑ 3px de folga entre os dois
+```
+
+**As duas primeiras casas dizem "nada", e significam coisas opostas:**
+
+- **`—`** é *não avaliei*. O critério fica **fora** da média do clube.
+- **`Nenhuma`** é *dificuldade zero*. Ela **entra** na média, como um 0.
+
+Estão a três pixels uma da outra, com o mesmo desenho, no começo da mesma fileira. Quem quer
+dizer "não sei avaliar a dificuldade" e toca em `Nenhuma` acabou de dizer ao clube que o jogo
+não tinha dificuldade nenhuma — e isso **puxa a média daquele critério para baixo**, num
+critério que o álbum inteiro pode ordenar.
+
+O `—` tem um `visually-hidden` dizendo "não avaliei", o que resolve para quem usa leitor de
+tela e não resolve para quem enxerga: na tela ele é um traço.
+
+**O mesmo vale nas réguas numéricas**, e é a mesma armadilha: `—` e `0` são vizinhos de 26px
+a 390px e de 20px a 320px (F-08). `0` em diversão é "esse jogo não tem graça nenhuma"; `—` é
+silêncio. Um dedo de diferença.
+
+**Proposta, três opções da mais barata para a melhor:**
+
+1. **`XS` — uma folga.** Separar a casa do `—` das demais com o mesmo respiro que o produto
+   usa para dizer "isto é outra coisa": um espaço maior, ou um filete. Custa uma margem.
+2. **`S` — o `—` ganha rótulo.** Em vez de um traço, `sem nota` em `tick` (a tipografia de
+   0,55rem existe exatamente para casas de régua). A palavra desfaz a ambiguidade com
+   `Nenhuma` de uma vez.
+3. **`S` — o `—` sai da fileira** e vira o estado padrão: a régua começa **vazia**, e tocar
+   numa casa preenche. Para desfazer, toca-se de novo na casa marcada. É o padrão de
+   avaliação por estrelas, não precisa de casa própria, e devolve espaço para o F-08.
+
+**Recomendação: (2) agora, (3) se a régua for redesenhada pelo F-08.** As duas resolvem o
+problema; a (3) resolve os dois achados de uma vez.
+
+**Cuidado com a (3):** "tocar de novo para desmarcar" é invisível. Ela só funciona se a
+faixa opcional já disser que nada ali é obrigatório — e ela diz: *O resto, se você quiser*.
+Ainda assim, é a opção que precisa ser vista antes de ser decidida.
+
+**Prova que falta:** não sei com que frequência isso acontece de verdade. Um clube com
+dificuldades registradas como `0` em jogos que claramente não eram fáceis seria o indício —
+e o log tem isso, se alguém quiser olhar.
 
 ---
 
