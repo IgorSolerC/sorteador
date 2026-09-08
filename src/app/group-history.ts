@@ -396,8 +396,14 @@ export class GroupHistory {
    * Um cartão fica lacrado quando esta pessoa jogou aquele jogo e ainda não resenhou.
    * Sempre, e não sob um interruptor: ver `sealed` em `game-sheet.ts`.
    */
+  /**
+   * Um giro **sem jogo escrito** nunca lacra: não há nota a esconder, e o cartão já diz a
+   * ausência uma vez. Dizer "Sem jogo escrito" e "Lacrado até você resenhar" no mesmo
+   * cartão é a mesma ausência dita duas vezes — e a segunda ainda promete um boletim que
+   * não existe. `pendingReviews()` e o pôster já conferiam o jogo antes; a parede, não.
+   */
   protected sealedOf(spin: SpinRecord): boolean {
-    return owesReview(spin, this.myKey());
+    return !!spin.note && owesReview(spin, this.myKey());
   }
 
   protected readonly pending = computed(() => {

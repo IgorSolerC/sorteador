@@ -1,7 +1,9 @@
 # Grupo sincronizado (Firebase)
 
-Modo novo, ao lado do atual. O modo por link (`#grupo=...`) **continua existindo e não muda** —
-há gente usando, e `compatibility.spec.ts` prova que os resultados antigos seguem intactos.
+**O log sincronizado é o produto inteiro.** O modo por link estático (`#grupo=...&inicio=...`)
+foi removido em setembro de 2026: links daquele formato caem na prateleira inicial, sem
+inventar um grupo, e `tests/e2e-flows.mjs` prova isso. Não há um segundo produto a preservar
+aqui — o que existe é este.
 
 ## Regra de custo, acima de qualquer outra
 
@@ -219,8 +221,8 @@ ninguém e ninguém conseguiria editá-la depois. Reescrever é gravar outra; `r
 a tira da conta sem tirá-la do log.
 
 **Reagir é um evento, e a lista de emoji é fechada NA RULE.** `review_reacted` carrega o
-giro, o `alvo` (a chave de quem escreveu a resenha reagida), o `emoji` e o `reagiu`. Doze
-emoji passam — 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆 —, e é a rule que garante: um campo de emoji livre viraria uma
+giro, o `alvo` (a chave de quem escreveu a resenha reagida), o `emoji` e o `reagiu`. Treze
+emoji passam — 😯 🔥 😭 😂 ❤️ 👍 👏 🤔 🤯 💀 🎮 🏆 👎 —, e é a rule que garante: um campo de emoji livre viraria uma
 segunda caixa de texto num log que não se apaga. Ampliar a lista exige **publicar as rules
 antes do site**, como toda mudança de rule.
 

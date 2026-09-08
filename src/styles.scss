@@ -9,6 +9,10 @@
   --chrome: #e3eaf2; --chrome-dim: #93a6be; --sky: #bccde6;
   --paper: #faf6ec; --paper-quiet: #f0e9d9; --ink: #16233a; --ink-quiet: #5b6779;
   --white: #ffffff; --field: #ffffff; --yellow: #ffc53d; --live: #ffc53d;
+  /* A dupla `--live` / `--live-ink` anda junta: o palco a repinta com a cápsula
+     vencedora e com a tinta AA que `capsuleInk()` calculou para ela. Fora do palco
+     vale o amarelo da marca, e a tinta dele é a mesma que a paleta escolheria. */
+  --live-ink: #0f0f12;
   --score-high: #0b6f7d; --score-high-lit: #3fbccb; --score-low: #a8481a; --score-worst: #ae1f16;
   --ok: #1f5c3a; --error-light: #ffc9d6; --note-ink: #4a3c1c; --remove-ink: #6d5560; --field-line: #a9b1bf; --field-focus: #b5761c; --field-error: #a3123f; --field-error-ink: #8f0f37;
   --line: rgba(200, 220, 255, .17); --line-strong: rgba(200, 220, 255, .34); --line-paper: rgba(22, 35, 58, .18);
@@ -29,7 +33,11 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 a { color: inherit; text-underline-offset: .24em; text-decoration-thickness: 1.5px; }
 h1, h2, h3, p { text-wrap: pretty; }
 h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -.03em; }
-::selection { background: var(--live); color: var(--enamel-deep); }
+/* A seleção é pintada com a cápsula vencedora, e por isso precisa da MESMA tinta que
+   toda cápsula usa. Com `--enamel-deep` fixo, metade da paleta — 12 das 24 — deixava
+   o texto selecionado abaixo de 4.5:1, e Breu (1.08:1) e Ameixa (1.17:1) o tornavam
+   invisível. Com `--live-ink`, o pior caso da paleta inteira é Carmim a 4.61:1. */
+::selection { background: var(--live); color: var(--live-ink); }
 :focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
 ::-webkit-scrollbar { width: 11px; height: 9px; }
 ::-webkit-scrollbar-track { background: var(--enamel-deep); }
@@ -344,7 +352,7 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .sheet-seal .sheet-seal-count { margin: 0 0 .35rem; color: var(--ink); font-size: .92rem; font-weight: 700; line-height: 1.5; }
 .sheet-seal-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem 1.2rem; margin-top: 1rem; }
 
-/* A resenha continua sendo papel escrito: as nove escolhas só aparecem quando há intenção.
+/* A resenha continua sendo papel escrito: as dez escolhas só aparecem quando há intenção.
    Fechado, o controle resume os emoji mais usados e a quantidade de reações numa linha. */
 .review-reactions { display: block; min-width: 0; margin: .55rem 0 0; }
 .reaction-popover .reaction { width: 44px; flex: 0 0 44px; padding: 0; }
@@ -360,10 +368,11 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 .reaction-popover { position: fixed; inset: auto; overflow: visible; margin: 0; padding: .25rem; max-width: calc(100vw - 16px); border: 0; border-radius: 12px; background: var(--paper); color: var(--ink); box-shadow: 0 8px 24px rgba(4, 10, 22, .3); }
 .reaction-popover:popover-open { display: flex; flex-wrap: wrap; gap: 4px; width: max-content; max-width: calc(100vw - 16px); }
 @media (max-width: 620px) {
-  /* Cinco escolhas fecham a primeira fileira; as quatro restantes ficam centradas abaixo. */
+  /* Cinco por fileira, e dez fecham as duas: nenhuma sobra órfã. O `center` fica de
+     guarda para a próxima escolha que chegar em número ímpar. */
   .reaction-popover:popover-open { justify-content: center; width: 244px; }
 }
-/* O alvo tem os 44px de sempre; o desenho é que encolhe. Nove cápsulas permanentes em cada
+/* O alvo tem os 44px de sempre; o desenho é que encolhe. Dez cápsulas permanentes em cada
    resenha fariam a folha virar painel, por isso esta fileira só existe dentro do popover. */
 /* A tinta é dita, e não herdada: o botão nasce com o branco do esmalte, e sobre papel isso
    é 1.21:1. O emoji é glifo colorido e não se importa — mas num sistema que o desenhe em
@@ -657,6 +666,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
 
+
 /* ---- O álbum: a parede de etiquetas ---- */
 /* Papel sobre esmalte, e nada mais: cada cartão é uma etiqueta de verdade colada na
    parede da máquina. A superfície continua sendo o esmalte — o papel são os objetos. */
@@ -941,6 +951,12 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 .capsule-back { min-height: 44px; display: inline-flex; align-items: center; gap: .3rem; margin-left: -.4rem; padding: 0 .4rem; background: transparent; border: 0; border-radius: 999px; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .capsule-back:hover { color: var(--ink); }
 .capsule-back svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+/* A saída da porta mora sobre ESMALTE, e não sobre o papel da bancada: herdando
+   `--ink-quiet` ela media 2.74:1 contra os 4.5:1 que o produto promete, e no hover
+   `--ink` caía para 1.1:1. Cromo é a tinta de toda saída em esmalte (12.96:1), e é a
+   mesma de `.back-link` — a saída do cabeçalho e a da porta são a mesma coisa. */
+.gate-back { color: var(--chrome); transition: color .16s ease, background .16s ease; }
+.gate-back:hover { background: rgba(200, 220, 255, .08); color: var(--white); }
 
 .capsule-title { display: flex; align-items: center; gap: .75rem; overflow-wrap: anywhere; }
 .capsule-preview { width: 3.4rem; height: 3.4rem; flex: none; display: grid; place-items: center; padding-bottom: 1rem; background: var(--capsule); border-radius: 999px; box-shadow: inset 0 -1.05rem 0 rgba(255, 255, 255, .38), inset 0 0 0 1px rgba(22, 35, 58, .28); transition: background .24s ease; }
@@ -1118,3 +1134,39 @@ app-confetti { display: contents; }
 .create-check { min-height: 44px; display: flex; align-items: center; gap: .8rem; }
 .create-check input { width: 24px; height: 24px; min-height: 24px; flex: none; accent-color: var(--yellow); }
 .create-check small { display: block; margin-top: .15rem; color: var(--chrome-dim); font-size: .82rem; }
+
+/* ---- Cores forçadas (alto contraste do Windows) ---- */
+/* Neste modo o sistema substitui TODA cor de fundo pela dele. As peças deste produto que
+   se desenham por preenchimento — sem borda, sem contorno, sem sombra — passavam a ser
+   fundo preto sobre página preta e sumiam inteiras. Medido, com o modo ligado: `primary-action`
+   (o botão de girar), `secondary-action`, as duas etiquetas de papel, os painéis da gaveta e
+   da ficha, e as onze casas da régua de nota, todas invisíveis.
+
+   Aqui elas voltam a existir como FORMA, com a tinta do sistema. Não é uma segunda paleta:
+   é a borda que o preenchimento fazia. */
+@media (forced-colors: active) {
+  .primary-action, .secondary-action, .note-sticker, .month-sticker,
+  .score-tick, .status-choice, .reaction, .reaction-popover,
+  .roster-card, .sheet-card, .confirm-card, .gate-bench,
+  .field-row button, .album-card {
+    border: 1px solid ButtonText;
+  }
+  /* O estado marcado também era só preenchimento. Três pixels de borda é o que sobra para
+     dizer "esta é a sua nota" quando não há tinta cheia possível. */
+  .score-tick.is-on, .status-choice.is-on, .reaction.is-on { border-width: 3px; }
+
+  /* A ÚNICA exceção, e ela é justificada: nestas peças a cor não decora, ela É a pessoa —
+     e na grade de escolha ela é o próprio conteúdo. Uma paleta sem cor não escolhe nada, e
+     um globo de cápsulas iguais deixa de ser a coleção que o produto inteiro promete.
+     Toda uma delas aparece ao lado do nome por extenso, e cada cor tem o nome no rótulo
+     acessível — a informação nunca depende só da tinta. */
+  .color-chip, .capsule-mark, .who-mark, .cell-capsule, .album-capsule,
+  .chip-capsule, .gate-person-capsule, .capsule-preview, .note-chip,
+  .capsule-dome, .capsule-shell,
+  /* A barra de completude distingue três coisas por cheio, meio-tom e hachura. O meio-tom
+     é o que colapsa: sem ele, três fatias pretas iguais. A legenda ao lado sempre traz a
+     palavra e a porcentagem, então a barra é reforço, e reforço precisa reforçar. */
+  .completion-bar, .completion-bar i {
+    forced-color-adjust: none;
+  }
+}

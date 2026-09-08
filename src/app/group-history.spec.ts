@@ -479,6 +479,19 @@ describe('o lacre na parede', () => {
     fixture.destroy();
   });
 
+  it('uma cápsula sem jogo escrito não lacra: não há nota a esconder', async () => {
+    // "Sem jogo escrito" e "Lacrado até você resenhar" no mesmo cartão são a mesma
+    // ausência dita duas vezes — e a segunda promete um boletim que não existe. O pôster
+    // e `pendingReviews()` já conferiam o jogo antes de lacrar; a parede, não.
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana');
+    const fixture = await render(new FakeStore().seed(['Ana', 'Breno'], 1));
+    const cartao = el(fixture).querySelector('.album-card')!;
+
+    expect(cartao.textContent).toContain('Sem jogo escrito');
+    expect(cartao.querySelector('.album-sealed')).toBeNull();
+    fixture.destroy();
+  });
+
   it('quem já resenhou vê a nota, e não a fila', async () => {
     window.localStorage.setItem('mesa-do-mes:autor:v1', 'Breno');
     const fixture = await render(jogado());

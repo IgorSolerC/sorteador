@@ -456,7 +456,7 @@ export class SyncedGroup {
    * há nota dela para ancorar. Sempre, e não sob um interruptor: ver `game-sheet.ts`.
    */
   protected sealed(spin: SpinRecord): boolean {
-    return owesReview(spin, this.myKey());
+    return !!spin.note && owesReview(spin, this.myKey());
   }
 
   /** Os jogos que esta pessoa jogou e ainda não resenhou, do mais recente para trás. */
@@ -525,7 +525,15 @@ export class SyncedGroup {
 
     this.isSpinning.set(true);
     this.revealed.set(false);
-    this.rotation.set(0);
+    // O globo NÃO volta a zero aqui. `is-spinning` já ligou a transição de 4,3s, e zerar
+    // antes da ida ao servidor punha a roda para desenrolar de 2610° até 0 — sete voltas
+    // para trás — durante toda a espera. Medido com 1500ms de latência: 127ms depois do
+    // "Girar mesmo assim", o alvo era `rotate(0deg)` com `transition-duration: 4.3s`, e a
+    // tela dizia "Entregando" enquanto a máquina andava ao contrário.
+    //
+    // Não é preciso zerar: `playScene()` calcula o destino A PARTIR do repouso atual, que
+    // é exatamente o que o comentário dela descreve. Parada, a máquina espera; ela só se
+    // move quando o servidor já disse quem saiu.
 
     try {
       await this.store.spin(this.groupId(), this.author());

@@ -229,8 +229,8 @@ const abrirReacoes = async () => {
   await sleep(150);
 };
 await abrirReacoes();
-check('o seletor oferece nove reações',
-  (await ev(`${fileira}.map((b) => b.innerText.trim()).join('')`)) === '😯🔥😭😂❤️👏🤔🤯💀',
+check('o seletor oferece dez reações',
+  (await ev(`${fileira}.map((b) => b.innerText.trim()).join('')`)) === '😯🔥😭😂❤️👏🤔🤯💀👎',
   await ev(`${fileira}.map((b) => b.innerText.trim()).join('')`));
 check('sem ninguém ter reagido, a fileira toda está apagada',
   (await ev(`${fileira}.every((b) => b.classList.contains('is-empty'))`)) === true);
@@ -245,8 +245,8 @@ check('reagir grava e volta do servidor com a minha marcada',
 check('a reação diz quem foi, para quem não vê o emoji',
   (await ev(`${fileira}[1].getAttribute('aria-label')`)).startsWith('Fogo — '),
   await ev(`${fileira}[1].getAttribute('aria-label')`));
-check('as outras oito continuam vazias: uma reação é de um emoji só',
-  (await ev(`${fileira}.filter((b) => b.classList.contains('is-empty')).length`)) === 8);
+check('as outras nove continuam vazias: uma reação é de um emoji só',
+  (await ev(`${fileira}.filter((b) => b.classList.contains('is-empty')).length`)) === 9);
 
 await ev(`${fileira}[1].click()`);
 await sleep(2500);

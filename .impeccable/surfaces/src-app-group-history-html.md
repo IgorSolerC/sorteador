@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-group-history-html"
 primary_target: "src/app/group-history.html"
-related_targets: ["src/app/group-history.ts","src/app/note-editor.html","src/styles.scss"]
+related_targets: ["src/app/group-history.ts","src/app/game-sheet.html","src/app/group-history.scss","src/styles.scss"]
 ---
 
 # Superfície: o álbum do grupo
@@ -25,8 +25,9 @@ e o cartão inteiro é o controle.
   etiqueta de verdade. Trocar por escala ou sombra sozinha perde o gesto.
 - **A cor de uma pessoa é a da primeira cápsula dela**, não a do giro que se está desenhando.
   Sem isso a mesma pessoa muda de cor entre dois cartões e a coleção deixa de ler como coleção.
-- **A bancada de etiqueta é a mesma da máquina** (`app-note-editor`). Se ela divergir entre as
-  duas páginas, alguém vai reescrever o mesmo formulário duas vezes.
+- **A ficha do jogo é a mesma da máquina** (`app-game-sheet`, em `src/app/game-sheet.html`).
+  Se ela divergir entre as duas páginas, alguém vai reescrever o mesmo formulário duas vezes.
+  O antigo `note-editor` não existe mais; a ficha o substituiu com quatro faces.
 
 ## Armadilhas já encontradas aqui
 
@@ -34,9 +35,11 @@ e o cartão inteiro é o controle.
   `.album-stats`. Nomes de classe do álbum precisam ser conferidos contra os dois arquivos.
 - Um grupo que falha ao carregar rendia página em branco, porque tudo vivia dentro do ramo
   `@else if (snapshot())`. O ramo `@else` com o recado é obrigatório.
-- Quatro valores de série em colunas automáticas viram 3 + 1 órfão. O bloco é 2×2.
+- Valores de série em colunas automáticas viram uma fileira órfã. `.album-stats` trava em
+  **duas colunas** em qualquer largura, e hoje carrega seis valores.
 
 ## Provas
 
-`src/app/group-history.spec.ts` (14 casos) e `npm run test:etiqueta` cobrem ordem, filtro,
-estado vazio, erro de carga e o ciclo de etiqueta ponta a ponta.
+`src/app/group-history.spec.ts` e `npm run test:etiqueta` cobrem ordem, filtro, estado
+vazio, erro de carga, o lacre na parede e o ciclo de etiqueta ponta a ponta.
+`node tests/e2e-acabamento.mjs` cobre o PNG do álbum e o seletor de reações.

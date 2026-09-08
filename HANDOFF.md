@@ -139,8 +139,8 @@ grupos/{id}/eventos/{eventoId}                ← append-only
 - **`review_reacted` liga e desliga EXPLICITAMENTE.** Nunca por paridade: dois aparelhos
   alternando quase junto chegariam a contagens diferentes a partir do mesmo log. O `alvo` é
   a **chave de participante** de quem escreveu a resenha, e não um `memberId` — quem assina
-  uma resenha não precisa ser do grupo. As rules ainda validam os doze emoji históricos;
-  a interface oferece nove e aposenta 👍, 🎮 e 🏆 sem apagar o log nem quebrar abas antigas.
+  uma resenha não precisa ser do grupo. As rules validam treze emoji; a interface oferece
+  dez e aposenta 👍, 🎮 e 🏆 sem apagar o log nem quebrar abas antigas.
   Ampliar a lista aceita pelo servidor exige publicar as rules antes do site.
 - **Os dois critérios da platina pendem do status.** `dificuldadePlatina` e `diversaoPlatina`
   só existem numa resenha `platinado`: a rule os recusa em qualquer outro status e o replay
@@ -247,6 +247,19 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 - **`[hidden]` perde para qualquer `display` declarado pelo autor.** Esconder o campo da
   porta com `[hidden]` não escondia nada: `.gate-field { display: block }` ganha da regra do
   navegador. Dentro de um `@if` o elemento simplesmente não existe, que é o que se queria.
+- **`opacity: 0` não tira nada da ordem de tabulação.** O aviso do rodapé fica sempre no
+  DOM e some com opacidade e `pointer-events: none` — que para o mouse e não para o Tab.
+  Medido a 1440: a 17ª parada do teclado era o `Fechar aviso` de um aviso que não existe.
+  A saída é `tabindex="-1"`, e **não** `visibility: hidden` nem `inert`: o aviso é uma
+  região viva, e tirá-lo da árvore de acessibilidade cala o anúncio.
+- **A folha de estilos do autor não é o que pinta a tela em cores forçadas.** Toda peça
+  que se desenha por preenchimento vira fundo sobre fundo e some — o botão de girar
+  inclusive. Conferir com o modo ligado, e pôr o bloco no FIM da folha: no meio, ele perde
+  para o `border: 0` do `.album-card`, escrito depois.
+- **`test:migration` pode deixar um emulador Firestore zumbi na 8080.** O hub morre, o
+  `java` não — e ele fica com `--project_id migracao-teste` e sem o emulador de auth. O
+  sintoma é uma suíte de navegador falhando em `a máquina carrega o grupo` sem que nada
+  no app esteja errado. Confira quem está na 8080 antes de procurar no código.
 - **Um `<button>` não herda a tinta da página.** A fileira de reações nasceu com o branco do
   esmalte sobre papel — 1.21:1. O emoji é glifo colorido e não reclama, mas a contagem ao
   lado some, e num sistema que desenhe emoji em monocromático some tudo. A auditoria pegou;
@@ -407,7 +420,7 @@ página, e isso está medido.
 
 A rodada de 2026-09-07, parte 1, troca a antiga grade permanente por `ReviewReactions`: fechado, um
 controle de uma linha mostra até três emoji por frequência e a contagem total; aberto,
-oferece nove escolhas com alvos de 44px. O painel prefere nascer abaixo para preservar a
+oferece dez escolhas com alvos de 44px. O painel prefere nascer abaixo para preservar a
 resenha, usa 4px de respiro vertical, centraliza a segunda linha móvel e revela o nome da
 reação em hover, foco ou pressão. Mouse exige 280ms de intenção; clique, toque, teclado,
 `Esc`, clique fora, scroll e resize têm caminhos medidos. 👍, 🎮 e 🏆 continuam válidos no

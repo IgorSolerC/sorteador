@@ -20,6 +20,8 @@ import {
   scoreTone,
   spinScores,
   reactionTally,
+  REACTION_LABELS,
+  isReactionEmoji,
   REVIEW_REACTIONS,
   pendingReviews,
   owesReview,
@@ -83,6 +85,14 @@ describe('as iniciais de um crachá', () => {
   it('um nome vazio não inventa letra nenhuma', () => {
     // A prateleira põe o seu próprio '?' quando não sobra sigla; as outras cinco telas
     // mostram a cápsula sem letra, que é o que elas sempre mostraram.
+    // Nome que começa por emoji: `parte[0]` devolvia meio par substituto, e a tela
+    // desenhava o losango de interrogação. Um símbolo é um ponto de código, não um char.
+    expect(initialsOf('🎮 Ana')).toBe('🎮A');
+    expect(initialsOf('🎮')).toBe('🎮');
+    expect([...initialsOf('🎮 Ana')].length).toBe(2);
+    // E os alfabetos que não são o nosso continuam inteiros.
+    expect(initialsOf('中村')).toBe('中');
+    expect(initialsOf('أحمد')).toBe('أ');
     expect(initialsOf('')).toBe('');
     expect(initialsOf('   ')).toBe('');
   });
@@ -707,6 +717,51 @@ function reaction(
   return { type: 'review_reacted', at: at(), spinIndex, actor, target, emoji, reacted };
 }
 
+describe('a mesma pessoa com dois crachás', () => {
+  // Trocar o crachá troca a chave de participante, que é congelada e decide identidade.
+  // Para quem está passando o aparelho a outra pessoa, isso é exatamente o certo. Para
+  // quem só corrigiu o próprio nome, é a mesma pessoa virando duas — e o produto não tem
+  // como distinguir os dois casos. O que ele PODE fazer é avisar antes; o que ele não pode
+  // é deixar a conta mentir. Estes testes travam a conta.
+  const jogo = (): GroupEvent[] => [
+    ...seed(['Ana', 'Breno', 'Cecília']),
+    spin(),
+    { type: 'spin_annotated', at: at(), spinIndex: 0, title: 'Overcooked 2', description: '' },
+    review(0, 'Ana', { score: 10 }),
+    review(0, 'Breno', { score: 4 }),
+  ];
+
+  it('a segunda assinatura da mesma pessoa é um voto a mais na média do clube', () => {
+    const antes = replay(GRUPO, jogo());
+    expect(spinScores(antes.spins[0]).score).toBe(7);
+
+    const depois = replay(GRUPO, [...jogo(), review(0, 'Ana Souza', { score: 10 })]);
+
+    expect(spinScores(depois.spins[0]).count).toBe(3);
+    expect(spinScores(depois.spins[0]).score).toBe(8);
+  });
+
+  it('quem assina uma resenha senta na mesa, mesmo sem ser do grupo', () => {
+    // Sem isto a conta ficaria com X maior que Y: três resenhas numa mesa de três, com uma
+    // delas de alguém que a mesa não conhece.
+    const state = replay(GRUPO, [...jogo(), review(0, 'Ana Souza', { score: 10 })]);
+
+    expect(state.spins[0].seated.map((seat) => seat.name))
+      .toEqual(['Ana', 'Ana Souza', 'Breno', 'Cecília']);
+    expect(state.members.map((member) => member.name)).toEqual(['Ana', 'Breno', 'Cecília']);
+    expect(spinScores(state.spins[0]).count)
+      .toBeLessThanOrEqual(spinScores(state.spins[0]).seats);
+  });
+
+  it('o crachá novo não deve as resenhas que o antigo assinou', () => {
+    const state = replay(GRUPO, jogo());
+
+    expect(owesReview(state.spins[0], 'ana')).toBe(false);
+    // E também não deve nada como "Ana Souza": ela não estava na mesa daquele dia.
+    expect(owesReview(state.spins[0], 'ana souza')).toBe(false);
+  });
+});
+
 describe('reagir a uma resenha', () => {
   const jogo = (): GroupEvent[] => [
     ...seed(['Ana', 'Breno', 'Cecília']),
@@ -722,6 +777,21 @@ describe('reagir a uma resenha', () => {
       const removed = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', emoji), reaction(0, 'Breno', 'ana', emoji, false)]);
       expect(removed.spins[0].reviews[0].reactions).toEqual([]);
     }
+  });
+
+  it('o joinha negativo é uma escolha de verdade, e é a última da fileira', () => {
+    // Discordar de uma resenha não tinha símbolo: 🤔 é dúvida e 💀 é piada. Ele entra pelo
+    // FIM porque a fileira é onde o dedo procura — abrir espaço no meio moveria nove alvos.
+    expect(isReactionEmoji('👎')).toBe(true);
+    expect(REACTION_LABELS['👎']).toBe('Discordo');
+    expect(REVIEW_REACTIONS.at(-1)).toBe('👎');
+    expect(REVIEW_REACTIONS.indexOf('💀')).toBe(9);
+
+    const state = replay(GRUPO, [...jogo(), reaction(0, 'Breno', 'ana', '👎')]);
+
+    expect(state.spins[0].reviews[0].reactions).toEqual([
+      { emoji: '👎', author: 'Breno', authorKey: 'breno' },
+    ]);
   });
 
   it('a reação pendura na resenha de quem escreveu, e diz quem reagiu', () => {

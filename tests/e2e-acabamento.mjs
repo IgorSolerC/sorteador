@@ -174,9 +174,11 @@ try {
     check('seletor preserva a resenha em ' + width, bounds.top >= bounds.triggerBottom, JSON.stringify(bounds));
     check('moldura vertical é enxuta em ' + width, bounds.paddingTop <= 4.1 && bounds.paddingBottom <= 4.1, JSON.stringify(bounds));
     await shot('reacoes-abertas-' + width);
-    check('nove escolhas com alvos de 44px em ' + width, await ev(`(() => {const b=[...document.querySelectorAll('.review:first-child .reaction')];return b.length===9 && b.every(e=>e.getBoundingClientRect().width>=44 && e.getBoundingClientRect().height>=44)})()`));
+    check('dez escolhas com alvos de 44px em ' + width, await ev(`(() => {const b=[...document.querySelectorAll('.review:first-child .reaction')];return b.length===10 && b.every(e=>e.getBoundingClientRect().width>=44 && e.getBoundingClientRect().height>=44)})()`));
     check('opções aposentadas estão ausentes em ' + width, await ev(`![...document.querySelectorAll('.review:first-child .reaction')].some(b => /🏆|🎮|👍/.test(b.textContent))`));
     if (width === 390) {
+      // Dez escolhas fecham cinco e cinco: a segunda fileira é cheia, e uma fileira cheia
+      // já nasce centrada. A verificação continua para pegar a próxima escolha ímpar.
       check('segunda fileira móvel fica centralizada', await ev(`(() => { const p=document.querySelector('.reaction-popover:popover-open').getBoundingClientRect(); const buttons=[...document.querySelectorAll('.review:first-child .reaction')].map(el=>el.getBoundingClientRect()); const last=buttons.slice(5); return Math.abs(last.reduce((sum,r)=>sum+r.left+r.width/2,0)/last.length-(p.left+p.width/2))<1 })()`));
     }
     await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await sleep(200);

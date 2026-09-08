@@ -192,7 +192,7 @@
                 <span class="capsule-mark" aria-hidden="true"
                       [style.--capsule]="reviewerColor(review)"
                       [style.--capsule-ink]="reviewerInk(review)">
-                  {{ initials(review.author) }}
+                  {{ reviewerEmoji(review) || initials(review.author) }}
                 </span>
                 <span class="review-who">
                   <strong>{{ review.author }}</strong>

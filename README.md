@@ -50,7 +50,7 @@ Back-end aqui é `group-log.ts` (o replay), `group-store.ts` (a camada Firestore
 
 Regras:
 
-- **Rode a suíte inteira, não a parte que você mexeu.** As sete estão listadas abaixo.
+- **Rode a suíte inteira, não a parte que você mexeu.** As nove estão listadas abaixo.
 - **Todo bug corrigido ganha um teste que falha sem a correção.** Se você não consegue
   escrever esse teste, você ainda não entendeu o bug.
 - **Nada de teste contra a produção.** O emulador existe para isso, e as suítes de rules e
@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 399 unitários e de componente
+npm test -- --watch=false   # 409 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -129,15 +129,24 @@ npm run test:etiqueta       # 86 verificações de ponta a ponta num navegador r
 node tests/e2e-flows.mjs "http://localhost:4200/?emu=1"   # 21 fluxos
 npm run build:testjs
 node tests/e2e-roleta.mjs "http://localhost:4200/?emu=1#/g/demo"   # 14 verificações de SVG
+node tests/e2e-acabamento.mjs   # 59 verificações de acabamento: reações, PNG, as duas barras
 npm run build -- --base-href=./
 ```
 
 Verde em todas, ou o motivo escrito de por que uma não roda nesta máquina. As contagens
 acima são as desta última rodada: se a sua baixar, você apagou um teste sem querer.
 
-As suítes de navegador (`test:a11y`, `test:etiqueta`, os fluxos e a roleta) precisam do emulador
-**e** do `ng serve` de pé, com o grupo `demo` semeado — e o e2e da etiqueta escreve nele, então
-**reseme antes de cada rodada** ou a segunda execução falha em cima do que a primeira gravou.
+As suítes de navegador (`test:a11y`, `test:etiqueta`, os fluxos, a roleta e o acabamento)
+precisam do emulador **e** do `ng serve` de pé, com o grupo `demo` semeado — e as que escrevem
+nele são várias, então **reseme antes de cada rodada** ou a segunda execução falha em cima do
+que a primeira gravou.
+
+**O emulador precisa de `--only firestore,auth`.** Só o Firestore não basta: o app entra
+anônimo, e sem o emulador de auth as suítes de navegador falham em `a máquina carrega o
+grupo` sem que nada no app esteja errado. E as suítes que sobem o próprio emulador podem
+deixar um **`java.exe` zumbi** segurando a porta 8080 com o projeto errado depois de
+encerrarem — se uma suíte de navegador falhar logo na carga, confira quem está na 8080 antes
+de procurar no código.
 
 ---
 
@@ -187,7 +196,7 @@ cartão do álbum e aparecem, em média, na ficha do jogo. Onde só cabe uma lin
 `Overcooked 2 · 9,2` — o título mais a nota do clube, que é derivada das resenhas e nunca
 gravada em campo nenhum, e `Overcooked 2 · 2 resenhas` quando a nota está lacrada.
 
-A resenha de cada um pode receber **nove reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀.
+A resenha de cada um pode receber **dez reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 👎.
 Um único controle mostra os emoji mais usados e a contagem; as escolhas se abrem por
 clique, toque, teclado ou hover, sem ocupar uma fileira permanente.
 Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o

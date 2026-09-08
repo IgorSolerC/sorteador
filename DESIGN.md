@@ -286,6 +286,34 @@ A cor **pertence à pessoa, não à posição dela no anel**: ela escolhe a sua 
 
 **A Regra da Cápsula Portante.** Cada cor escolhe tinta clara ou escura por contraste medido, nunca por suposição. `capsuleInk()` garante pelo menos 4.5:1 para iniciais, nomes do aro e ferragens sobre qualquer uma das vinte e quatro tintas. Quando a cor da pessoa não alcança 4.5:1 como texto sobre o esmalte, o nome vencedor fica branco; a cor continua inequívoca na chapa, no aro, na cápsula e no brilho. `palette.spec.ts` derruba o build se qualquer um desses dois contextos falhar.
 
+**A Regra da Tinta que Acompanha a Cápsula.** Onde a cor da cápsula pinta um fundo, a tinta
+por cima é a que `capsuleInk()` calculou para **aquela** cápsula — nunca uma tinta fixa. Vale
+também nas superfícies que não são elementos: a **seleção de texto** é pintada com `--live` e
+por isso lê `--live-ink`, que o palco publica ao lado dela. Com a tinta fixa em
+`--enamel-deep`, metade da paleta — 12 das 24 — deixava o texto selecionado abaixo de 4.5:1,
+e Breu (1.08:1) e Ameixa (1.17:1) o faziam desaparecer. Com a tinta da cápsula, o pior caso
+da paleta inteira é Carmim a 4.61:1. `--live` e `--live-ink` andam **sempre juntos**: quem
+publicar um sem o outro reabre o buraco.
+
+**A Regra da Forma em Cores Forçadas.** No alto contraste do sistema, toda cor de fundo é
+substituída — e uma peça que se desenha só por preenchimento vira fundo sobre fundo e some.
+Toda peça deste produto cuja silhueta é o preenchimento (o botão primário e o de esmalte, as
+duas etiquetas de papel, os painéis da gaveta e da ficha, o cartão do álbum, as casas da
+régua e os selos de completude) recebe, sob `@media (forced-colors: active)`, a **borda que o
+preenchimento fazia**, em `ButtonText`; o estado marcado engorda para 3px, porque tinta cheia
+deixa de ser opção. Não é uma segunda paleta — é a mesma forma, desenhada por contorno.
+
+Há **uma** exceção e ela é justificada: as cápsulas e a grade de cores mantêm
+`forced-color-adjust: none`, porque ali a cor não decora, ela **é** a pessoa — e na grade de
+escolha ela é o próprio conteúdo. A informação nunca fica só na tinta: toda cápsula aparece
+ao lado do nome por extenso, e cada cor traz o nome no rótulo acessível. A barra de
+completude também se preserva, porque o meio-tom do "finalizado" era o que colapsava e sem
+ele as três fatias ficavam iguais.
+
+**O bloco mora no fim da folha**, e isso é parte da regra: ele é sobrescrita, e
+`.album-card { border: 0 }` vem depois no arquivo. Posto no meio, ele perde por ordem de
+origem.
+
 **A Regra do Passo, Não da Ordem.** A lista alterna famílias, mas seus trechos ainda têm parentes próximos. O passo 11 é primo com 24, percorre as vinte e quatro sem repetir e impede que os primeiros membros recebam uma sequência inteira do mesmo trecho. Um passo que não seja primo com o tamanho da paleta fecha um ciclo curto e repete; a paleta cresce, o passo acompanha.
 
 **A Regra da Cor Escolhida.** A cor guardada é a **posição na paleta**, nunca um hexadecimal livre — nem no log, nem nas rules. É o que garante que toda cápsula continue passando no contraste sem que o servidor precise saber calcular contraste, e o que permite reafinar a paleta inteira sem reescrever um evento sequer.
@@ -372,11 +400,15 @@ porque cada controle novo (o som foi o último) empurrava o crachá para uma lin
 Os comprimidos de navegação não encolhem; o **nome** do crachá é o que cede, porque ele é o
 único conteúdo variável ali.
 
-E ele cede pela barra cheia, não pela largura sozinha: abaixo de `460px` **e** com dois
-comprimidos na fileira — a máquina —, sobra o disco da cápsula, que já é a pessoa neste
-produto e já tem 44px. O álbum tem um comprimido só e mostra o nome inteiro na mesma
-largura. Escondido, o nome sai do olho e **não** da árvore de acessibilidade: com
-`display: none` o botão passaria a se anunciar como "trocar de pessoa" sem dizer de quem.
+E ele cede pela **barra cheia**, não pela largura sozinha: quem manda é a presença da saída
+escrita. A regra é `.topbar:has(.back-link) .who-name` — ou seja, o nome cede no **álbum** e na
+**oficina**, que têm o comprimido de voltar disputando a fileira, e não na máquina, que não
+tem saída no alto porque é onde se está. Medido a 320px com o crachá
+`Maria Eduarda Gonçalves de Albuquerque`: no álbum sobra o disco de 48×44px e o nome fica em
+1×1px; na máquina o nome aparece.
+
+Escondido, o nome sai do olho e **não** da árvore de acessibilidade: com `display: none` o
+botão passaria a se anunciar como "trocar de pessoa" sem dizer de quem.
 
 **A Regra das Duas Barras.** No desktop o cabeçalho é uma plaqueta só. No celular ele é
 **duas**: em cima quem eu sou e por onde eu saio; embaixo, fixo no pé da tela, o que eu posso
@@ -558,6 +590,11 @@ ficava de uma cor na barra e de outra dois dedos abaixo, no aro e no registro, n
 dela. Vale também para quem já saiu do clube: a cor continua sendo dela, e quem saiu ainda
 abre o álbum.
 
+A regra vale em **toda** aparição de uma pessoa, e não só no crachá: a linha da resenha
+na ficha era o último lugar onde ela ainda vinha do hash do nome — Davi saía tangerina na
+resenha e pinho na mesa, dois dedos abaixo, na mesma ficha aberta. Quem tem cápsula veste a
+cápsula; a cor do nome é o plano B, nunca o padrão.
+
 **Fora de um grupo não há cápsula**, e aí o crachá volta a ser a cor tirada do nome — é o que
 o faz ser o mesmo disco na prateleira e na oficina, onde não existe grupo nenhum para
 consultar. Quem abre o link sem estar na lista também: um convidado não tem cápsula para
@@ -634,7 +671,9 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   a mesma linha; no celular o rótulo fica acima. O boletim usa o próprio papel da ficha,
   separado por filetes, sem uma segunda caixa. A contagem de resenhas acompanha a completude,
   com barra e três colunas de percentuais. Cada resenha traz o disco de cápsula
-  de quem escreveu, a nota, o selo de completude e o tempo. As duas réguas da platina fecham
+  de quem escreveu — **a cápsula dela, com a cor e o emoji que ela escolheu**, e não uma cor
+  tirada do nome (ver A Regra da Cápsula Que É Você) —, a nota, o selo de completude e o
+  tempo. As duas réguas da platina fecham
   a lista atrás de um **picote** — a mesma marca de impressor que corta o cartão do álbum —,
   cada uma com a faísca antes do rótulo (ver A Regra da Platina Perguntada).
 - **Resenhas legíveis:** nome em `1rem`, nota em `1.8rem`, critérios em pares rótulo–valor
@@ -643,7 +682,7 @@ um. A mesa é a terceira, e é uma nota de rodapé.
   inteiros, com quebras de linha preservadas. Os estilos da ficha vivem em `game-sheet.scss`.
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
-- **A reação compacta**, no pé de cada resenha: um resumo numa linha e nove escolhas sob
+- **A reação compacta**, no pé de cada resenha: um resumo numa linha e dez escolhas sob
   demanda, sempre com `44px` de alvo (ver A Regra da Reação que se Abre).
 - **O lacre**, no lugar do boletim inteiro quando esta pessoa ainda deve a resenha daquele
   jogo (ver A Regra do Lacre).
@@ -720,16 +759,23 @@ ela termina num único controle `Reagir`; com reações, esse mesmo controle res
 emoji pela frequência e a contagem total. A participação de quem está lendo ganha um ponto
 de tinta, sem disputar com o amarelo reservado à ação principal.
 
-Ao clicar, tocar ou permanecer `280ms` com o mouse, o controle abre 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀
+Ao clicar, tocar ou permanecer `280ms` com o mouse, o controle abre 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 👎
 na ordem fixa. Cada escolha conserva `44 × 44px`; o invólucro usa só `4px` de respiro. No
-celular são cinco escolhas na primeira linha e quatro **centradas** na segunda. O nome da
+celular são **cinco e cinco**: as dez fecham as duas fileiras, pela Regra da Grade que
+Fecha — com nove, a segunda vinha com um buraco e precisava ser centrada. O nome da
 reação aparece ao focar, pousar ou pressionar, e continua inteiro no nome acessível. `Esc`,
 clique fora, scroll e resize recolhem a camada; pelo teclado, o foco volta ao controle.
 
 A camada prefere nascer **depois** do controle para não cobrir a resenha que está sendo
-julgada, e só inverte quando não há espaço. As rules ainda aceitam os doze valores históricos:
-👍 🎮 e 🏆 foram aposentados na interface sem apagar o log nem quebrar abas antigas. A lista
-continua fechada no servidor — um emoji livre viraria uma segunda caixa de texto.
+julgada, e só inverte quando não há espaço. As rules aceitam treze valores: 👍 🎮 e 🏆
+foram aposentados na interface sem apagar o log nem quebrar abas antigas. A lista continua
+fechada no servidor — um emoji livre viraria uma segunda caixa de texto.
+
+**Escolha nova entra pelo fim da fileira.** A ordem é onde o dedo procura: mover ❤️ para
+abrir espaço faria quem já reagia errar o alvo na visita seguinte. 👎 (`Discordo`) fecha a
+lista porque discordar de uma resenha não tinha símbolo — 🤔 e 💀 dizem outra coisa —, e
+porque uma discordância de um toque é mais barata de dar, e mais fácil de ler, do que uma
+segunda resenha escrita para contradizer a primeira.
 
 **A Regra da Marca de Reescrita.** Editar é gravar outro evento, e o log guarda quantas
 versões existiram — mas a tela diz **uma palavra, não um placar**: a resenha reescrita traz
@@ -778,7 +824,7 @@ pode ficar com X maior que Y —, e isso é dito uma vez abaixo da lista, não u
 
 O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colada no esmalte. A superfície continua sendo o esmalte — o papel são os objetos, não o fundo, e é isso que mantém a Regra da Única Quebra de pé com dezenas de cartões na tela.
 
-- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série em 2×2 (`Cápsulas`, `Etiquetadas`, `Rodadas`, `Já saíram`). Quatro colunas estreitas viravam 3 + 1 órfão; 2×2 fecha o bloco.
+- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série travada em **duas colunas** (`.album-stats`), hoje com seis valores: `Nota do clube`, `Platinado`, `Jogos com nota`, `Resenhas`, `Com jogo escrito` e `Rodadas`. Colunas automáticas deixavam órfão; duas colunas fecham o bloco em qualquer contagem par. Ela custa **189px** no celular, antes do primeiro cartão — ver a proposta de descê-la em `MELHORIAS-UX.md` (L-01).
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca. No celular a mesma escolha é o seletor do sistema (ver A Regra da Ordem que Cabe na Mão).
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.
@@ -902,6 +948,11 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Do** dar às peças grandes da máquina o lábio duro em cima mais a sombra ambiente: é o que
   faz plástico moldado em vez de retângulo pintado.
 - **Do** honrar `prefers-reduced-motion` em CSS e em JS ao mesmo tempo.
+- **Do** dar borda de `ButtonText` em cores forçadas a toda peça cuja silhueta é o
+  preenchimento — e conferir com o modo LIGADO, porque a folha de estilos do autor não
+  é o que pinta a tela ali.
+- **Do** ler a tinta da cápsula (`--live-ink`) onde a cor da cápsula pinta um fundo,
+  inclusive na seleção de texto. Tinta fixa sobre cor variável é contraste no escuro.
 
 ### Don't:
 - **Don't** centralizar o conteúdo em um card branco flutuante: é exatamente a entrega que este mundo recusa.
@@ -935,3 +986,7 @@ Fora disso, apenas transições de estado curtas (`.16s`–`.7s`).
 - **Don't** pôr o voltar no meio das ações da tela: ele é a saída, não uma das respostas.
 - **Don't** usar o lábio moldado sem a sombra ambiente que o acompanha — sozinho ele é
   adesivo, não plástico.
+- **Don't** publicar `--live` sem `--live-ink`: os dois são um par, e quem separa devolve
+  metade da paleta ao ilegível.
+- **Don't** pôr o bloco de cores forçadas no meio da folha: ele é sobrescrita e perde por
+  ordem de origem para qualquer `border: 0` escrito depois.

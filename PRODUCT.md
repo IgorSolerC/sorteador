@@ -74,7 +74,7 @@ O que continua sendo contrato:
   de cor e emoji da gaveta dos integrantes, no lugar onde a cápsula já está desenhada em
   340px e servindo de prévia ao vivo. Sem reconhecimento não há bancada, e a primeira visita
   continua sendo uma pergunta só.
-- **Reagir à resenha de outra pessoa** com um de nove emoji — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 — e
+- **Reagir à resenha de outra pessoa** com um de dez emoji — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 👎 — e
   desfazer a própria reação. Fechado, o controle resume os mais usados e a contagem; as
   escolhas só aparecem quando alguém quer reagir. A lista é fechada no servidor.
 - **Avisar o que esta pessoa deve**: quantos jogos ela jogou (está na mesa) e ainda não

@@ -16,6 +16,7 @@ import {
   MAX_NOTE_TITLE,
   MAX_REVIEW_TEXT,
   MAX_SCORE,
+  memberByAuthor,
   owesReview,
   PLATINUM_CRITERIA,
   ReactionTally,
@@ -146,8 +147,13 @@ export class GameSheet {
    * clube lê, e uma conta que depende de um interruptor não é a mesma conta para todos.
    * Espiar continua sendo de quem está lendo, e vale só enquanto esta ficha está aberta.
    */
+  /**
+   * Sem jogo escrito não há lacre: o giro ainda não tem nota nenhuma a ancorar, e a saída
+   * dele é escrever o jogo — que é a ação que a ficha já oferece logo abaixo. Mesma
+   * condição de `pendingReviews()` e do pôster.
+   */
   protected readonly sealed = computed(() =>
-    !this.peeked() && owesReview(this.spin(), this.myKey()),
+    !this.peeked() && !!this.spin().note && owesReview(this.spin(), this.myKey()),
   );
 
   /** Quantas pessoas já escreveram sobre este jogo. O lacre esconde a nota, não a fila. */
@@ -269,8 +275,25 @@ export class GameSheet {
 
   // --- leitura ---
 
+  /**
+   * A cor de quem escreveu uma resenha: a cápsula que ela mesma pintou, como em toda
+   * parte. Aqui era o hash do nome, e a mesma pessoa saía de duas cores na MESMA ficha
+   * aberta — Davi era tangerina na resenha e pinho na mesa, dois dedos abaixo. A cor
+   * pertence à pessoa, e a ficha era o último lugar onde ela ainda vinha do nome.
+   *
+   * Quem só assinou uma resenha e nunca foi do grupo continua na cor tirada do nome: não
+   * há cápsula a consultar, e é a mesma regra da mesa logo abaixo.
+   */
   protected reviewerColor(review: SpinReview): string {
-    return capsuleColor(hashString(`cracha:v1:${review.authorKey}`) % CAPSULE_COLOR_COUNT);
+    const member = memberByAuthor(this.members(), review.author);
+    return member
+      ? capsuleColor(member.colorIndex)
+      : capsuleColor(hashString(`cracha:v1:${review.authorKey}`) % CAPSULE_COLOR_COUNT);
+  }
+
+  /** O emoji de quem resenhou, quando ela escolheu um. Mesma cápsula, mesmo símbolo. */
+  protected reviewerEmoji(review: SpinReview): string {
+    return memberByAuthor(this.members(), review.author)?.emoji ?? '';
   }
 
   /**
