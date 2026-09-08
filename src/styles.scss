@@ -903,6 +903,18 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
    rebitada como as outras, com a ação em amarelo porque ela é a única coisa a fazer ali. */
 .owed-note { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; max-width: 62ch; margin: 0 0 2.4rem; padding: .8rem 1rem; background: rgba(200, 220, 255, .06); border: 1px solid var(--line); border-radius: 8px; color: var(--sky); font-size: .82rem; line-height: 1.5; }
 .owed-note strong { color: var(--white); font-variant-numeric: tabular-nums; }
+/* Com mais de uma pendência a plaqueta deixa de ser frase-mais-ação e vira frase-mais-lista:
+   os comprimidos empilhados ao lado do texto liam como continuação da frase. */
+.owed-note.owed-choice { flex-direction: column; align-items: flex-start; gap: .75rem; }
+.owed-picks { display: flex; flex-wrap: wrap; gap: .5rem; max-width: 100%; margin: 0; padding: 0; list-style: none; }
+/* O mesmo comprimido da fileira de pessoas do álbum, e de propósito: um nome ao lado da
+   cápsula de quem tirou o jogo. Nenhum deles é amarelo — não há uma resposta certa entre
+   eles, e a ação primária desta tela continua sendo o giro. */
+.owed-pick { max-width: 100%; min-height: 44px; display: inline-flex; align-items: center; gap: .55rem; padding: .5rem 1rem; background: rgba(200, 220, 255, .06); color: var(--white); border: 1px solid var(--line); border-radius: 999px; font-family: var(--display); font-size: .95rem; font-weight: 600; transition: background .16s ease, border-color .16s ease; }
+.owed-pick:hover { background: rgba(200, 220, 255, .13); border-color: var(--line-strong); }
+/* Um título de 80 caracteres não pode empurrar a plaqueta para fora da goteira; o nome
+   inteiro fica no rótulo acessível. */
+.owed-pick-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .owed-action { min-height: 44px; display: inline-flex; align-items: center; padding: 0; background: transparent; border: 0; color: var(--yellow); font-family: var(--body); font-size: .82rem; font-weight: 700; text-decoration: underline; text-underline-offset: .24em; text-decoration-thickness: 1.5px; cursor: pointer; }
 .owed-action:hover { color: var(--white); }
 /* O crachá: quem está mexendo, sempre à vista, e um clique para passar a vez. */

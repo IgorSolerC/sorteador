@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { CAPSULE_COLORS, capsuleInk } from '../tmpjs/src/app/palette.js';
 
@@ -11,21 +12,33 @@ const width = 1440;
 const height = 1000;
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const port = Number(process.env['CDP_PORT'] ?? 9683);
 
+/**
+ * A porta de depuração é sorteada pelo próprio Chrome (`0`) e lida do perfil, e não fixada
+ * em 9683.
+ *
+ * `chrome.kill()` no Windows derruba o processo pai e deixa os filhos vivos. Um Chrome de
+ * uma rodada anterior continuava segurando a porta fixa, a rodada seguinte não conseguia
+ * abri-la, e o `fetch` respondia com os alvos do navegador **velho** — a suíte inteira caía
+ * em "A máquina precisa estar carregada" dirigindo um `about:blank` de outra execução. Uma
+ * em quatro, sem nada errado no app.
+ */
+const perfil = process.env['TEMP'] + '/chrome-cdp-' + Date.now();
 const chrome = spawn(CHROME, [
   '--headless=new', '--disable-gpu', '--hide-scrollbars',
-  `--remote-debugging-port=${port}`,
+  '--remote-debugging-port=0',
   `--window-size=${width},${height}`,
-  '--user-data-dir=' + process.env['TEMP'] + '/chrome-cdp-' + Date.now(),
+  '--user-data-dir=' + perfil,
   'about:blank',
 ], { stdio: 'ignore' });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function target() {
+  let port = 0;
   for (let i = 0; i < 60; i += 1) {
     try {
+      if (!port) port = Number(readFileSync(perfil + '/DevToolsActivePort', 'utf8').trim().split(/\s+/)[0]);
       const list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       const page = list.find((t) => t.type === 'page');
       if (page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;

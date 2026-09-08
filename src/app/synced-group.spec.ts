@@ -1108,6 +1108,108 @@ describe('o que esta pessoa deve ao clube, na máquina', () => {
     fixture.destroy();
   });
 
+  it('com mais de uma pendência, cada jogo ganha o próprio comprimido', async () => {
+    // A ordem em que o clube joga não é a ordem em que cada um termina: quem acabou o
+    // segundo antes do primeiro precisa alcançar o primeiro sem sair da tela.
+    const store = new FakeStore().seed(['Igor', 'Breno'], 2).label(0, 'Overcooked 2')
+      .label(1, 'Hollow Knight');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const nomes = [...fixture.nativeElement.querySelectorAll('.owed-pick-name')]
+      .map((pick) => (pick as HTMLElement).textContent?.trim());
+    expect(nomes).toEqual(['Hollow Knight', 'Overcooked 2']);
+    fixture.destroy();
+  });
+
+  it('escolher o jogo mais antigo abre a ficha dele na face de resenha', async () => {
+    const store = new FakeStore().seed(['Igor', 'Breno'], 2).label(0, 'Overcooked 2')
+      .label(1, 'Hollow Knight');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const escolhas = fixture.nativeElement.querySelectorAll('.owed-pick');
+    (escolhas[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const app = fixture.componentInstance as unknown as {
+      sheetFace: () => string;
+      editingSpin: () => SpinRecord | null;
+    };
+    expect(app.editingSpin()?.note?.title).toBe('Overcooked 2');
+    expect(app.sheetFace()).toBe('resenha');
+    fixture.destroy();
+  });
+
+  it('com uma só pendência, a plaqueta continua sendo frase e ação', async () => {
+    const store = new FakeStore().seed(['Igor', 'Breno'], 1).label(0, 'Overcooked 2');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const recado = fixture.nativeElement.querySelector('.owed-note') as HTMLElement;
+    expect(recado.textContent).toContain('Overcooked 2');
+    expect(recado.querySelector('.owed-picks')).toBeNull();
+    expect(recado.querySelector('.owed-action')?.textContent?.trim()).toBe('Escrever a minha');
+    fixture.destroy();
+  });
+
+  it('o título já traz a própria pontuação, e a frase não soma outra', async () => {
+    // "Click The Button!." era o que a plaqueta dizia: o ponto da frase colado no do jogo.
+    const store = new FakeStore().seed(['Igor', 'Breno'], 1).label(0, 'Click The Button!');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const recado = fixture.nativeElement.querySelector('.owed-note') as HTMLElement;
+    expect(recado.textContent).toContain('Click The Button!');
+    expect(recado.textContent).not.toContain('!.');
+    fixture.destroy();
+  });
+
+  it('escrever uma das pendências devolve o foco à escolha seguinte', async () => {
+    // O comprimido clicado some junto com a pendência que ele abriu. Sem um segundo alvo o
+    // teclado ficava largado no topo do documento a cada resenha entregue.
+    const store = new FakeStore().seed(['Igor', 'Breno'], 3).label(0, 'Overcooked 2')
+      .label(1, 'Hollow Knight').label(2, 'Hades');
+    const fixture = await render(store);
+    TestBed.inject(Identity).remember('Igor');
+    fixture.detectChanges();
+
+    const app = fixture.componentInstance as unknown as {
+      commitReview(draft: never): Promise<void>;
+      closeNote(): void;
+    };
+    (fixture.nativeElement.querySelector('.owed-pick') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await app.commitReview({
+      score: 8, criteria: {}, status: 'finalizado', hours: null, text: '',
+    } as never);
+    fixture.detectChanges();
+    app.closeNote();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const focado = document.activeElement as HTMLElement;
+    expect(focado.className).toContain('owed-pick');
+    expect(focado.textContent?.trim()).toBe('Hollow Knight');
+
+    // A penúltima encolhe a plaqueta para a forma de uma pendência só: lá a escolha
+    // seguinte é a ação, e não sobra comprimido nenhum para receber o foco.
+    (focado as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await app.commitReview({
+      score: 8, criteria: {}, status: 'finalizado', hours: null, text: '',
+    } as never);
+    fixture.detectChanges();
+    app.closeNote();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect((document.activeElement as HTMLElement).className).toContain('owed-action');
+    fixture.destroy();
+  });
+
   it('quem não está no grupo não é cobrado de nada', async () => {
     const store = new FakeStore().seed(['Ana', 'Breno'], 1).label(0, 'Overcooked 2');
     const fixture = await render(store);

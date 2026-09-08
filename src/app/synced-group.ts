@@ -42,6 +42,7 @@ import { Notice } from './notice';
 import { MachineSound } from './machine-sound';
 import { Preferences } from './preferences';
 import { GameSheet } from './game-sheet';
+import { OwedNote } from './owed-note';
 import { CapsuleStyle, RosterBench } from './roster-bench';
 import { normalizeName, participantKey } from './naming';
 
@@ -56,7 +57,7 @@ import { normalizeName, participantKey } from './naming';
  */
 @Component({
   selector: 'app-synced-group',
-  imports: [CommonModule, Machine, GameSheet, RosterBench, Confetti],
+  imports: [CommonModule, Machine, GameSheet, RosterBench, Confetti, OwedNote],
   templateUrl: './synced-group.html',
 })
 export class SyncedGroup {
@@ -465,10 +466,11 @@ export class SyncedGroup {
     return state ? pendingReviews(state, this.myKey()) : [];
   });
 
-  /** Abrir a mais recente das pendências já na face de escrever: é o que ela veio fazer. */
-  protected openPending(event: Event): void {
-    const spin = this.pending()[0];
-    if (!spin) return;
+  /** A cor da cápsula de um giro, como a plaqueta das pendências a pede: já ligada a `this`. */
+  protected readonly capsuleOf = (spin: SpinRecord): string => this.colorOf(spin);
+
+  /** Abrir a pendência escolhida já na face de escrever: é o que ela veio fazer. */
+  protected openReview({ spin, event }: { spin: SpinRecord; event: Event }): void {
     this.bench.open(spin, event);
     this.bench.show('resenha');
   }

@@ -36,6 +36,7 @@ import { capsuleColor, capsuleInk } from './palette';
 import { rememberGroup } from './recent-groups';
 import { GameBench, NoteDraft, ReviewDraft, SheetFace } from './game-bench';
 import { GameSheet } from './game-sheet';
+import { OwedNote } from './owed-note';
 import { Notice } from './notice';
 
 /**
@@ -86,7 +87,7 @@ const TILTS = [-1.7, 1.1, -0.7, 1.8, -1.3, 0.8] as const;
 
 @Component({
   selector: 'app-group-history',
-  imports: [CommonModule, GameSheet],
+  imports: [CommonModule, GameSheet, OwedNote],
   templateUrl: './group-history.html',
   styleUrl: './group-history.scss',
 })
@@ -411,9 +412,10 @@ export class GroupHistory {
     return state ? pendingReviews(state, this.myKey()) : [];
   });
 
-  protected openPending(event: Event): void {
-    const spin = this.pending()[0];
-    if (!spin) return;
+  /** A cor da cápsula de um giro, como a plaqueta das pendências a pede: já ligada a `this`. */
+  protected readonly capsuleOf = (spin: SpinRecord): string => this.colorOf(spin);
+
+  protected openReview({ spin, event }: { spin: SpinRecord; event: Event }): void {
     this.bench.open(spin, event);
     this.bench.show('resenha');
   }

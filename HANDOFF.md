@@ -76,6 +76,8 @@ src/app/
   machine-sound.ts     a voz da máquina, sintetizada. Nada toca sem gesto
   album-poster.ts      o álbum desenhado em canvas e salvo como PNG. Três fatos por ficha
                        — quem escolheu, o jogo, a nota. Sem o link, nunca
+  owed-note.ts         a plaqueta do que esta pessoa deve. Máquina e álbum mostram a MESMA:
+                       com mais de uma pendência ela lista os jogos e a pessoa escolhe
   home.*               A PRATELEIRA (raiz)
   recent-groups.ts     lista local de grupos visitados — não dá acesso a nada
   create-group.*       a oficina (#/novo)
@@ -202,6 +204,13 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
   cru nessa medida parte um par substituto e grava meio emoji. Ver `noteText()`.
 - **Um emoji é um grafema, não um ponto de código.** `emojiText()` usa `Intl.Segmenter`;
   cortar por ponto de código parte uma família ao meio.
+- **`chrome.kill()` no Windows deixa os filhos vivos, e uma porta de depuração fixa faz a
+  suíte seguinte dirigir o navegador da anterior.** A roleta caía uma vez em cada três ou
+  quatro, sempre em `A máquina precisa estar carregada`, com o app intacto: o `fetch` na
+  porta 9683 respondia com os alvos de um Chrome zumbi parado num `about:blank`. Ela agora
+  pede `--remote-debugging-port=0` e lê a porta sorteada em `DevToolsActivePort`, dentro do
+  próprio perfil. **Suíte de navegador com porta fixa é a mesma armadilha do `java.exe` na
+  8080**, um andar acima.
 - **Ir de `/base/` para `/base/#rota` é só troca de hash — o navegador NÃO recarrega.** Em
   script de teste, escreva o `localStorage` e dê `Page.reload`. Isso derrubou o smoke inteiro.
 - **`ngModel` propaga num microtask.** Em teste: `dispatchEvent(new Event('input', {bubbles:true}))`

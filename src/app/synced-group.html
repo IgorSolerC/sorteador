@@ -266,17 +266,8 @@
     <!-- Fora do cabeçalho de propósito: ele é uma grade de duas colunas, e um recado
          espremido numa delas leria como legenda do título em vez de como o que é — a
          única coisa que esta pessoa tem a fazer nesta tela. -->
-    @if (pending().length; as devendo) {
-      <p class="owed-note">
-        <span>
-          Você jogou <strong>{{ devendo }}</strong>
-          {{ devendo === 1 ? 'jogo que ainda não resenhou' : 'jogos que ainda não resenhou' }}
-          — {{ pending()[0].note?.title }}{{ devendo > 1 ? ' e mais ' + (devendo - 1) : '' }}.
-        </span>
-        <button type="button" class="owed-action" (click)="openPending($event)">
-          {{ devendo === 1 ? 'Escrever a minha' : 'Começar pela mais nova' }}
-        </button>
-      </p>
+    @if (pending().length) {
+      <app-owed-note [spins]="pending()" [capsuleOf]="capsuleOf" (pick)="openReview($event)" />
     }
 
     @if (snap.state.spins.length) {

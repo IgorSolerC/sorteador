@@ -444,6 +444,35 @@ describe('a ordem da parede', () => {
   });
 });
 
+describe('a plaqueta das pendências, no álbum', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    TestBed.resetTestingModule();
+  });
+
+  it('mais de uma pendência vira uma escolha, e escolher abre a face de resenha', async () => {
+    // A mesma plaqueta da máquina, e é essa a razão de ela ser um componente só: aqui a
+    // pessoa está olhando a parede, e a cápsula que falta pode ser a de baixo.
+    window.localStorage.setItem('mesa-do-mes:autor:v1', 'Ana');
+    const fixture = await render(
+      new FakeStore().seed(['Ana', 'Breno'], 2).label(0, 'Overcooked 2').label(1, 'Hades'),
+    );
+
+    expect(texts(fixture, '.owed-pick-name')).toEqual(['Hades', 'Overcooked 2']);
+
+    (el(fixture).querySelectorAll('.owed-pick')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const app = fixture.componentInstance as unknown as {
+      sheetFace: () => string;
+      editingSpin: () => { note?: { title: string } | null } | null;
+    };
+    expect(app.editingSpin()?.note?.title).toBe('Overcooked 2');
+    expect(app.sheetFace()).toBe('resenha');
+    fixture.destroy();
+  });
+});
+
 describe('o lacre na parede', () => {
   // O lacre não tem interruptor: vale para todo jogo que esta pessoa jogou e não
   // resenhou. O nome no crachá é o que decide, e ele mora no aparelho.

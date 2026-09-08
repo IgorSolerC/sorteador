@@ -837,10 +837,22 @@ O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colad
   única coisa que a pessoa precisa saber antes de mandar a imagem a alguém (ver A Regra do
   Pôster Sem Link).
 - **O recado do que ela deve:** quando esta pessoa jogou algo e não resenhou, uma plaqueta
-  em esmalte com a contagem, o nome do mais recente e a ação em amarelo — a única coisa a
-  fazer naquela tela. Ele aparece na máquina e no álbum, e some sozinho quando ela escreve.
+  em esmalte com a contagem — a única coisa a fazer naquela tela. Ele aparece na máquina e no
+  álbum, e some sozinho quando ela escreve. Tem **duas formas**, e a diferença é se há uma
+  escolha a fazer: com **uma** pendência, a frase nomeia o jogo e a ação vai em amarelo, à
+  direita; com **mais de uma**, a frase só conta, e abaixo dela vem um comprimido por jogo,
+  do mais novo para trás, cada um com a cápsula de quem tirou aquele giro. Nenhum comprimido
+  é amarelo (ver A Regra da Pendência Sem Favorita).
 
 #### Named Rules
+
+**A Regra da Pendência Sem Favorita.** A ordem em que o clube joga não é a ordem em que cada
+um termina: quem acabou o segundo jogo antes do primeiro precisa alcançar o primeiro. Por isso
+a plaqueta com mais de uma pendência lista **todas**, e não a mais nova com um atalho. E por
+isso nenhuma delas é amarela: não há resposta certa entre elas, e um comprimido de ação
+primária diria que há — a Regra do Amarelo de Ação continua valendo, e o amarelo desta tela é
+do giro. Os comprimidos são os mesmos da fileira de pessoas do álbum, cápsula à esquerda e
+nome à direita, porque são a mesma peça: um nome com a cor de quem o carrega.
 
 **A Regra do Pôster Sem Link.** O álbum sai como PNG **desenhado**, e não fotografado: uma
 captura do DOM traria barra de rolagem, corte no lugar errado e a densidade de uma tela. O

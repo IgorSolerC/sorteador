@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-group-history-html"
 primary_target: "src/app/group-history.html"
-related_targets: ["src/app/group-history.ts","src/app/game-sheet.html","src/app/group-history.scss","src/styles.scss"]
+related_targets: ["src/app/group-history.ts","src/app/game-sheet.html","src/app/owed-note.ts","src/app/group-history.scss","src/styles.scss"]
 ---
 
 # Superfície: o álbum do grupo
@@ -25,6 +25,10 @@ e o cartão inteiro é o controle.
   etiqueta de verdade. Trocar por escala ou sombra sozinha perde o gesto.
 - **A cor de uma pessoa é a da primeira cápsula dela**, não a do giro que se está desenhando.
   Sem isso a mesma pessoa muda de cor entre dois cartões e a coleção deixa de ler como coleção.
+- **A plaqueta de pendências é a mesma da máquina** (`app-owed-note`, em
+  `src/app/owed-note.ts`). Ela tem duas formas — frase-mais-ação com uma pendência, e
+  frase-mais-lista com mais de uma — e as duas telas mostram exatamente a mesma. Duplicá-la
+  de volta no template é reabrir a divergência que a ficha já pagou uma vez.
 - **A ficha do jogo é a mesma da máquina** (`app-game-sheet`, em `src/app/game-sheet.html`).
   Se ela divergir entre as duas páginas, alguém vai reescrever o mesmo formulário duas vezes.
   O antigo `note-editor` não existe mais; a ficha o substituiu com quatro faces.

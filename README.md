@@ -120,7 +120,7 @@ a alguém, também. **Leia antes de mexer.**
 ### 8. Antes de dizer que terminou
 
 ```bash
-npm test -- --watch=false   # 409 unitários e de componente
+npm test -- --watch=false   # 415 unitários e de componente
 npm run test:rules          # 118 rules no emulador
 npm run test:store          # 48 integrações da camada de dados
 npm run test:migration      # 13 verificações da migração de histórico
@@ -199,8 +199,9 @@ gravada em campo nenhum, e `Overcooked 2 · 2 resenhas` quando a nota está lacr
 A resenha de cada um pode receber **dez reações** dos outros — 😯 🔥 😭 😂 ❤️ 👏 🤔 🤯 💀 👎.
 Um único controle mostra os emoji mais usados e a contagem; as escolhas se abrem por
 clique, toque, teclado ou hover, sem ocupar uma fileira permanente.
-Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve, com o
-atalho para a mais recente. E a nota do clube fica **lacrada** justamente nos jogos que a
+Quem jogou e ainda não escreveu vê um **recado** dizendo quantas resenhas deve. Quando é
+mais de uma, o recado lista os jogos e ela escolhe por qual começar — a ordem em que o clube
+joga não é a ordem em que cada um termina. E a nota do clube fica **lacrada** justamente nos jogos que a
 pessoa ainda vai julgar — ler `9,2` antes de dar a própria nota move a própria nota. Não é
 opcional; ela pode espiar, e espiar vale só enquanto aquela ficha está aberta. **O lacre
 esconde a média, não a fila:** quantas pessoas já resenharam continua à vista, no cartão, na

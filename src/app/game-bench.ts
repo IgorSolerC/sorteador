@@ -92,9 +92,25 @@ export class GameBench {
     window.setTimeout(() => {
       const target = invoker && this.document.contains(invoker)
         ? invoker
-        : this.document.querySelector<HTMLElement>('.note-sticker');
+        : this.fallbackFor(invoker);
       target?.focus();
     }, 0);
+  }
+
+  /**
+   * Para onde o foco cai quando quem abriu a ficha não existe mais.
+   *
+   * Um comprimido da plaqueta de pendências some assim que a resenha dele é escrita, e o
+   * álbum não tem etiqueta nenhuma para onde cair: o teclado ficava largado no topo do
+   * documento a cada resenha entregue. Ele volta para a próxima escolha da mesma plaqueta —
+   * e a penúltima resenha encolhe a plaqueta para a forma de uma pendência só, onde a
+   * escolha seguinte é a ação, não um comprimido.
+   */
+  private fallbackFor(invoker: HTMLElement | null): HTMLElement | null {
+    const selector = invoker?.classList.contains('owed-pick')
+      ? '.owed-pick, .owed-action'
+      : '.note-sticker';
+    return this.document.querySelector<HTMLElement>(selector);
   }
 
   /** A resenha desta pessoa neste giro, quando ela já escreveu uma. */
