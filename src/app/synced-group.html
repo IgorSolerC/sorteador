@@ -122,12 +122,6 @@
               <span class="winner-emoji" aria-hidden="true">{{ winnerEmoji() }}</span>
             }
           </h1>
-          <p class="result-copy">
-            {{ last.winnerName }} escolhe o jogo.
-            @if (!pool().length) {
-              Todos já saíram — a próxima rodada abre com o globo cheio.
-            }
-          </p>
         } @else if (members().length >= MIN_MEMBERS) {
           <h1 id="synced-title">Pronta para<br /><strong>girar</strong></h1>
           <p class="result-copy">Gire para tirar a primeira cápsula.</p>

@@ -181,12 +181,25 @@
       }
 
       @if (!sealed() && reviews().length) {
-        <h3 class="reviews-title">
-          As resenhas
-          <b>{{ reviews().length }}</b>
-        </h3>
+        <div class="reviews-heading">
+          <h3 class="reviews-title">
+            As resenhas
+            <b>{{ reviews().length }}</b>
+          </h3>
+          <label class="review-sort">
+            <span>Ordenar por</span>
+            <span class="review-sort-control">
+              <select [value]="ordemResenhas()" (change)="ordenarResenhas($event)">
+                @for (option of ORDENS_RESENHAS; track option.key) {
+                  <option [value]="option.key">{{ option.label }}</option>
+                }
+              </select>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4" /></svg>
+            </span>
+          </label>
+        </div>
         <ul class="reviews">
-          @for (review of reviews(); track review.authorKey) {
+          @for (review of resenhasOrdenadas(); track review.authorKey) {
             <li class="review" [class.is-mine]="review.authorKey === mine()?.authorKey">
               <p class="review-head">
                 <span class="capsule-mark" aria-hidden="true"

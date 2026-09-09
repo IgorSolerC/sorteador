@@ -150,7 +150,7 @@ h1 strong { display: block; color: var(--live); font-weight: 600; }
 .section-heading h2 { color: var(--white); }
 .section-heading p { max-width: 40ch; margin: 0 0 .3rem auto; color: var(--sky); line-height: 1.55; }
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); margin: 0; padding: 0; border-top: 2px solid var(--line-strong); list-style: none; }
-.chart-cell { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; }
+.chart-cell { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem; }
 .cell-tick { position: absolute; top: 0; left: 0; width: 1px; height: 13px; background: var(--line-strong); }
 .cell-head { display: flex; align-items: center; gap: .55rem; }
 .cell-capsule { width: 1.55rem; height: 1.1rem; flex: none; border-radius: 999px 999px 4px 4px; box-shadow: inset 0 -.33rem 0 rgba(233, 242, 252, .42); }
@@ -563,7 +563,7 @@ input:focus-visible, textarea:focus-visible { outline-color: var(--field-focus);
 
 /* ---- A célula do registro vira o modo de abrir a etiqueta ---- */
 .chart-cell:has(.cell-open) { padding: 0; }
-.cell-open { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem 0; background: transparent; border: 0; border-radius: 0 8px 8px 0; color: inherit; text-align: left; transition: background .16s ease; }
+.cell-open { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: .42rem; padding: 1.5rem .85rem .9rem; background: transparent; border: 0; border-radius: 0 8px 8px 0; color: inherit; text-align: left; transition: background .16s ease; }
 .cell-open:hover { background: rgba(200, 220, 255, .07); }
 .cell-open:hover .cell-note { text-decoration: underline; text-underline-offset: .22em; text-decoration-thickness: 1.5px; }
 .cell-open:hover .cell-note.is-blank { color: var(--chrome); text-decoration: none; }
@@ -662,7 +662,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 /* Salvar a parede como imagem. A ação fica em comprimido de plaqueta, como as outras do
    esmalte, e a linha ao lado diz a única coisa que a pessoa precisa saber antes de mandar
    a imagem para alguém: o link do grupo não vai nela. */
-.album-save { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; margin: 0 5vw 1.6rem; padding: 0; }
+.album-save { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; margin: 0; padding: 0 5vw clamp(2.4rem, 4vw, 3.4rem); background: linear-gradient(to bottom, var(--vidro-leitura), color-mix(in srgb, var(--enamel-deep) 52%, transparent) 58%, transparent); }
 .album-save span { max-width: 48ch; color: var(--chrome-dim); font-size: .82rem; line-height: 1.5; }
 .album-save .plate-action:disabled { opacity: .6; cursor: default; }
 /* Mais específico que `.owed-note` de propósito: no álbum ele acompanha a goteira de 5vw
@@ -757,7 +757,7 @@ footer p { margin: 0; color: var(--sky); font-size: .92rem; }
 }
 @media (max-width: 620px) {
   .album-head { padding: 2.8rem 1.1rem 2rem; }
-  .album-people, .album-wall { padding-inline: 1.1rem; }
+  .album-save, .album-people, .album-wall { padding-inline: 1.1rem; }
   .album-error { margin-inline: 1.1rem; }
   .album-grid { grid-template-columns: 1fr; }
   /* Numa coluna só, a inclinação cheia beira a borda: metade dela basta para o efeito. */
@@ -1128,7 +1128,7 @@ app-confetti { display: contents; }
 .create-check input { width: 24px; height: 24px; min-height: 24px; flex: none; accent-color: var(--yellow); }
 .create-check small { display: block; margin-top: .15rem; color: var(--chrome-dim); font-size: .82rem; }
 
-.gate, .home-stage, .album-head, .album-wall { background: var(--vidro-leitura); }
+.gate, .home-stage, .album-head, .album-save, .album-wall { background: var(--vidro-leitura); }
 
 /* A bancada é uma cena contínua. Só o resultado recebe vidro: a máquina fica
    nítida e apoiada na mesa, como na referência aprovada. */
@@ -1164,7 +1164,7 @@ app-confetti { display: contents; }
 
 @media (prefers-reduced-transparency: reduce) {
   body::before { display: none; }
-  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-wall { background: var(--enamel); }
+  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-save, .album-wall { background: var(--enamel); }
   .draw-stage .result { background: var(--enamel-deep); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
@@ -1179,7 +1179,7 @@ app-confetti { display: contents; }
    é a borda que o preenchimento fazia. */
 @media (forced-colors: active) {
   body::before { display: none; }
-  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-wall { background: Canvas; }
+  .draw-stage, .empty-stage, .gate, .home-stage, .album-head, .album-save, .album-wall { background: Canvas; }
   .draw-stage .result { background: Canvas; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid CanvasText; }
   .primary-action, .secondary-action, .note-sticker, .month-sticker,
   .score-tick, .status-choice, .reaction, .reaction-popover,

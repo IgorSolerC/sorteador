@@ -42,6 +42,24 @@ import { trapFocusWithin } from './focus-trap';
 import { capsuleColor, capsuleInkForColor, CAPSULE_COLOR_COUNT } from './palette';
 import { hashString, initialsOf, participantKey } from './naming';
 
+type OrdenacaoResenhas = 'escrita' | 'nota' | 'tempo' | ReviewCriterion;
+
+const ORDENS_RESENHAS: readonly {
+  readonly key: OrdenacaoResenhas;
+  readonly label: string;
+}[] = [
+  { key: 'escrita', label: 'Ordem de escrita' },
+  { key: 'nota', label: 'Nota final' },
+  { key: 'diversao', label: REVIEW_CRITERION_LABELS.diversao },
+  { key: 'historia', label: REVIEW_CRITERION_LABELS.historia },
+  { key: 'qualidade', label: REVIEW_CRITERION_LABELS.qualidade },
+  { key: 'jogabilidade', label: REVIEW_CRITERION_LABELS.jogabilidade },
+  { key: 'dificuldade', label: REVIEW_CRITERION_LABELS.dificuldade },
+  { key: 'diversaoPlatina', label: REVIEW_CRITERION_LABELS.diversaoPlatina },
+  { key: 'dificuldadePlatina', label: REVIEW_CRITERION_LABELS.dificuldadePlatina },
+  { key: 'tempo', label: 'Tempo de jogo' },
+];
+
 /**
  * A ficha do jogo: o papel que fica colado na cápsula depois que ela caiu.
  *
@@ -129,6 +147,28 @@ export class GameSheet {
   );
 
   protected readonly reviews = computed(() => this.spin().reviews);
+
+  /**
+   * A ficha abre na ordem em que as pessoas escreveram, como sempre abriu. A escolha só
+   * reordena a leitura desta ficha; não toca no log nem atravessa para o próximo jogo.
+   */
+  protected readonly ORDENS_RESENHAS = ORDENS_RESENHAS;
+  protected readonly ordemResenhas = signal<OrdenacaoResenhas>('escrita');
+  protected readonly resenhasOrdenadas = computed<readonly SpinReview[]>(() => {
+    const ordem = this.ordemResenhas();
+    const resenhas = this.reviews();
+    if (ordem === 'escrita') return resenhas;
+
+    return resenhas
+      .map((review, index) => ({ review, index, medida: this.medidaDaResenha(review, ordem) }))
+      .sort((a, b) => {
+        if (a.medida === null && b.medida === null) return a.index - b.index;
+        if (a.medida === null) return 1;
+        if (b.medida === null) return -1;
+        return b.medida - a.medida || a.index - b.index;
+      })
+      .map(({ review }) => review);
+  });
 
   // --- o lacre da nota do clube ---
 
@@ -401,6 +441,21 @@ export class GameSheet {
         label: this.CRITERION_LABELS[criterion],
         value: criterionText(criterion, review.criteria[criterion]!),
       }));
+  }
+
+  /** Ausência vai ao fim; inventar zero mudaria o sentido de quem não avaliou um critério. */
+  private medidaDaResenha(review: SpinReview, ordem: OrdenacaoResenhas): number | null {
+    if (ordem === 'nota') return review.score;
+    if (ordem === 'tempo') return review.hours;
+    if (ordem === 'escrita') return null;
+    return review.criteria[ordem] ?? null;
+  }
+
+  /** Um `<select>` entrega texto livre, então só as ordens conhecidas entram no signal. */
+  protected ordenarResenhas(event: Event): void {
+    const value = (event.target as HTMLSelectElement | null)?.value ?? '';
+    const option = ORDENS_RESENHAS.find((ordem) => ordem.key === value);
+    if (option) this.ordemResenhas.set(option.key);
   }
 
   // --- escrita ---

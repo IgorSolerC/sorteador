@@ -55,8 +55,16 @@
 .completion-legend > span::before { display: none; }
 .completion-legend b { font-family: var(--mono); font-size: .82rem; }
 .sheet-description, .review-text { max-width: 70ch; font-size: 1rem; }
-.reviews-title { margin-top: 2.2rem; font-family: var(--display); font-size: 1.42rem; letter-spacing: normal; text-transform: none; }
+.reviews-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .55rem var(--respiro); margin: 2.2rem 0 .9rem; padding-top: .8rem; border-top: 2px solid var(--line-paper); }
+.reviews-title { margin: 0; padding: 0; border: 0; font-family: var(--display); font-size: 1.42rem; letter-spacing: normal; text-transform: none; }
 .reviews-title b { font-family: var(--mono); font-size: .82rem; }
+.review-sort { display: flex; align-items: center; gap: .55rem; color: var(--ink-quiet); font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.review-sort-control { position: relative; display: block; min-width: 12rem; }
+.review-sort select { width: 100%; min-height: 44px; padding: 0 2.35rem 0 .8rem; appearance: none; background: var(--paper); color: var(--ink); border: 1px solid var(--line-paper); border-radius: 999px; font-family: var(--body); font-size: .82rem; font-weight: 700; letter-spacing: normal; text-transform: none; }
+.review-sort select:hover { border-color: var(--ink-quiet); }
+.review-sort select:focus-visible { outline: 3px solid var(--field-focus); outline-offset: 2px; }
+.review-sort option { background: var(--paper); color: var(--ink); }
+.review-sort svg { position: absolute; top: 50%; right: .75rem; width: 18px; fill: none; stroke: var(--ink-quiet); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transform: translateY(-50%); }
 .reviews { gap: var(--respiro); }
 .review { padding: var(--respiro); }
 .review-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; }
@@ -79,5 +87,9 @@
   .review-head { grid-template-columns: auto minmax(0, 1fr) auto; gap: .55rem; }
   .review-status { grid-column: 2 / -1; justify-self: start; }
   .review-criteria { grid-template-columns: minmax(0, 1fr); }
+  .reviews-heading { align-items: stretch; }
+  .reviews-title { width: 100%; }
+  .review-sort { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+  .review-sort-control { min-width: 0; }
   .sheet-actions .sheet-aside { margin-left: 0; }
 }

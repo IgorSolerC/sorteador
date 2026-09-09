@@ -694,7 +694,10 @@ um. A mesa é a terceira, e é uma nota de rodapé.
 - **Resenhas legíveis:** nome em `1rem`, nota em `1.8rem`, critérios em pares rótulo–valor
   (`0.82rem` / `0.74rem`), em duas colunas no desktop e uma no celular. No celular o status
   desce abaixo do nome para não comprimir quem escreveu. Descrição e texto livre são `1rem`,
-  inteiros, com quebras de linha preservadas. Os estilos da ficha vivem em `game-sheet.scss`.
+  inteiros, com quebras de linha preservadas. Um seletor de `44px` ordena a lista pela ordem
+  de escrita, nota final, tempo ou qualquer critério; ausências ficam no fim e empates
+  preservam a ordem de escrita. A escolha vale só para a ficha aberta e nunca altera o log.
+  Os estilos da ficha vivem em `game-sheet.scss`.
 - **Face 2, minha resenha:** duas faixas separadas por uma hairline (ver A Regra da Exigência
   de Faixa), e dentro da segunda um bloco que só existe para quem platinou.
 - **A reação compacta**, no pé de cada resenha: um resumo numa linha e dez escolhas sob
@@ -839,7 +842,7 @@ pode ficar com X maior que Y —, e isso é dito uma vez abaixo da lista, não u
 
 O álbum é a parede de etiquetas: cada cápsula que já saiu da máquina, colada no esmalte. A superfície continua sendo o esmalte — o papel são os objetos, não o fundo, e é isso que mantém a Regra da Única Quebra de pé com dezenas de cartões na tela.
 
-- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série travada em **duas colunas** (`.album-stats`), hoje com seis valores: `Nota do clube`, `Platinado`, `Jogos com nota`, `Resenhas`, `Com jogo escrito` e `Rodadas`. Colunas automáticas deixavam órfão; duas colunas fecham o bloco em qualquer contagem par. Ela custa **189px** no celular, antes do primeiro cartão — ver a proposta de descê-la em `MELHORIAS-UX.md` (L-01).
+- **Cabeçalho:** título display, um parágrafo de apoio em céu e a grade de série travada em **duas colunas** (`.album-stats`), hoje com seis valores: `Nota do clube`, `Platinado`, `Jogos com nota`, `Resenhas`, `Com jogo escrito` e `Rodadas`. Colunas automáticas deixavam órfão; duas colunas fecham o bloco em qualquer contagem par. O véu de leitura atravessa a ação de salvar e se dissolve gradualmente antes de devolver a fotografia da bancada; não termina numa linha dura em volta do botão. Ela custa **189px** no celular, antes do primeiro cartão — ver a proposta de descê-la em `MELHORIAS-UX.md` (L-01).
 - **Fileira de pessoas:** faixa de esmalte profundo com um comprimido por pessoa que já saiu, carregando a cápsula plana na cor dela, o emoji ao lado do nome e a contagem em mono tabular. O selecionado é amarelo — aqui o amarelo é marcador de estado, o segundo papel que a Regra do Amarelo de Ação lhe dá, e não uma ação concorrente. A cor é a que a pessoa escolheu, e ela continua sendo a mesma em toda a parede mesmo depois de sair do grupo. O emoji fica **ao lado** do comprimido, não dentro: `1.15rem × .82rem` é pequeno demais para um símbolo ser lido.
 - **Seletor de ordem:** um rótulo em mono e uma fileira de oito controles em texto — rodada, nota do clube, cada critério e tempo de jogo. Ele é **texto e não comprimido**: o amarelo já é o marcador do filtro de pessoa logo acima, e dois marcadores na mesma tela empatam a hierarquia. O escolhido ganha sublinhado de 2px e tinta branca. No celular a mesma escolha é o seletor do sistema (ver A Regra da Ordem que Cabe na Mão).
 - **Régua de rodada:** filete de 2px com o nome da faixa à esquerda e a contagem à direita, em mono de série. Na ordem padrão a faixa é a rodada, da mais nova para a mais antiga, e dentro de cada uma do giro mais recente para trás: quem abre o álbum quer ver o que acabou de acontecer. **Qualquer outra ordem desmancha as rodadas de propósito** — ela existe para comparar jogos de meses diferentes, e uma régua por cartão não separaria nada —, e a faixa passa a dizer por onde a parede foi ordenada.

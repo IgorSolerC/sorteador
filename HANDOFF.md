@@ -1,7 +1,7 @@
 # Handoff — Mesa do Mês
 
-Estado em **2026-09-07**, na rodada da voz enxuta, do celular, do lacre sem chave, do
-crachá vestido e da ficha impressa de três fatos.
+Estado em **2026-09-09**, na rodada da ordenação da ficha, dos recortes limpos e dos
+véus contínuos.
 Este arquivo é para quem assume o trabalho; ele não substitui `PRODUCT.md` (o quê e por quê),
 `DESIGN.md` (o sistema visual) e `FIREBASE.md` (dados, rules e custo) — **leia os três antes
 de mexer em qualquer coisa.**
@@ -283,6 +283,19 @@ Firestore: o tempo virtual atropela os streams e faz uma página boa parecer tra
 ## 7. O que ficou aberto
 
 Nada pendente no código.
+
+A rodada de 2026-09-09 fecha quatro pontos de acabamento. A ficha do jogo ganhou um seletor
+de ordenação das resenhas com 44 px e dez opções: escrita, nota final, os sete critérios e
+tempo de jogo. A ordem é local à ficha; valores ausentes ficam por último e empates preservam
+a ordem de escrita. O atlas RGB da máquina tinha o xadrez de transparência gravado nos pixels,
+então o recorte da caixa foi apertado em 5 px na origem, sem regenerar a arte. No álbum, o véu
+de leitura agora atravessa a ação de salvar e desaparece em gradiente, em vez de terminar numa
+linha. No registro, o conteúdo dos botões da timeline ganhou 13,6 px de respiro também à
+esquerda.
+
+Validação desta rodada: 416 unitários e de componente, 118 regras, 48 integrações, 13
+verificações de migração, 86 E2E da etiqueta, 21 fluxos, 14 da roleta e 59 de acabamento;
+a11y em 17 telas × 3 larguras com zero achados, e build estático limpo.
 
 A rodada de 2026-09-07, parte 6, tem três pedidos, e nenhum deles toca no sorteio.
 

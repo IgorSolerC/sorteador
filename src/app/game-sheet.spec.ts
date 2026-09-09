@@ -132,6 +132,42 @@ describe('a ficha do jogo', () => {
     fixture.destroy();
   });
 
+  it('ordena as resenhas por nota, critério e tempo sem inventar valor ausente', async () => {
+    const fixture = await render(spinRecord({
+      reviews: [
+        review({ author: 'Ana', authorKey: 'ana', score: 6, hours: 30,
+          criteria: { dificuldade: 2 } }),
+        review({ author: 'Breno', authorKey: 'breno', score: 10, hours: null,
+          criteria: { dificuldade: 8 } }),
+        review({ author: 'Caio', authorKey: 'caio', score: 8, hours: 50, criteria: {} }),
+      ],
+    }));
+    const nomes = () => [...el(fixture).querySelectorAll('.review-who strong')]
+      .map((nome) => nome.textContent?.trim());
+    const seletor = el(fixture).querySelector('.review-sort select') as HTMLSelectElement;
+
+    // O padrão preserva o contrato antigo: a primeira escrita continua primeiro.
+    expect(nomes()).toEqual(['Ana', 'Breno', 'Caio']);
+    expect([...seletor.options].map((option) => option.text)).toContain('Nota final');
+    expect([...seletor.options].map((option) => option.text)).toContain('Dificuldade');
+
+    seletor.value = 'nota';
+    seletor.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(nomes()).toEqual(['Breno', 'Caio', 'Ana']);
+
+    seletor.value = 'dificuldade';
+    seletor.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(nomes()).toEqual(['Breno', 'Ana', 'Caio']);
+
+    seletor.value = 'tempo';
+    seletor.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(nomes()).toEqual(['Caio', 'Ana', 'Breno']);
+    fixture.destroy();
+  });
+
   it('voltar da edição abre o boletim no topo mesmo depois de rolar o formulário', async () => {
     const fixture = await render(spinRecord(), 'jogo');
     await new Promise((resolve) => window.setTimeout(resolve, 0));

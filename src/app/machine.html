@@ -9,7 +9,9 @@
       <image id="material-capsula" href="images/capsula-material.png" width="1254" height="1254" />
       <clipPath id="silhueta-roda"><circle cx="589" cy="470" r="459" /></clipPath>
       <clipPath id="silhueta-caixa">
-        <path d="M94 899Q94 872 112 847L145 810Q161 795 181 795H994Q1018 795 1037 817L1073 857Q1087 879 1087 903V1217Q1087 1267 1036 1267H145Q94 1267 94 1217Z" />
+        <!-- O atlas é RGB e ainda traz o xadrez da remoção ao redor da peça. Recuar o
+             recorte 5px no tampo e no chão elimina essa franja sem comer o bisel azul. -->
+        <path d="M94 899Q94 872 112 847L145 810Q161 800 181 800H994Q1018 800 1037 817L1073 857Q1087 879 1087 903V1217Q1087 1262 1036 1262H145Q94 1262 94 1217Z" />
       </clipPath>
       <clipPath id="silhueta-capsula"><circle cx="623" cy="597" r="496" /></clipPath>
       <clipPath id="core-clip"><circle cx="200" cy="200" r="96" /></clipPath>
